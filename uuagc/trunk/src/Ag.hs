@@ -1,5 +1,5 @@
 -- Todo: we should make a nicer pipeline. Perhaps use Atze's "compile run" combinators.
-module Ag (uuagcLib, uuagcLibString, uuagcExe,compile) where
+module Ag (uuagcLib, uuagcLibTH, uuagcExe,compile) where
 
 import System.Environment            (getArgs, getProgName)
 import System.Console.GetOpt         (usageInfo)
@@ -17,7 +17,7 @@ import Pretty
 import PPUtil
 
 import UU.Parsing                    (Message(..), Action(..))
-import UU.Scanner.Position           (Pos, line, file)
+import UU.Scanner.Position           (Pos (Pos), line, file)
 import UU.Scanner.Token              (Token)
 
 import qualified Transform           as Pass1  (sem_AG     ,  wrap_AG     ,  Syn_AG      (..), Inh_AG      (..))
@@ -36,7 +36,8 @@ import qualified ExecutionPlan2TH    as Pass4e (sem_ExecutionPlan, wrap_Executio
 import qualified PrintCode           as Pass5  (sem_Program,  wrap_Program,  Syn_Program (..), Inh_Program (..))
 import qualified PrintOcamlCode      as Pass5a (sem_Program,  wrap_Program,  Syn_Program (..), Inh_Program (..))
 import qualified PrintCleanCode      as Pass5b (sem_Program,  wrap_Program,  Syn_Program (..), Inh_Program (..))
-import qualified PrintErrorMessages  as PrErr  (sem_Errors ,  wrap_Errors ,  Syn_Errors  (..), Inh_Errors  (..), isError)
+import qualified PrintErrorMessages  as PrErr  (sem_Errors ,  wrap_Errors ,  Syn_Errors  (..), Inh_Errors  (..), isError
+                                               ,sem_Error  ,  wrap_Error  ,  Syn_Error   (..), Inh_Error   (..))
 import qualified TfmToVisage         as PassV  (sem_Grammar,  wrap_Grammar,  Syn_Grammar (..), Inh_Grammar (..))
 import qualified TfmToMirage         as PassM  (sem_Grammar,  wrap_Grammar,  Syn_Grammar (..), Inh_Grammar (..))
 
@@ -74,12 +75,12 @@ uuagcLib args fileP
                    else do compile flags fileP (head $ outputFiles flags++repeat "")
                            return (ExitSuccess, [])
 
-uuagcLibString :: [String] -> String -> Either String [TH.Dec]
-uuagcLibString args
-  | null errs = compileString flags
-  | otherwise = const (Left (unlines errs))
-  where
-    (flags,_,errs) = (getOptions args) 
+uuagcLibTH :: [String] -> String -> TH.Q [TH.Dec]
+uuagcLibTH args input = do
+  let (flags, _, errs) = getOptions (map ("--" ++) args)
+  if not (null errs)
+    then fail (unlines errs)
+    else compileTH flags input
 
 -- Executable version
 uuagcExe :: IO ()
@@ -101,168 +102,169 @@ uuagcExe
                        then reportDeps flags files
                        else zipWithM_ (compile flags) files (outputFiles flags++repeat "")
 
-compileString :: Options -> String -> Either String [TH.Dec]
-compileString flags input
- = let (output0,parseErrors) = parseAGString flags input
-       irrefutableMap = mempty
-       printStr  = outputStr flags
-       failWith  = failWithCode flags
-       inputfile = maybe input id (mainFilename flags)
-       output1   = Pass1.wrap_AG              (Pass1.sem_AG                                 output0 ) Pass1.Inh_AG       {Pass1.options_Inh_AG       = flags}
-       flags'    = condDisableOptimizations (Pass1.pragmas_Syn_AG output1 flags)
-       grammar1  = Pass1.output_Syn_AG        output1
-       output1a  = Pass1a.wrap_Grammar        (Pass1a.sem_Grammar grammar1                          ) Pass1a.Inh_Grammar {Pass1a.options_Inh_Grammar = flags', Pass1a.forcedIrrefutables_Inh_Grammar = irrefutableMap, Pass1a.mainName_Inh_Grammar = mainName }
-       grammar1a = Pass1a.output_Syn_Grammar  output1a
-       output2   = Pass2.wrap_Grammar         (Pass2.sem_Grammar grammar1a                          ) Pass2.Inh_Grammar  {Pass2.options_Inh_Grammar  = flags', Pass2.constructorTypeMap_Inh_Grammar = Pass1.constructorTypeMap_Syn_AG output1}
-       grammar2  = Pass2.output_Syn_Grammar   output2
-       outputV   = PassV.wrap_Grammar         (PassV.sem_Grammar grammar2                           ) PassV.Inh_Grammar  {}
-       grammarV  = PassV.visage_Syn_Grammar   outputV
-       outputM   = PassM.wrap_Grammar         (PassM.sem_Grammar grammar2                           ) PassM.Inh_Grammar  {PassM.options_Inh_Grammar = flags'}
-       output2a  = Pass2a.wrap_Grammar        (Pass2a.sem_Grammar grammar2                          ) Pass2a.Inh_Grammar {Pass2a.options_Inh_Grammar = flags'}
-       grammar2a = Pass2a.output_Syn_Grammar  output2a
-       output3   = Pass3.wrap_Grammar         (Pass3.sem_Grammar grammar2a                          ) Pass3.Inh_Grammar  {Pass3.options_Inh_Grammar  = flags'}
-       grammar3  = Pass3.output_Syn_Grammar   output3
-       output3a  = Pass3a.wrap_Grammar        (Pass3a.sem_Grammar grammar2a                         ) Pass3a.Inh_Grammar  {Pass3a.options_Inh_Grammar  = flags'}
-       output3b  = Pass3b.wrap_Grammar        (Pass3b.sem_Grammar grammar2a                         ) Pass3b.Inh_Grammar  {Pass3b.options_Inh_Grammar  = flags'}
-       grammar3a | loag flags' = Pass3b.output_Syn_Grammar output3b
-                 | otherwise   = Pass3a.output_Syn_Grammar output3a
-       output4   = Pass4.wrap_CGrammar        (Pass4.sem_CGrammar(Pass3.output_Syn_Grammar  output3)) Pass4.Inh_CGrammar {Pass4.options_Inh_CGrammar = flags'}
-       output4a  = Pass4a.wrap_CGrammar       (Pass4a.sem_CGrammar(Pass3.output_Syn_Grammar output3)) Pass4a.Inh_CGrammar {Pass4a.options_Inh_CGrammar = flags'}
-       -- output4b  = Pass4b.wrap_ExecutionPlan  (Pass4b.sem_ExecutionPlan grammar3a) Pass4b.Inh_ExecutionPlan
-       --   { Pass4b.options_Inh_ExecutionPlan = flags'
-       --   , Pass4b.inhmap_Inh_ExecutionPlan = Pass3a.inhmap_Syn_Grammar output3a
-       --   , Pass4b.synmap_Inh_ExecutionPlan = Pass3a.synmap_Syn_Grammar output3a
-       --   , Pass4b.pragmaBlocks_Inh_ExecutionPlan = pragmaBlocksTxt
-       --   , Pass4b.importBlocks_Inh_ExecutionPlan = importBlocksTxt
-       --   , Pass4b.textBlocks_Inh_ExecutionPlan = textBlocksDoc
-       --   , Pass4b.moduleHeader_Inh_ExecutionPlan = mkModuleHeader $ Pass1.moduleDecl_Syn_AG output1
-       --   , Pass4b.mainName_Inh_ExecutionPlan = mkMainName mainName $ Pass1.moduleDecl_Syn_AG output1
-       --   , Pass4b.mainFile_Inh_ExecutionPlan = mainFile
-       --   , Pass4b.textBlockMap_Inh_ExecutionPlan = textBlockMap
-       --   , Pass4b.mainBlocksDoc_Inh_ExecutionPlan = mainBlocksDoc
-       --   , Pass4b.localAttrTypes_Inh_ExecutionPlan = Pass3a.localSigMap_Syn_Grammar output3a
-       --   }
-       output4e  = Pass4e.wrap_ExecutionPlan  (Pass4e.sem_ExecutionPlan grammar3a) Pass4e.Inh_ExecutionPlan
-         { Pass4e.options_Inh_ExecutionPlan = flags'
-         , Pass4e.inhmap_Inh_ExecutionPlan = Pass3a.inhmap_Syn_Grammar output3a
-         , Pass4e.synmap_Inh_ExecutionPlan = Pass3a.synmap_Syn_Grammar output3a
-         -- , Pass4e.pragmaBlocks_Inh_ExecutionPlan = pragmaBlocksTxt
-         -- , Pass4e.importBlocks_Inh_ExecutionPlan = importBlocksTxt
-         -- , Pass4e.textBlocks_Inh_ExecutionPlan = textBlocksDoc
-         -- , Pass4e.moduleHeader_Inh_ExecutionPlan = mkModuleHeader $ Pass1.moduleDecl_Syn_AG output1
-         -- , Pass4e.mainName_Inh_ExecutionPlan = mkMainName mainName $ Pass1.moduleDecl_Syn_AG output1
-         -- , Pass4e.mainFile_Inh_ExecutionPlan = mainFile
-         -- , Pass4e.textBlockMap_Inh_ExecutionPlan = textBlockMap
-         -- , Pass4e.mainBlocksDoc_Inh_ExecutionPlan = mainBlocksDoc
-         , Pass4e.localAttrTypes_Inh_ExecutionPlan = Pass3a.localSigMap_Syn_Grammar output3a
-         }
-       -- output4c  = Pass4c.wrap_ExecutionPlan  (Pass4c.sem_ExecutionPlan grammar3a) Pass4c.Inh_ExecutionPlan {Pass4c.options_Inh_ExecutionPlan = flags', Pass4c.inhmap_Inh_ExecutionPlan = Pass3a.inhmap_Syn_Grammar output3a, Pass4c.synmap_Inh_ExecutionPlan = Pass3a.synmap_Syn_Grammar output3a, Pass4c.mainName_Inh_ExecutionPlan = mkMainName mainName $ Pass1.moduleDecl_Syn_AG output1, Pass4c.mainFile_Inh_ExecutionPlan = mainFile, Pass4c.localAttrTypes_Inh_ExecutionPlan = Pass3a.localSigMap_Syn_Grammar output3a}
-       -- output4d  = Pass4d.wrap_ExecutionPlan  (Pass4d.sem_ExecutionPlan grammar3a) Pass4d.Inh_ExecutionPlan {Pass4d.options_Inh_ExecutionPlan = flags', Pass4d.inhmap_Inh_ExecutionPlan = Pass3a.inhmap_Syn_Grammar output3a, Pass4d.synmap_Inh_ExecutionPlan = Pass3a.synmap_Syn_Grammar output3a, Pass4d.importBlocks_Inh_ExecutionPlan = importBlocksTxt, Pass4d.textBlocks_Inh_ExecutionPlan = textBlocksDoc, Pass4d.iclModuleHeader_Inh_ExecutionPlan = Pass4d.mkIclModuleHeader $ Pass1.moduleDecl_Syn_AG output1, Pass4d.dclModuleHeader_Inh_ExecutionPlan = Pass4d.mkDclModuleHeader $ Pass1.moduleDecl_Syn_AG output1, Pass4d.mainName_Inh_ExecutionPlan = mkMainName mainName $ Pass1.moduleDecl_Syn_AG output1, Pass4d.mainFile_Inh_ExecutionPlan = mainFile, Pass4d.textBlockMap_Inh_ExecutionPlan = textBlockMap, Pass4d.mainBlocksDoc_Inh_ExecutionPlan = mainBlocksDoc,Pass4d.localAttrTypes_Inh_ExecutionPlan = Pass3a.localSigMap_Syn_Grammar output3a, Pass4d.constructorTypeMap_Inh_ExecutionPlan = Pass1.constructorTypeMap_Syn_AG output1}
-       -- output5   = Pass5.wrap_Program         (Pass5.sem_Program (Pass4.output_Syn_CGrammar output4)) Pass5.Inh_Program  {Pass5.options_Inh_Program  = flags', Pass5.pragmaBlocks_Inh_Program = pragmaBlocksTxt, Pass5.importBlocks_Inh_Program = importBlocksTxt, Pass5.textBlocks_Inh_Program = textBlocksDoc, Pass5.textBlockMap_Inh_Program = textBlockMap, Pass5.mainBlocksDoc_Inh_Program = mainBlocksDoc, Pass5.optionsLine_Inh_Program = optionsLine, Pass5.mainFile_Inh_Program = mainFile, Pass5.moduleHeader_Inh_Program = mkModuleHeader $ Pass1.moduleDecl_Syn_AG output1, Pass5.mainName_Inh_Program = mkMainName mainName $ Pass1.moduleDecl_Syn_AG output1}
-       -- output5a  = Pass5a.wrap_Program        (Pass5a.sem_Program (Pass4.output_Syn_CGrammar output4)) Pass5a.Inh_Program { Pass5a.options_Inh_Program  = flags', Pass5a.textBlockMap_Inh_Program = textBlockMap }
-       -- output5b  = Pass5b.wrap_Program        (Pass5b.sem_Program (Pass4.output_Syn_CGrammar output4)) Pass5b.Inh_Program  {Pass5b.options_Inh_Program  = flags', Pass5b.pragmaBlocks_Inh_Program = pragmaBlocksTxt, Pass5b.importBlocks_Inh_Program = importBlocksTxt, Pass5b.textBlocks_Inh_Program = textBlocksDoc, Pass5b.textBlockMap_Inh_Program = textBlockMap, Pass5b.mainBlocksDoc_Inh_Program = mainBlocksDoc, Pass5b.optionsLine_Inh_Program = optionsLine, Pass5b.mainFile_Inh_Program = mainFile, Pass5b.moduleHeader_Inh_Program = mkModuleHeader $ Pass1.moduleDecl_Syn_AG output1, Pass5b.mainName_Inh_Program = mkMainName mainName $ Pass1.moduleDecl_Syn_AG output1}
-       -- output6   = PrErr.wrap_Errors          (PrErr.sem_Errors                       errorsToReport) PrErr.Inh_Errors   {PrErr.options_Inh_Errors   = flags', PrErr.dups_Inh_Errors = [] }
+compileTH :: Options -> String -> TH.Q [TH.Dec]
+compileTH flags input
+ = do TH.Loc { TH.loc_filename = filename, TH.loc_start = (linepos, colpos) } <- TH.location
+      let (output0,parseErrors) = parseAGString flags input (Pos linepos colpos filename)
+          irrefutableMap = mempty
+          printStr  = outputStr flags
+          failWith  = failWithCode flags
+          inputfile = maybe input id (mainFilename flags)
+          output1   = Pass1.wrap_AG              (Pass1.sem_AG                                 output0 ) Pass1.Inh_AG       {Pass1.options_Inh_AG       = flags}
+          flags'    = condDisableOptimizations (Pass1.pragmas_Syn_AG output1 flags)
+          grammar1  = Pass1.output_Syn_AG        output1
+          output1a  = Pass1a.wrap_Grammar        (Pass1a.sem_Grammar grammar1                          ) Pass1a.Inh_Grammar {Pass1a.options_Inh_Grammar = flags', Pass1a.forcedIrrefutables_Inh_Grammar = irrefutableMap, Pass1a.mainName_Inh_Grammar = mainName }
+          grammar1a = Pass1a.output_Syn_Grammar  output1a
+          output2   = Pass2.wrap_Grammar         (Pass2.sem_Grammar grammar1a                          ) Pass2.Inh_Grammar  {Pass2.options_Inh_Grammar  = flags', Pass2.constructorTypeMap_Inh_Grammar = Pass1.constructorTypeMap_Syn_AG output1}
+          grammar2  = Pass2.output_Syn_Grammar   output2
+          outputV   = PassV.wrap_Grammar         (PassV.sem_Grammar grammar2                           ) PassV.Inh_Grammar  {}
+          grammarV  = PassV.visage_Syn_Grammar   outputV
+          outputM   = PassM.wrap_Grammar         (PassM.sem_Grammar grammar2                           ) PassM.Inh_Grammar  {PassM.options_Inh_Grammar = flags'}
+          output2a  = Pass2a.wrap_Grammar        (Pass2a.sem_Grammar grammar2                          ) Pass2a.Inh_Grammar {Pass2a.options_Inh_Grammar = flags'}
+          grammar2a = Pass2a.output_Syn_Grammar  output2a
+          output3   = Pass3.wrap_Grammar         (Pass3.sem_Grammar grammar2a                          ) Pass3.Inh_Grammar  {Pass3.options_Inh_Grammar  = flags'}
+          grammar3  = Pass3.output_Syn_Grammar   output3
+          output3a  = Pass3a.wrap_Grammar        (Pass3a.sem_Grammar grammar2a                         ) Pass3a.Inh_Grammar  {Pass3a.options_Inh_Grammar  = flags'}
+          output3b  = Pass3b.wrap_Grammar        (Pass3b.sem_Grammar grammar2a                         ) Pass3b.Inh_Grammar  {Pass3b.options_Inh_Grammar  = flags'}
+          grammar3a | loag flags' = Pass3b.output_Syn_Grammar output3b
+                    | otherwise   = Pass3a.output_Syn_Grammar output3a
+          output4   = Pass4.wrap_CGrammar        (Pass4.sem_CGrammar(Pass3.output_Syn_Grammar  output3)) Pass4.Inh_CGrammar {Pass4.options_Inh_CGrammar = flags'}
+          output4a  = Pass4a.wrap_CGrammar       (Pass4a.sem_CGrammar(Pass3.output_Syn_Grammar output3)) Pass4a.Inh_CGrammar {Pass4a.options_Inh_CGrammar = flags'}
+          -- output4b  = Pass4b.wrap_ExecutionPlan  (Pass4b.sem_ExecutionPlan grammar3a) Pass4b.Inh_ExecutionPlan
+          --   { Pass4b.options_Inh_ExecutionPlan = flags'
+          --   , Pass4b.inhmap_Inh_ExecutionPlan = Pass3a.inhmap_Syn_Grammar output3a
+          --   , Pass4b.synmap_Inh_ExecutionPlan = Pass3a.synmap_Syn_Grammar output3a
+          --   , Pass4b.pragmaBlocks_Inh_ExecutionPlan = pragmaBlocksTxt
+          --   , Pass4b.importBlocks_Inh_ExecutionPlan = importBlocksTxt
+          --   , Pass4b.textBlocks_Inh_ExecutionPlan = textBlocksDoc
+          --   , Pass4b.moduleHeader_Inh_ExecutionPlan = mkModuleHeader $ Pass1.moduleDecl_Syn_AG output1
+          --   , Pass4b.mainName_Inh_ExecutionPlan = mkMainName mainName $ Pass1.moduleDecl_Syn_AG output1
+          --   , Pass4b.mainFile_Inh_ExecutionPlan = mainFile
+          --   , Pass4b.textBlockMap_Inh_ExecutionPlan = textBlockMap
+          --   , Pass4b.mainBlocksDoc_Inh_ExecutionPlan = mainBlocksDoc
+          --   , Pass4b.localAttrTypes_Inh_ExecutionPlan = Pass3a.localSigMap_Syn_Grammar output3a
+          --   }
+          output4e  = Pass4e.wrap_ExecutionPlan  (Pass4e.sem_ExecutionPlan grammar3a) Pass4e.Inh_ExecutionPlan
+            { Pass4e.options_Inh_ExecutionPlan = flags'
+            , Pass4e.inhmap_Inh_ExecutionPlan = Pass3a.inhmap_Syn_Grammar output3a
+            , Pass4e.synmap_Inh_ExecutionPlan = Pass3a.synmap_Syn_Grammar output3a
+            -- , Pass4e.pragmaBlocks_Inh_ExecutionPlan = pragmaBlocksTxt
+            -- , Pass4e.importBlocks_Inh_ExecutionPlan = importBlocksTxt
+            -- , Pass4e.textBlocks_Inh_ExecutionPlan = textBlocksDoc
+            -- , Pass4e.moduleHeader_Inh_ExecutionPlan = mkModuleHeader $ Pass1.moduleDecl_Syn_AG output1
+            -- , Pass4e.mainName_Inh_ExecutionPlan = mkMainName mainName $ Pass1.moduleDecl_Syn_AG output1
+            -- , Pass4e.mainFile_Inh_ExecutionPlan = mainFile
+            -- , Pass4e.textBlockMap_Inh_ExecutionPlan = textBlockMap
+            -- , Pass4e.mainBlocksDoc_Inh_ExecutionPlan = mainBlocksDoc
+            , Pass4e.localAttrTypes_Inh_ExecutionPlan = Pass3a.localSigMap_Syn_Grammar output3a
+            }
+          -- output4c  = Pass4c.wrap_ExecutionPlan  (Pass4c.sem_ExecutionPlan grammar3a) Pass4c.Inh_ExecutionPlan {Pass4c.options_Inh_ExecutionPlan = flags', Pass4c.inhmap_Inh_ExecutionPlan = Pass3a.inhmap_Syn_Grammar output3a, Pass4c.synmap_Inh_ExecutionPlan = Pass3a.synmap_Syn_Grammar output3a, Pass4c.mainName_Inh_ExecutionPlan = mkMainName mainName $ Pass1.moduleDecl_Syn_AG output1, Pass4c.mainFile_Inh_ExecutionPlan = mainFile, Pass4c.localAttrTypes_Inh_ExecutionPlan = Pass3a.localSigMap_Syn_Grammar output3a}
+          -- output4d  = Pass4d.wrap_ExecutionPlan  (Pass4d.sem_ExecutionPlan grammar3a) Pass4d.Inh_ExecutionPlan {Pass4d.options_Inh_ExecutionPlan = flags', Pass4d.inhmap_Inh_ExecutionPlan = Pass3a.inhmap_Syn_Grammar output3a, Pass4d.synmap_Inh_ExecutionPlan = Pass3a.synmap_Syn_Grammar output3a, Pass4d.importBlocks_Inh_ExecutionPlan = importBlocksTxt, Pass4d.textBlocks_Inh_ExecutionPlan = textBlocksDoc, Pass4d.iclModuleHeader_Inh_ExecutionPlan = Pass4d.mkIclModuleHeader $ Pass1.moduleDecl_Syn_AG output1, Pass4d.dclModuleHeader_Inh_ExecutionPlan = Pass4d.mkDclModuleHeader $ Pass1.moduleDecl_Syn_AG output1, Pass4d.mainName_Inh_ExecutionPlan = mkMainName mainName $ Pass1.moduleDecl_Syn_AG output1, Pass4d.mainFile_Inh_ExecutionPlan = mainFile, Pass4d.textBlockMap_Inh_ExecutionPlan = textBlockMap, Pass4d.mainBlocksDoc_Inh_ExecutionPlan = mainBlocksDoc,Pass4d.localAttrTypes_Inh_ExecutionPlan = Pass3a.localSigMap_Syn_Grammar output3a, Pass4d.constructorTypeMap_Inh_ExecutionPlan = Pass1.constructorTypeMap_Syn_AG output1}
+          -- output5   = Pass5.wrap_Program         (Pass5.sem_Program (Pass4.output_Syn_CGrammar output4)) Pass5.Inh_Program  {Pass5.options_Inh_Program  = flags', Pass5.pragmaBlocks_Inh_Program = pragmaBlocksTxt, Pass5.importBlocks_Inh_Program = importBlocksTxt, Pass5.textBlocks_Inh_Program = textBlocksDoc, Pass5.textBlockMap_Inh_Program = textBlockMap, Pass5.mainBlocksDoc_Inh_Program = mainBlocksDoc, Pass5.optionsLine_Inh_Program = optionsLine, Pass5.mainFile_Inh_Program = mainFile, Pass5.moduleHeader_Inh_Program = mkModuleHeader $ Pass1.moduleDecl_Syn_AG output1, Pass5.mainName_Inh_Program = mkMainName mainName $ Pass1.moduleDecl_Syn_AG output1}
+          -- output5a  = Pass5a.wrap_Program        (Pass5a.sem_Program (Pass4.output_Syn_CGrammar output4)) Pass5a.Inh_Program { Pass5a.options_Inh_Program  = flags', Pass5a.textBlockMap_Inh_Program = textBlockMap }
+          -- output5b  = Pass5b.wrap_Program        (Pass5b.sem_Program (Pass4.output_Syn_CGrammar output4)) Pass5b.Inh_Program  {Pass5b.options_Inh_Program  = flags', Pass5b.pragmaBlocks_Inh_Program = pragmaBlocksTxt, Pass5b.importBlocks_Inh_Program = importBlocksTxt, Pass5b.textBlocks_Inh_Program = textBlocksDoc, Pass5b.textBlockMap_Inh_Program = textBlockMap, Pass5b.mainBlocksDoc_Inh_Program = mainBlocksDoc, Pass5b.optionsLine_Inh_Program = optionsLine, Pass5b.mainFile_Inh_Program = mainFile, Pass5b.moduleHeader_Inh_Program = mkModuleHeader $ Pass1.moduleDecl_Syn_AG output1, Pass5b.mainName_Inh_Program = mkMainName mainName $ Pass1.moduleDecl_Syn_AG output1}
+          output6   = PrErr.wrap_Errors          (PrErr.sem_Errors                       errorsToReport) PrErr.Inh_Errors   {PrErr.options_Inh_Errors   = flags', PrErr.dups_Inh_Errors = [] }
 
-       -- dump1     = GrammarDump.wrap_Grammar   (GrammarDump.sem_Grammar grammar1                     ) GrammarDump.Inh_Grammar
-       -- dump2     = GrammarDump.wrap_Grammar   (GrammarDump.sem_Grammar grammar2                     ) GrammarDump.Inh_Grammar
-       -- dump3     = CGrammarDump.wrap_CGrammar (CGrammarDump.sem_CGrammar grammar3                   ) CGrammarDump.Inh_CGrammar
+          -- dump1     = GrammarDump.wrap_Grammar   (GrammarDump.sem_Grammar grammar1                     ) GrammarDump.Inh_Grammar
+          -- dump2     = GrammarDump.wrap_Grammar   (GrammarDump.sem_Grammar grammar2                     ) GrammarDump.Inh_Grammar
+          -- dump3     = CGrammarDump.wrap_CGrammar (CGrammarDump.sem_CGrammar grammar3                   ) CGrammarDump.Inh_CGrammar
 
 
-       -- outputVisage = VisageDump.wrap_VisageGrammar (VisageDump.sem_VisageGrammar grammarV) VisageDump.Inh_VisageGrammar
-       -- aterm        = VisageDump.aterm_Syn_VisageGrammar outputVisage
-       -- 
-       -- mirage = PassM.mirage_Syn_Grammar outputM
+          -- outputVisage = VisageDump.wrap_VisageGrammar (VisageDump.sem_VisageGrammar grammarV) VisageDump.Inh_VisageGrammar
+          -- aterm        = VisageDump.aterm_Syn_VisageGrammar outputVisage
+          -- 
+          -- mirage = PassM.mirage_Syn_Grammar outputM
 
-       parseErrorList   = map message2error (parseErrors)
-       mainErrors       = toList ( Pass1.errors_Syn_AG       output1
-                            Seq.>< Pass1a.errors_Syn_Grammar output1a
-                            Seq.>< Pass2.errors_Syn_Grammar  output2
-                            Seq.>< Pass2a.errors_Syn_Grammar output2a)
-       furtherErrors    = toList (Pass4e.errors_Syn_ExecutionPlan output4e)
---                           if loag flags'
---                           then toList (Pass3b.errors_Syn_Grammar output3b)
---                           else if kennedyWarren flags'
---                                then let errs3a = Pass3a.errors_Syn_Grammar output3a
---                                     in if Seq.null errs3a
---                                        then if ocaml flags'
---                                             then toList ( Pass4c.errors_Syn_ExecutionPlan output4c )
---                                             else if clean flags'
---                                                  then toList ( Pass4d.errors_Syn_ExecutionPlan output4d )
---                                                  else toList ( Pass4b.errors_Syn_ExecutionPlan output4b )
---                                        else toList errs3a
---                                else toList ( Pass3.errors_Syn_Grammar  output3
---                                              Seq.>< Pass4.errors_Syn_CGrammar output4)
+          parseErrorList   = map message2error (parseErrors)
+          mainErrors       = toList ( Pass1.errors_Syn_AG       output1
+                               Seq.>< Pass1a.errors_Syn_Grammar output1a
+                               Seq.>< Pass2.errors_Syn_Grammar  output2
+                               Seq.>< Pass2a.errors_Syn_Grammar output2a)
+          furtherErrors    = toList (Pass4e.errors_Syn_ExecutionPlan output4e)
+--                              if loag flags'
+--                              then toList (Pass3b.errors_Syn_Grammar output3b)
+--                              else if kennedyWarren flags'
+--                                   then let errs3a = Pass3a.errors_Syn_Grammar output3a
+--                                        in if Seq.null errs3a
+--                                           then if ocaml flags'
+--                                                then toList ( Pass4c.errors_Syn_ExecutionPlan output4c )
+--                                                else if clean flags'
+--                                                     then toList ( Pass4d.errors_Syn_ExecutionPlan output4d )
+--                                                     else toList ( Pass4b.errors_Syn_ExecutionPlan output4b )
+--                                           else toList errs3a
+--                                   else toList ( Pass3.errors_Syn_Grammar  output3
+--                                                 Seq.>< Pass4.errors_Syn_CGrammar output4)
 
-       errorList        = if null parseErrorList
-                          then mainErrors
-                               ++ if null (filter (PrErr.isError flags') mainErrors)
-                                  then furtherErrors
-                                  else []
-                          else [head parseErrorList]
+          errorList        = if null parseErrorList
+                             then mainErrors
+                                  ++ if null (filter (PrErr.isError flags') mainErrors)
+                                     then furtherErrors
+                                     else []
+                             else [head parseErrorList]
 
-       fatalErrorList = filter (PrErr.isError flags') errorList
+          fatalErrorList = filter (PrErr.isError flags') errorList
 
-       allErrors = if wignore flags'
-                   then fatalErrorList
-                   else errorsToFront flags' errorList
+          allErrors = if wignore flags'
+                      then fatalErrorList
+                      else errorsToFront flags' errorList
 
-       errorsToReport = take (wmaxerrs flags') allErrors
+          errorsToReport = take (wmaxerrs flags') allErrors
 
-       errorsToStopOn = if werrors flags'
-                         then errorList
-                         else fatalErrorList
+          errorsToStopOn = if werrors flags'
+                            then errorList
+                            else fatalErrorList
 
-       blocks1                    = (Pass1.blocks_Syn_AG output1) {-SM `Map.unionWith (++)` (Pass3.blocks_Syn_Grammar output3)-}
-       (pragmaBlocks, blocks2)    = Map.partitionWithKey (\(k, at) _->k==BlockPragma && at == Nothing) blocks1
-       (importBlocks, textBlocks) = Map.partitionWithKey (\(k, at) _->k==BlockImport && at == Nothing) blocks2
+          blocks1                    = (Pass1.blocks_Syn_AG output1) {-SM `Map.unionWith (++)` (Pass3.blocks_Syn_Grammar output3)-}
+          (pragmaBlocks, blocks2)    = Map.partitionWithKey (\(k, at) _->k==BlockPragma && at == Nothing) blocks1
+          (importBlocks, textBlocks) = Map.partitionWithKey (\(k, at) _->k==BlockImport && at == Nothing) blocks2
 
-       -- importBlocksTxt = vlist_sep "" . map addLocationPragma . concat . Map.elems $ importBlocks
-       -- textBlocksDoc   = vlist_sep "" . map addLocationPragma . Map.findWithDefault [] (BlockOther, Nothing) $ textBlocks
-       -- mainBlocksDoc   = vlist_sep "" . map addLocationPragma . Map.findWithDefault [] (BlockMain, Nothing) $ textBlocks
-       -- dataBlocksDoc   = vlist_sep "" . map addLocationPragma . Map.findWithDefault [] (BlockData, Nothing) $ textBlocks
-       -- recBlocksDoc    = vlist_sep "" . map addLocationPragma . Map.findWithDefault [] (BlockRec, Nothing) $ textBlocks
-       -- pragmaBlocksTxt = unlines . concat . map fst  . concat . Map.elems $ pragmaBlocks
-       -- textBlockMap    = Map.map (vlist_sep "" . map addLocationPragma) . Map.filterWithKey (\(_, at) _ -> at /= Nothing) $ textBlocks
+          -- importBlocksTxt = vlist_sep "" . map addLocationPragma . concat . Map.elems $ importBlocks
+          -- textBlocksDoc   = vlist_sep "" . map addLocationPragma . Map.findWithDefault [] (BlockOther, Nothing) $ textBlocks
+          -- mainBlocksDoc   = vlist_sep "" . map addLocationPragma . Map.findWithDefault [] (BlockMain, Nothing) $ textBlocks
+          -- dataBlocksDoc   = vlist_sep "" . map addLocationPragma . Map.findWithDefault [] (BlockData, Nothing) $ textBlocks
+          -- recBlocksDoc    = vlist_sep "" . map addLocationPragma . Map.findWithDefault [] (BlockRec, Nothing) $ textBlocks
+          -- pragmaBlocksTxt = unlines . concat . map fst  . concat . Map.elems $ pragmaBlocks
+          -- textBlockMap    = Map.map (vlist_sep "" . map addLocationPragma) . Map.filterWithKey (\(_, at) _ -> at /= Nothing) $ textBlocks
 
-       -- outputfile = if null output then outputFile flags' inputfile else output
-       -- mainFile | null output = outputFile flags' inputfile
-       --          | otherwise   = output
-       mainName = dropExtension $ takeFileName inputfile
+          -- outputfile = if null output then outputFile flags' inputfile else output
+          -- mainFile | null output = outputFile flags' inputfile
+          --          | otherwise   = output
+          mainName = dropExtension $ takeFileName inputfile
 
-       -- addLocationPragma :: ([String], Pos) -> PP_Doc
-       -- addLocationPragma (strs, p)
-       --   | genLinePragmas flags' =
-       --       ppLinePragma flags' (line p) (file p) >-< vlist (map pp strs)
-       --       >-< ppWithLineNr (\l -> ppLinePragma flags' (l+1) outputfile)
-       --   | otherwise = vlist (map pp strs)
+          -- addLocationPragma :: ([String], Pos) -> PP_Doc
+          -- addLocationPragma (strs, p)
+          --   | genLinePragmas flags' =
+          --       ppLinePragma flags' (line p) (file p) >-< vlist (map pp strs)
+          --       >-< ppWithLineNr (\l -> ppLinePragma flags' (l+1) outputfile)
+          --   | otherwise = vlist (map pp strs)
 
-       optionsGHC = option (unbox flags') "-fglasgow-exts" ++ option (bangpats flags') "-XBangPatterns"
-       option True s  = [s]
-       option False _ = []
-       optionsLine | null optionsGHC = ""
-                   | otherwise       = "{-# OPTIONS_GHC " ++ unwords optionsGHC ++ " #-}"
+          optionsGHC = option (unbox flags') "-fglasgow-exts" ++ option (bangpats flags') "-XBangPatterns"
+          option True s  = [s]
+          option False _ = []
+          optionsLine | null optionsGHC = ""
+                      | otherwise       = "{-# OPTIONS_GHC " ++ unwords optionsGHC ++ " #-}"
 
-       nrOfErrorsToReport = length $ filter (PrErr.isError flags') errorsToReport
-       nrOfWarningsToReport = length $ filter (not.(PrErr.isError flags')) errorsToReport
-       totalNrOfErrors = length $ filter (PrErr.isError flags') allErrors
-       totalNrOfWarnings = length $ filter (not.(PrErr.isError flags')) allErrors
-       additionalErrors = totalNrOfErrors - nrOfErrorsToReport
-       additionalWarnings = totalNrOfWarnings - nrOfWarningsToReport
-       pluralS n = if n == 1 then "" else "s"
+          nrOfErrorsToReport = length $ filter (PrErr.isError flags') errorsToReport
+          nrOfWarningsToReport = length $ filter (not.(PrErr.isError flags')) errorsToReport
+          totalNrOfErrors = length $ filter (PrErr.isError flags') allErrors
+          totalNrOfWarnings = length $ filter (not.(PrErr.isError flags')) allErrors
+          additionalErrors = totalNrOfErrors - nrOfErrorsToReport
+          additionalWarnings = totalNrOfWarnings - nrOfWarningsToReport
+          pluralS n = if n == 1 then "" else "s"
 
-       (outAgi, ext) = (undefined, undefined)
+          (outAgi, ext) = (undefined, undefined)
 
-       ext'      = fmap remAgi ext
-       outAgi1   = Pass1.wrap_AG             (Pass1.sem_AG               outAgi ) Pass1.Inh_AG             {Pass1.options_Inh_AG       = flags'}
-       agi       = Pass1.agi_Syn_AG          outAgi1
-       aspectAG  = AspectAGDump.wrap_Grammar (AspectAGDump.sem_Grammar grammar2  ) AspectAGDump.Inh_Grammar { AspectAGDump.options_Inh_Grammar  = flags'
-                                                                                                            , AspectAGDump.agi_Inh_Grammar      = agi
-                                                                                                            , AspectAGDump.ext_Inh_Grammar      = ext' } --marcos
+          ext'      = fmap remAgi ext
+          outAgi1   = Pass1.wrap_AG             (Pass1.sem_AG               outAgi ) Pass1.Inh_AG             {Pass1.options_Inh_AG       = flags'}
+          agi       = Pass1.agi_Syn_AG          outAgi1
+          aspectAG  = AspectAGDump.wrap_Grammar (AspectAGDump.sem_Grammar grammar2  ) AspectAGDump.Inh_Grammar { AspectAGDump.options_Inh_Grammar  = flags'
+                                                                                                               , AspectAGDump.agi_Inh_Grammar      = agi
+                                                                                                               , AspectAGDump.ext_Inh_Grammar      = ext' } --marcos
 
 -- TODO check this error printing code
 
---       printStr . formatErrors $ PrErr.pp_Syn_Errors output6
--- 
+      TH.runIO . printStr . formatErrors $ PrErr.pp_Syn_Errors output6
+
 --       if additionalErrors > 0
 --        then printStr $ "\nPlus " ++ show additionalErrors ++ " more error" ++ pluralS additionalErrors ++
 --                      if additionalWarnings > 0
@@ -277,9 +279,10 @@ compileString flags input
 --             isJust (Pass3b.ads_Syn_Grammar output3b)) $
 --         putStrLn (show $ fromJust $ Pass3b.ads_Syn_Grammar output3b)
 
-       in if not (null errorsToStopOn)  -- note: this may already run quite a part of the compilation...
-           then Left "Encountered errors" -- (show errorsToStopOn)
-           else Right (Pass4e.output_Syn_ExecutionPlan output4e)
+      if not (null errorsToStopOn)  -- note: this may already run quite a part of the compilation...
+           then fail "Encountered critical errors"
+
+           else return (Pass4e.output_Syn_ExecutionPlan output4e)
 --            do
 --               if genvisage flags'
 --                then writeFile (outputfile++".visage") (writeATerm aterm)

@@ -53,9 +53,9 @@ parseAG opts searchPath file = do
   (es,_,_,_,mesg) <- parseFile False opts searchPath file
   return (AG es, mesg)
 
-parseAGString :: Options -> String -> (AG,[Message Token Pos])
-parseAGString opts txt =
-  let (Pair (es,_,_) _, msgs) = parseString False opts "<string>" txt
+parseAGString :: Options -> String -> Pos -> (AG,[Message Token Pos])
+parseAGString opts txt pos =
+  let (Pair (es,_,_) _, msgs) = parseString False opts pos txt
   in (AG es, msgs)
 
 --marcos
@@ -91,12 +91,12 @@ parseFile' parsedfiles agi opts searchPath filename
             cont (es,f:fs,allfs,ext,msg)
               = do (ess,fss,allfss,_, msgs) <- parseFile' allfs agi opts searchPath' f
                    return (ess ++ es, fss ++ fs, allfss, ext, msg ++ msgs)
-        let (Pair (es,fls,ext) _ ,mesg) = parseString agi opts file text
+        let (Pair (es,fls,ext) _ ,mesg) = parseString agi opts (initPos file) text
         loopp stop cont (es,files ++ fls,file : parsedfiles, ext,mesg)
 
-parseString :: Bool -> Options -> String -> String -> (Pair ([Elem], [String], Maybe String) (Pair Input ()), [Message Token Pos])
-parseString agi opts file txt =
-  let tokens = input opts (initPos file) txt
+parseString :: Bool -> Options -> Pos -> String -> (Pair ([Elem], [String], Maybe String) (Pair Input ()), [Message Token Pos])
+parseString agi opts pos txt =
+  let tokens = input opts pos txt
       steps = parse (pElemsFiles agi) tokens
   in evalStepsMessages steps
  where
