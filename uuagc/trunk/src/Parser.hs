@@ -28,7 +28,6 @@ import HsTokenScanner
 import Options
 import Scanner(lowercaseKeywords)
 
-
 type AGParser = AnaParser Input  Pair Token Pos
 
 pIdentifier, pIdentifierU, pIdentifierExcl :: AGParser Identifier
@@ -54,6 +53,11 @@ parseAG opts searchPath file = do
   (es,_,_,_,mesg) <- parseFile False opts searchPath file
   return (AG es, mesg)
 
+parseAGString :: Options -> String -> (AG,[Message Token Pos])
+parseAGString opts txt =
+  let (Pair (es,_,_) _, msgs) = parseString False opts "<string>" txt
+  in (AG es, msgs)
+
 --marcos
 parseAGI :: Options -> [FilePath] -> String -> IO (AG, Maybe String)
 parseAGI opts searchPath file
@@ -71,6 +75,7 @@ depsAG opts searchPath file
 parseFile :: Bool -> Options -> [FilePath] -> String -> IO  ([Elem],[String],[String], Maybe String,[Message Token Pos ])
 parseFile = parseFile' []
 
+
 parseFile' :: [String] -> Bool -> Options -> [FilePath] -> String -> IO  ([Elem],[String],[String], Maybe String,[Message Token Pos ])
 parseFile' parsedfiles agi opts searchPath filename
  = do file <- normalise `fmap` resolveFile opts searchPath filename
@@ -82,15 +87,18 @@ parseFile' parsedfiles agi opts searchPath filename
             litMode = ".lag" `isSuffixOf` file
             (files,text) = if litMode then scanLit txt
                            else ([],txt)
-            tokens       = input opts (initPos file) text
-
-            steps = parse (pElemsFiles agi) tokens
             stop (_,fs,_,_,_) = null fs
             cont (es,f:fs,allfs,ext,msg)
               = do (ess,fss,allfss,_, msgs) <- parseFile' allfs agi opts searchPath' f
                    return (ess ++ es, fss ++ fs, allfss, ext, msg ++ msgs)
-        let (Pair (es,fls,ext) _ ,mesg) = evalStepsMessages steps
+        let (Pair (es,fls,ext) _ ,mesg) = parseString agi opts file text
         loopp stop cont (es,files ++ fls,file : parsedfiles, ext,mesg)
+
+parseString :: Bool -> Options -> String -> String -> (Pair ([Elem], [String], Maybe String) (Pair Input ()), [Message Token Pos])
+parseString agi opts file txt =
+  let tokens = input opts (initPos file) txt
+      steps = parse (pElemsFiles agi) tokens
+  in evalStepsMessages steps
  where
 
     --

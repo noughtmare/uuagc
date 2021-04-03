@@ -110,6 +110,9 @@ options: module, pretty, newtypes, wrappers, catas, semfuns, signatures, genline
 file: "src-ag/ExecutionPlan2Hs.ag"
 options: module, pretty, newtypes, wrappers, catas, semfuns, signatures, genlinepragmas, checkParseHaskell, kennedywarren
 
+file: "src-ag/ExecutionPlan2TH.ag"
+options: module, pretty, newtypes, wrappers, catas, semfuns, signatures, genlinepragmas, checkParseHaskell, kennedywarren
+
 file: "src-ag/ExecutionPlan2Clean.ag"
 options: module, pretty, newtypes, wrappers, catas, semfuns, signatures, genlinepragmas, checkParseHaskell, kennedywarren
 
