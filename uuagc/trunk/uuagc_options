@@ -68,6 +68,9 @@ options: module, pretty, newtypes, wrappers, catas, semfuns, signatures, genline
 file: "src-ag/PrintCode.ag"
 options: module, pretty, newtypes, wrappers, catas, semfuns, signatures, genlinepragmas, checkParseHaskell, kennedywarren
 
+file: "src-ag/Code2TH.ag"
+options: module, pretty, newtypes, wrappers, catas, semfuns, signatures, genlinepragmas, checkParseHaskell, kennedywarren
+
 file: "src-ag/PrintVisitCode.ag"
 options: module, pretty, newtypes, wrappers, catas, semfuns, signatures, genlinepragmas, checkParseHaskell, kennedywarren
 

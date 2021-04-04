@@ -37,6 +37,9 @@ import qualified Language.Haskell.Meta as Meta
 }
 
 {
+(.->) :: TH.Type -> TH.Type -> TH.Type
+(.->) x y = TH.AppT (TH.AppT TH.ArrowT x) y
+
 nobang :: TH.Bang
 nobang = TH.Bang TH.NoSourceUnpackedness TH.NoSourceStrictness	
 }
@@ -87,6 +90,10 @@ ATTR EProductions EProduction Visits Visit [ params : {[Identifier]} | | ]
 SEM ENonterminal | ENonterminal
   prods.params = @params
 
+ATTR EProductions EProduction [ classCtxs : ClassContext | | ]
+SEM ENonterminal | ENonterminal
+  prods.classCtxs = @classCtxs
+
 -------------------------------------------------------------------------------
 --  Default output
 -------------------------------------------------------------------------------
@@ -106,23 +113,23 @@ SEM ENonterminal
                               [ if dataTypes @lhs.options
                                   then [@loc.datatype]
                                   else []
-                              -- , if @loc.hasWrapper
-                              --     then [ @loc.wr_inh
-                              --          , @loc.wr_syn
-                              --          , @loc.wrapper
-                              --          ]
-                              --     else []
-                              -- , if folds @lhs.options
-                              --     then [@loc.sem_nt]
-                              --     else []
-                              -- , if semfuns @lhs.options
-                              --     then [ @loc.t_init
+                              , if @loc.hasWrapper
+                                  then [ @loc.wr_inh
+                                       , @loc.wr_syn
+                                       ]
+                                       ++ @loc.wrapper
+                                  else []
+                              , if folds @lhs.options
+                                  then @loc.sem_nt
+                                  else []
+                              , if semfuns @lhs.options
+                                  then [ @loc.t_init
                               --          , @loc.t_states
                               --          , @loc.k_states
                               --          , @prods.t_visits
                               --          , @prods.sem_prod
-                              --          ]
-                              --     else []
+                                       ]
+                                  else []
                               ]
                  loc.hasWrapper = @nt `Set.member` @lhs.wrappers
 
@@ -154,6 +161,17 @@ SEM ENonterminal
                                     Nothing -> []
 
 {
+classCtxsToCxt :: ClassContext -> TH.Cxt
+classCtxsToCxt cctx =
+  [ foldl TH.AppT
+          (TH.ConT (TH.mkName (getName con)))
+          (map (TH.VarT . TH.mkName) params)
+  | (con, params) <- cctx
+  ]
+
+classConstrsToCxt :: [Type] -> TH.Cxt
+classConstrsToCxt = map typeToTH
+
 typeToTH :: Type -> TH.Type
 typeToTH = either (error . ("Cannot convert type: " ++)) id . Meta.parseType . typeToHaskellString (error "Self types should have been resolved by now") []
 
@@ -195,7 +213,6 @@ SEM EChild
       loc.strNm  = recordFieldname @lhs.nt @lhs.con @name
       loc.field = (@loc.bang, @loc.tpTH)
       loc.fieldVar = (TH.mkName @loc.strNm, @loc.bang, @loc.tpTH)
-      loc.bang = TH.Bang TH.NoSourceUnpackedness (if strictData @lhs.options then TH.SourceStrict else TH.NoSourceStrictness)
   | EChild  lhs.datatype = case @kind of
                              ChildAttr -> empty  -- higher order attributes are not part of the data type
                              _         -> pure @loc.field
@@ -219,8 +236,10 @@ SEM ENonterminal
 
                  -- The sem_NT function is lazy in the AST: it depends on the application of "child"
                  -- rules to which extend the AST needs to be constructed.
-                 loc.sem_tp  = @loc.quantTH [{- context -}] (TH.AppT (TH.AppT TH.ArrowT (foldl TH.AppT (TH.ConT (identToName @nt)) (map TH.VarT @loc.t_params))) (foldl TH.AppT (TH.ConT (TH.mkName @loc.t_type)) (map TH.VarT @loc.t_params)))
+                 loc.sem_tp  = @loc.quantTH @loc.classTH (foldl TH.AppT (TH.ConT (identToName @nt)) (map TH.VarT @loc.t_params)
+                                                      .-> foldl TH.AppT (TH.ConT (TH.mkName @loc.t_type)) (map TH.VarT @loc.t_params))
                  loc.quantTH = quantsTH TH.ForallT @params
+                 loc.classTH = classCtxsToCxt @classCtxs
                  loc.sem_nt  = @loc.semPragma
                                ++
                                [ TH.SigD (TH.mkName @loc.semname) @loc.sem_tp
@@ -488,83 +507,99 @@ monadTypeTH opts
 -------------------------------------------------------------------------------
 --  Inh and Syn wrappers
 -------------------------------------------------------------------------------
--- SEM ENonterminal
---   | ENonterminal loc.wr_inh   = @loc.genwrap "Inh" @loc.wr_inhs
---                  loc.wr_syn   = @loc.genwrap "Syn" @loc.wr_syns
---                  loc.genwrap  = \nm attr -> "data" >#< nm >|< "_" >|< @nt >#< @loc.t_params >#< "=" >#< nm >|< "_" >|< @nt >#< "{"
---                                             >#< (ppCommas $ map (\(i,t) -> i >|< "_" >|< nm >|< "_" >|< @nt >#< "::"
---                                             >#< (@loc.addbang $ pp_parens $ typeToHaskellString (Just @nt) [] t)) attr) >#< "}"
---                  loc.synAttrs = fromJust $ Map.lookup @nt @lhs.inhmap
---                  loc.wr_inhs  = Map.toList $ @loc.wr_filter $ @loc.synAttrs
---                  loc.wr_inhs1 = Map.toList @loc.synAttrs
---                  loc.wr_filter = if lateHigherOrderBinding @lhs.options
---                                  then Map.delete idLateBindingAttr
---                                  else id
---                  loc.wr_syns  = Map.toList $ fromJust $ Map.lookup @nt @lhs.synmap
---                  loc.inhlist  = map (lhsname @lhs.options True . fst) @loc.wr_inhs
---                  loc.inhlist1 = map (lhsname @lhs.options True . fst) @loc.wr_inhs1
---                  loc.synlist  = map (lhsname @lhs.options False . fst) @loc.wr_syns
---                  loc.wrapname = "wrap_" ++ show @nt
---                  loc.inhname  = "Inh_" ++ show @nt
---                  loc.synname  = "Syn_" ++ show @nt
---                  loc.firstVisitInfo = Map.findWithDefault ManyVis @initial @nextVisits
---                  loc.wrapper  = @loc.wrapPragma
---                                 >-< (@loc.wrapname >#< "::" >#< @loc.quantPP >#< @loc.classPP >#< @loc.t_type >#< @loc.t_params >#< "->"
---                                       >#< @loc.inhname >#< @loc.t_params >#< "->" >#< ( if monadicWrappers @lhs.options then ppMonadType @lhs.options else empty) >#< pp_parens (@loc.synname >#< @loc.t_params))
---                                 >-< (@loc.wrapname >#< (@loc.addbang $ pp_parens (@loc.t_type >#< pp "act"))
+SEM ENonterminal
+  | ENonterminal loc.wr_inh   = @loc.genwrap "Inh" @loc.wr_inhs
+                 loc.wr_syn   = @loc.genwrap "Syn" @loc.wr_syns :: TH.Dec
+                 loc.genwrap  = \nm attr -> TH.DataD
+                                  []
+                                  (TH.mkName (nm ++ "_" ++ getName @nt))
+                                  (map TH.PlainTV @loc.t_params)
+                                  Nothing
+                                  [TH.RecC (TH.mkName (nm ++ "_" ++ getName @nt))
+                                           (map (\(i,t) -> ( TH.mkName (getName i ++ "_" ++ nm ++ "_" ++ getName @nt)
+                                                           , @loc.bang
+                                                           , either (error . ("Cannot convert type: " ++)) id
+                                                             $ Meta.parseType
+                                                             $ typeToHaskellString (Just @nt) [] t
+                                                           ))
+                                                attr)]
+                                  []
+                 loc.synAttrs = fromJust $ Map.lookup @nt @lhs.inhmap
+                 loc.wr_inhs  = Map.toList $ @loc.wr_filter $ @loc.synAttrs
+                 loc.wr_inhs1 = Map.toList @loc.synAttrs
+                 loc.wr_filter = if lateHigherOrderBinding @lhs.options
+                                 then Map.delete idLateBindingAttr
+                                 else id
+                 loc.wr_syns  = Map.toList $ fromJust $ Map.lookup @nt @lhs.synmap
+                 loc.inhlist  = map (lhsname @lhs.options True . fst) @loc.wr_inhs
+                 loc.inhlist1 = map (lhsname @lhs.options True . fst) @loc.wr_inhs1
+                 loc.synlist  = map (lhsname @lhs.options False . fst) @loc.wr_syns
+                 loc.wrapname = TH.mkName ("wrap_" ++ show @nt)
+                 loc.inhname  = TH.mkName ("Inh_" ++ show @nt)
+                 loc.synname  = TH.mkName ("Syn_" ++ show @nt)
+                 loc.firstVisitInfo = Map.findWithDefault ManyVis @initial @nextVisits
+                 loc.wrapper  = @loc.wrapPragma ++
+                                [ TH.SigD @loc.wrapname (@loc.quantTH @loc.classTH
+                                    (foldl TH.AppT (TH.ConT (TH.mkName @loc.t_type)) (map TH.VarT @loc.t_params)
+                                    .-> foldl TH.AppT (TH.ConT @loc.inhname) (map TH.VarT @loc.t_params)
+                                    .-> ( if monadicWrappers @lhs.options
+                                            then monadTypeTH @lhs.options
+                                            else id) (foldl TH.AppT (TH.ConT @loc.synname) (map TH.VarT @loc.t_params))))
+                                ]
+--                                 , (@loc.wrapname >#< (@loc.addbang $ pp_parens (@loc.t_type >#< pp "act"))
 --                                     >#< (@loc.addbang $ pp_parens (@loc.inhname
 --                                            >#< (ppSpaced $ map (@loc.addbangWrap . pp) @loc.inhlist)) >#< "="))
---                                 >-<
---                                 indent 3 (case @initialv of
---                                   -- case where there are no inherited or synthesized attributes
---                                   [] -> @loc.synname >#< " { }"
---                                   initvs@(initv:_) ->
---                                     let extra  = if dummyTokenVisit @lhs.options
---                                                  then pp $ dummyArg @lhs.options True
---                                                  else empty
---                                         unMonad | monadicWrappers @lhs.options = empty
---                                                 | otherwise                    = unMon @lhs.options
---                                         genSteps _      []           = []
---                                         genSteps curst (curv:nextvs) = setarg : dovis : genSteps nextst nextvs where
---                                           inCon = conNmTVisitIn @nt curv
---                                           outCon = conNmTVisitOut @nt curv
---                                           pat    = @loc.addbang $ pp_parens $ pat0
---                                           pat0   = outCon >#< ppSpaced (map (lhsname @lhs.options False) syns) >#< cont
---                                           cont   | null nextvs = empty
---                                                  | otherwise   = pp "sem"
---                                           inhs = Set.toList $ Map.findWithDefault Set.empty curv @prods.visituses
---                                           syns = Set.toList $ Map.findWithDefault Set.empty curv @prods.visitdefs
---                                           arg = inCon >#< ppSpaced (map (lhsname @lhs.options True) inhs)
---                                           setarg = "let" >#< @loc.addbangWrap (pp "arg" >|< curv) >#< "=" >#< arg
---                                           ind    = case Map.findWithDefault ManyVis curst @nextVisits of
---                                                    NoneVis  -> error "wrapper: initial state should have a next visit but it has none"
---                                                    OneVis _ -> empty
---                                                    ManyVis  -> @loc.k_type >|< "_v" >|< initv
---                                           nextst = curst + 1 -- This is not correct, but works both for KW and AOAG
---                                                              -- Should be lookup up based on visit
---                                           convert = case Map.lookup curv @lhs.allVisitKinds of
---                                                       Just kind -> case kind of
---                                                          VisitPure _  -> text "return"
---                                                          VisitMonadic -> empty
---                                           dovis  = pat >#< "<-" >#< convert >#< pp_parens 
---                                             ("inv_" >|< @nt >|< "_s" >|< curst >#< "sem" >#< ind 
---                                             >#< "arg" >|< curv >#< extra)
---                                     in unMonad >#< "("
---                                        >-< indent 2 (
---                                               "do" >#< ( @loc.addbang (pp "sem") >#< "<-" >#< "act"   -- run the per-node monadic code to get the initial state (of the root)
---                                                        >-< vlist (genSteps @initial initvs)
---                                                        >-< "return" >#< pp_parens (@loc.synname >#< ppSpaced @loc.synlist)
---                                                        )
---                                             )
---                                        >-< ")" )
---                                 >-< if lateHigherOrderBinding @lhs.options
+--                                   indent 3 (case @initialv of
+--                                     -- case where there are no inherited or synthesized attributes
+--                                     [] -> @loc.synname >#< " { }"
+--                                     initvs@(initv:_) ->
+--                                       let extra  = if dummyTokenVisit @lhs.options
+--                                                    then pp $ dummyArg @lhs.options True
+--                                                    else empty
+--                                           unMonad | monadicWrappers @lhs.options = empty
+--                                                   | otherwise                    = unMon @lhs.options
+--                                           genSteps _      []           = []
+--                                           genSteps curst (curv:nextvs) = setarg : dovis : genSteps nextst nextvs where
+--                                             inCon = conNmTVisitIn @nt curv
+--                                             outCon = conNmTVisitOut @nt curv
+--                                             pat    = @loc.addbang $ pp_parens $ pat0
+--                                             pat0   = outCon >#< ppSpaced (map (lhsname @lhs.options False) syns) >#< cont
+--                                             cont   | null nextvs = empty
+--                                                    | otherwise   = pp "sem"
+--                                             inhs = Set.toList $ Map.findWithDefault Set.empty curv @prods.visituses
+--                                             syns = Set.toList $ Map.findWithDefault Set.empty curv @prods.visitdefs
+--                                             arg = inCon >#< ppSpaced (map (lhsname @lhs.options True) inhs)
+--                                             setarg = "let" >#< @loc.addbangWrap (pp "arg" >|< curv) >#< "=" >#< arg
+--                                             ind    = case Map.findWithDefault ManyVis curst @nextVisits of
+--                                                      NoneVis  -> error "wrapper: initial state should have a next visit but it has none"
+--                                                      OneVis _ -> empty
+--                                                      ManyVis  -> @loc.k_type >|< "_v" >|< initv
+--                                             nextst = curst + 1 -- This is not correct, but works both for KW and AOAG
+--                                                                -- Should be lookup up based on visit
+--                                             convert = case Map.lookup curv @lhs.allVisitKinds of
+--                                                         Just kind -> case kind of
+--                                                            VisitPure _  -> text "return"
+--                                                            VisitMonadic -> empty
+--                                             dovis  = pat >#< "<-" >#< convert >#< pp_parens 
+--                                               ("inv_" >|< @nt >|< "_s" >|< curst >#< "sem" >#< ind 
+--                                               >#< "arg" >|< curv >#< extra)
+--                                       in unMonad >#< "("
+--                                          >-< indent 2 (
+--                                                 "do" >#< ( @loc.addbang (pp "sem") >#< "<-" >#< "act"   -- run the per-node monadic code to get the initial state (of the root)
+--                                                          >-< vlist (genSteps @initial initvs)
+--                                                          >-< "return" >#< pp_parens (@loc.synname >#< ppSpaced @loc.synlist)
+--                                                          )
+--                                               )
+--                                          >-< ")" )
+--                                   if lateHigherOrderBinding @lhs.options
 --                                     then indent 2 ("where" >#< lhsname @lhs.options True idLateBindingAttr >#< "=" >#< lateBindingFieldNm @lhs.mainName)
 --                                     else empty
---                  loc.wrapPragma = if parallelInvoke @lhs.options && not (monadicWrappers @lhs.options)
---                                   then noInlineTH @loc.wrapname  -- required for the use of unsafePerformIO in case of the IO monad
---                                   else if noInlinePragmas @lhs.options
---                                        then empty
---                                        else inlinableTH @loc.wrapname  -- ensure that the wrapper is exposed as inlinable
+--                                 ]
+                 loc.wrapPragma = if parallelInvoke @lhs.options && not (monadicWrappers @lhs.options)
+                                  then pure $ noInlineTH @loc.wrapname  -- required for the use of unsafePerformIO in case of the IO monad
+                                  else if noInlinePragmas @lhs.options
+                                       then empty
+                                       else pure $ inlinableTH @loc.wrapname  -- ensure that the wrapper is exposed as inlinable
 
 -------------------------------------------------------------------------------
 --  Collection of NT / Production sem funs references
@@ -628,14 +663,14 @@ ATTR EChildren [ | | argtps  USE {maybe id (.)} {id} : { TH.Type -> TH.Type }
 
 SEM EChild
   | EChild lhs.argtps   = case @kind of
-                            ChildSyntax     -> pure (typeToTH @tp `TH.AppT` TH.ArrowT `TH.AppT`)
-                            ChildReplace tp -> pure (typeToTH tp `TH.AppT` TH.ArrowT `TH.AppT`)
+                            ChildSyntax     -> pure (typeToTH @tp .->)
+                            ChildReplace tp -> pure (typeToTH tp .->)
                             _               -> empty  -- higher order attribute
            loc.argpats = case @kind of
                            ChildSyntax    -> Just (TH.VarP (TH.mkName (getName @name ++ "_")))                    -- no strictification of children semantics to allow infinite trees
                            ChildReplace _ -> Just (TH.VarP (TH.mkName (getName @name ++ "_")))
                            _              -> Nothing
-  | ETerm  lhs.argtps  = pure $ \res -> (typeToTH @tp) `TH.AppT` TH.ArrowT `TH.AppT` res
+  | ETerm  lhs.argtps  = pure $ \res -> (typeToTH @tp) .-> res
            loc.argpats = pure $ @loc.addbang $ TH.VarP (TH.mkName (fieldname @name))   -- terminals may be strict (perhaps this should become an option)
 
 -- {
@@ -658,7 +693,8 @@ SEM EProduction
 --                                               then arg
 --                                               else text "_") @children.argpats
                 loc.semname  = TH.mkName ("sem_" ++ show @lhs.nt ++ "_" ++ show @con)
-                loc.sem_tp   = @loc.quantTH2 @loc.classTH1 (@children.argtps (foldl TH.AppT @loc.t_type @loc.t_params))
+                loc.sem_tp   = @loc.quantTH2 @loc.classTH2 (@children.argtps (foldl TH.AppT @loc.t_type @loc.t_params))
+                loc.classTH2 = classCtxsToCxt @lhs.classCtxs ++ classConstrsToCxt @constraints
                 loc.quantTH2 = quantsTH TH.ForallT (@lhs.params ++ @params)
 --                 loc.sem_prod = @loc.semInlinePragma
 --                                >-< @loc.semname >#< "::" >#< @loc.sem_tp
@@ -1600,9 +1636,12 @@ SEM HsToken [ || tok:{(Pos,String)}]
 SEM ERule | ERule                   loc.addbang = \x -> if bangpats @lhs.options then TH.BangP x else x
 SEM Visit | Visit                   loc.addbang = \x -> if bangpats @lhs.options then TH.BangP x else x
 SEM ENonterminal | ENonterminal     loc.addbang = \x -> if bangpats @lhs.options then TH.BangP x else x
+                                    loc.bang    = TH.Bang TH.NoSourceUnpackedness (if strictData @lhs.options then TH.SourceStrict else TH.NoSourceStrictness)
 SEM EProduction | EProduction       loc.addbang = \x -> if bangpats @lhs.options then TH.BangP x else x
 SEM EChild | EChild                 loc.addbang = \x -> if bangpats @lhs.options then TH.BangP x else x
+                                    loc.bang    = TH.Bang TH.NoSourceUnpackedness (if strictData @lhs.options then TH.SourceStrict else TH.NoSourceStrictness)
 SEM EChild | ETerm                  loc.addbang = \x -> if bangpats @lhs.options then TH.BangP x else x
+                                    loc.bang    = TH.Bang TH.NoSourceUnpackedness (if strictData @lhs.options then TH.SourceStrict else TH.NoSourceStrictness)
 SEM VisitStep | ChildVisit          loc.addbang = \x -> if bangpats @lhs.options then TH.BangP x else x
 SEM Pattern | Alias Constr Product  loc.addbang  = \x -> if bangpats @lhs.options then TH.BangP x else x
 

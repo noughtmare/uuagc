@@ -1,0 +1,493 @@
+PRAGMA strictdata
+PRAGMA optimize
+PRAGMA bangpats
+PRAGMA strictwrap
+
+INCLUDE "Code.ag"
+INCLUDE "Patterns.ag"
+
+imports
+{
+import Data.Char (isAlphaNum)
+-- import Pretty
+import Code
+import Options
+import CommonTypes (attrname, _LOC, nullIdent)
+import Data.List(intersperse)
+import System.IO
+import System.Directory
+import System.FilePath
+import CommonTypes(BlockInfo, BlockKind(..))
+import Data.Char (isUpper)
+
+import Control.Applicative (Alternative (..))
+
+import qualified Language.Haskell.TH as TH
+import qualified Language.Haskell.TH.Syntax as TH
+import qualified Language.Haskell.Meta as Meta
+
+import Debug.Trace
+}
+
+{
+tupleT :: Bool -> Bool -> [TH.Type] -> TH.Type
+tupleT _       _      [tp] = tp
+tupleT unboxed nested tps
+  | nested = foldl1 (\xs x -> con 2 `TH.AppT` xs `TH.AppT` x) tps
+  | otherwise = foldl TH.AppT (con (length tps)) tps
+  where con = if unboxed then TH.UnboxedTupleT else TH.TupleT
+
+tupleP :: Bool -> Bool -> [TH.Pat] -> TH.Pat
+tupleP _       _      [tp] = tp
+tupleP unboxed nested tps
+  | nested = foldl1 (\xs x -> con [xs, x]) tps
+  | otherwise = con tps
+  where con = if unboxed then TH.UnboxedTupP else TH.TupP
+
+tupleE :: Bool -> Bool -> [TH.Exp] -> TH.Exp
+tupleE _       _      [tp] = tp
+tupleE unboxed nested tps
+  | nested = foldl1 (\xs x -> con [Just xs, Just x]) tps
+  | otherwise = con (map Just tps)
+  where con = if unboxed then TH.UnboxedTupE else TH.TupE
+
+-- This is a bit of a hack because the UUAG intermediate representation Code 
+-- doesn't group function declaration clauses. This functions recovers that structure.
+dedupFunDecls :: [TH.Dec] -> [TH.Dec]
+dedupFunDecls (x1@(TH.FunD n1 cl1) : x2@(TH.FunD n2 cl2) : xs)
+  | n1 == n2 = dedupFunDecls (TH.FunD n1 (cl1 ++ cl2) : xs)
+dedupFunDecls (x1:x2:xs) = x1 : dedupFunDecls (x2 : xs)
+dedupFunDecls xs = xs
+
+varConE :: String -> TH.Exp
+varConE xs@(x:_)
+  | isUpper x = TH.ConE (TH.mkName xs)
+  | otherwise = TH.VarE (TH.mkName xs)
+
+seqsE :: [TH.Exp] -> TH.Exp -> TH.Exp
+seqsE xs x = foldr (TH.AppE . TH.AppE (TH.VarE (TH.mkName "seq"))) x xs
+}
+
+-- ATTR Expr Exprs Decl Decls CaseAlt CaseAlts Lhs [ outputfile : {String} | | ]
+
+SEM Chunk
+  | Chunk loc.th = maybe id (:) @comment.th $ concat [@info.th, @dataDef.th, @cataFun.th, @semDom.th, @semWrapper.th, @semFunctions.th]
+
+ATTR Program                            [ options:{Options} | | th:{[TH.Dec]} ]
+
+ATTR Expr Exprs Decl Decls Chunk Chunks CaseAlts CaseAlt Lhs Pattern Patterns [ options:{Options} | | ]
+
+ATTR Expr Decl DataAlt Type NamedType [ nested:{Bool} | | ] -- pp:{PP_Doc} ]
+
+ATTR Exprs DataAlts Types NamedTypes Decls Chunk Chunks Lhs [ nested:{Bool} | | ] --pps : {PP_Docs} ]
+
+ATTR Chunk  [ | | th:{[TH.Dec]} ]
+ATTR Chunks [ | | th USE {++} {[]} : {[TH.Dec]} ]
+
+ATTR CaseAlt CaseAlts                   [ nested:{Bool} | | ] -- pps: {PP_Docs} ]
+
+SEM Program | Program
+  loc.options = @lhs.options { breadthFirst = breadthFirst @lhs.options && visit @lhs.options && cases @lhs.options && @ordered }
+
+SEM Program
+  | Program chunks.nested = nest @lhs.options
+
+SEM Program
+  | Program    lhs.th  = dedupFunDecls @chunks.th
+
+ATTR Decl     [ | | th   USE {error "can't combine decl th"} {Nothing} :{Maybe TH.Dec}
+                    stmt USE {error "con't combine decl stmt"} {Nothing}:{Maybe TH.Stmt}]
+ATTR Decls    [ | | th   USE {maybe id (:)} {[]} :{[TH.Dec]}
+                    stmt USE {maybe id (:)} {[]} :{[TH.Stmt]}]
+ATTR DataAlts [ | | th USE {:} {[]} :{[TH.Con]} ]
+ATTR DataAlt  [ | | th:{TH.Con} ]
+ATTR CaseAlts [ | | th USE {:} {[]} :{[TH.Match]} ]
+ATTR CaseAlt  [ | | th:{TH.Match} ]
+ATTR Type     [ | | th:{TH.Type} ]
+ATTR Types    [ | | th USE {:} {[]} :{[TH.Type]} ]
+ATTR Lhs      [ | | th:{TH.Exp -> TH.Dec} ]
+ATTR Expr     [ | | th :{TH.Exp}
+                    pat USE {error "can't combine expr pat"} {Nothing}:{Maybe TH.Pat}]
+ATTR Exprs    [ | | th  USE {:} {[]}:{[TH.Exp]}
+                    pat USE {maybe id (:)} {[]} :{[TH.Pat]} ]
+
+SEM Decl
+  | Decl       lhs.th      = pure $ @left.th @rhs.th
+  | Bind       lhs.stmt    = pure $ TH.BindS @left.pat @rhs.th
+  | BindLet    lhs.stmt    = pure $ TH.LetS [@left.th @rhs.th]
+  | Data       lhs.th      = pure $ TH.DataD []
+                                             (TH.mkName @name)
+                                             (map (TH.PlainTV . TH.mkName) @params)
+                                             Nothing
+                                             @alts.th
+                                             [TH.DerivClause Nothing (map (TH.ConT . TH.mkName) @derivings)]
+  | NewType    lhs.th      = pure $ TH.NewtypeD [] 
+                                                (TH.mkName @name)
+                                                (map (TH.PlainTV . TH.mkName) @params)
+                                                Nothing
+                                                (TH.NormalC (TH.mkName @con)
+                                                  [(TH.Bang TH.NoSourceUnpackedness TH.NoSourceStrictness, @tp.th)])
+                                                []
+  | Type       lhs.th      = pure $ TH.TySynD (TH.mkName @name)
+                                              (map (TH.PlainTV . TH.mkName) @params)
+                                              @tp.th
+  | TSig       lhs.th      = pure $ TH.SigD (TH.mkName @name) @tp.th
+  -- | Comment    lhs.th      = TODO TH doesn't support comments yet
+  -- | PragmaDecl lhs.th      = TODO: "THDec $ Th.PragmaD @txt" This probably needs a more precise PragmaDecl type
+  | Resume   lhs.(th,stmt) = if @monadic
+                             then (Nothing, Just (TH.BindS @left.pat @rhs.th))
+                             else (Just (@left.th @rhs.th), Nothing)
+  | EvalDecl   loc.strat   = if breadthFirstStrict @lhs.options
+                             then TH.VarE (TH.mkName "stepwiseEval")
+                             else TH.VarE (TH.mkName "lazyEval")
+               lhs.th      = pure $ if breadthFirst @lhs.options
+                             then @left.th $ TH.CaseE (TH.AppE @loc.strat @rhs.th)
+                                  [ TH.Match (TH.ConP (TH.mkName (@nt ++ "_Syn"))
+                                               [TH.VarP (TH.mkName "_val")])
+                                             (TH.NormalB (TH.VarE (TH.mkName "_val")))
+                                             []
+                                  ]
+                             else @left.th @rhs.th
+
+SEM Expr
+  | Let        lhs.th      = TH.LetE @decls.th @body.th
+               lhs.pat     = error "Cannot use let expression in pattern"
+  | Case       lhs.th      = TH.CaseE @expr.th @alts.th
+               lhs.pat     = error "Cannot use case expression in pattern"
+  | Do         lhs.th      = TH.DoE (@stmts.stmt ++ [TH.NoBindS (TH.VarE (TH.mkName "return") `TH.AppE` @body.th)])
+               lhs.pat     = error "Cannot use do expression in pattern"
+  | Lambda     loc.strictParams = if strictSems @lhs.options
+                                  then @args.th
+                                  else []
+               loc.addBang = if bangpats @lhs.options
+                             then TH.BangP
+                             else id
+               lhs.th      = TH.LamE (map @loc.addBang @args.pat) (seqsE @loc.strictParams @body.th)
+               lhs.pat     = error "Cannot use lambda expression in pattern"
+  | TupleExpr  lhs.th      = tupleE False @lhs.nested @exprs.th
+               lhs.pat     = pure $ tupleP False @lhs.nested @exprs.pat
+  | UnboxedTupleExpr
+               lhs.th      = tupleE True @lhs.nested @exprs.th
+               lhs.pat     = pure $ tupleP True @lhs.nested @exprs.pat
+  | App        lhs.th      = foldl TH.AppE (varConE @name) @args.th
+               lhs.pat     = pure $ TH.ConP (TH.mkName @name) @args.pat
+  | SimpleExpr lhs.th      = varConE @txt
+               lhs.pat     = pure $ TH.VarP (TH.mkName @txt)
+  | TextExpr   lhs.th      = either error id $ Meta.parseExp (unlines @lns)
+               lhs.pat     = error "Figure out what to do with TextExpr pat"
+  | Trace      lhs.th      = TH.VarE (TH.mkName "trace") `TH.AppE` (TH.LitE (TH.StringL @txt)) `TH.AppE` @expr.th
+               lhs.pat     = error "Cannot use trace expression in pattern"
+  -- | PragmaExpr lhs.th      = TODO Figure out what to do with PragmaExpr
+                             --     op = if @onNewLine
+                             --          then (>-<)
+                             --          else (>#<)
+                             --     leftOp x y = if @onLeftSide
+                             --                  then x `op` y
+                             --                  else y
+                             --     rightOp x y = if @onLeftSide
+                             --                   then x
+                             --                   else x `op` y
+                             -- in pp_parens (pragmaDoc `leftOp` @expr.pp `rightOp` pragmaDoc)
+  --              lhs.pat     = error "Cannot use pragma expression in pattern"
+  | LineExpr   lhs.th      = @expr.th -- TODO do something with this line pragma
+                                      -- >-< "{-# LINE" >#< ppWithLineNr (\n -> pp $ show $ n + 1) >#< show @lhs.outputfile >#< "#-}"
+                                      -- >-< ""
+               lhs.pat     = error "Cannot use line pragma expression in pattern"
+  | TypedExpr  lhs.th      = TH.SigE @expr.th @tp.th
+               lhs.pat     = error "Cannot use typed expression in pattern"
+  | ResultExpr lhs.th      = if breadthFirst @lhs.options
+                             then TH.VarE (TH.mkName "final") `TH.AppE` (TH.ConE (TH.mkName (@nt ++ "_Syn")) `TH.AppE` @expr.th)
+                             else @expr.th
+               lhs.pat     = error "Cannot use result expression in pattern"
+  | InvokeExpr lhs.th      = if breadthFirst @lhs.options
+                             then TH.VarE (TH.mkName "invoke")
+                                 `TH.AppE` @expr.th
+                                 `TH.AppE` (TH.ConE (TH.mkName (@nt ++ "_Inh")) `TH.AppE` (TH.TupE (map Just @args.th)))
+                             else foldl TH.AppE @expr.th @args.th
+               lhs.pat     = error "Cannot use invoke expression in pattern"
+  | ResumeExpr lhs.th      = if breadthFirst @lhs.options
+                             then TH.VarE (TH.mkName "resume")
+                                 `TH.AppE` @expr.th
+                                 `TH.AppE` TH.LamE [TH.TildeP (TH.ConP (TH.mkName (@nt ++ "_Syn")) [TH.VarP (TH.mkName "_inh_arg")])]
+                                                   (TH.LetE [@left.th (TH.VarE (TH.mkName "_inh_arg"))] @rhs.th)
+                             else TH.CaseE @expr.th [TH.Match @left.pat (TH.NormalB @rhs.th) []]
+               lhs.pat     = error "Cannot use resume expression in pattern"
+  | SemFun     loc.strictParams = if strictSems @lhs.options
+                                  then @args.th
+                                  else []
+               loc.addBang = if bangpats @lhs.options then TH.BangP else id
+               lhs.th      = if breadthFirst @lhs.options
+                             then TH.ConE (TH.mkName "Child")
+                                 `TH.AppE` TH.LamE [TH.ConP (TH.mkName (@nt ++ "_Inh")) [TH.TupP (map @loc.addBang @args.pat)]]
+                                                   (seqsE @loc.strictParams @body.th)
+                             else if null @args.pat
+                                  then @body.th
+                                  else TH.LamE (map @loc.addBang @args.pat)
+                                               (seqsE @loc.strictParams @body.th)
+               lhs.pat     = error "Cannot use semfun expression in pattern"
+
+SEM CaseAlt
+  | CaseAlt    lhs.th     = TH.Match @left.pat (TH.NormalB @expr.th) []
+
+ATTR NamedType  [ | | th:{TH.VarBangType} ]
+ATTR NamedTypes [ | | th USE {:} {[]} :{[TH.VarBangType]} ]
+
+SEM DataAlt
+  | DataAlt    lhs.th      = TH.NormalC (TH.mkName @name) (map (\x -> (@lhs.strictPre, x)) @args.th)
+  | Record     lhs.th      = TH.RecC (TH.mkName @name) @args.th
+
+SEM NamedType
+  | Named      lhs.th      = if @strict
+                             then (TH.mkName @name, TH.Bang TH.NoSourceUnpackedness TH.SourceStrict, @tp.th)
+                             else (TH.mkName @name, TH.Bang TH.NoSourceUnpackedness TH.NoSourceStrictness, @tp.th)
+
+ATTR Lhs [ | | pat:{TH.Pat} ]
+
+SEM Lhs
+--   | Pattern3 TupleLhs UnboxedTupleLhs
+--       loc.addStrictGuard = if strictCases @lhs.options && @loc.hasStrictVars then \v -> v >#< "|" >#< @loc.strictGuard else id
+--   | Pattern3
+--       loc.strictGuard = @pat3.strictVars `ppMultiSeqH` (pp "True")
+--       loc.hasStrictVars = not (null @pat3.strictVars)
+  -- | TupleLhs UnboxedTupleLhs
+  --     loc.strictGuard = if stricterCases @lhs.options && not @lhs.isDeclOfLet
+  --                       then map text @comps `ppMultiSeqH` (pp "True")
+  --                       else pp "True"
+  --     loc.hasStrictVars = not (null @comps)
+
+  -- | Fun
+  --     loc.addStrictGuard = if strictSems @lhs.options && @loc.hasStrictVars then \v -> v >#< "|" >#< @loc.strictGuard else id
+  --     loc.hasStrictVars  = not (null @args.th)
+  --     loc.strictGuard    = @args.th `ppMultiSeqH` (pp "True")
+
+  | TupleLhs UnboxedTupleLhs Fun
+      loc.addBang = if bangpats @lhs.options then TH.BangP else id
+
+  | Pattern3   lhs.pat      = error "pat Deal with Pattern3" -- @loc.addStrictGuard @pat3.pp
+               lhs.th       = \x -> TH.ValD @pat3.th (TH.NormalB (seqsE (map TH.VarE @pat3.strictVars) x)) []
+  | Pattern3SM lhs.pat      = error "pat Deal with Pattern3SM" -- @pat3.th'
+               lhs.th       = error "th Deal with Pattern3SM"
+  | TupleLhs   loc.pat      = tupleP False @lhs.nested (map (@loc.addBang . TH.VarP . TH.mkName) @comps) -- @loc.addStrictGuard $ ppTuple @lhs.nested (map (@loc.addBang . text) @comps)
+               lhs.th       = \x -> TH.ValD @loc.pat (TH.NormalB x) []
+  | UnboxedTupleLhs   lhs.pat      = error "pat Deal with UnboxedTupleLhs" -- @loc.addStrictGuard $ ppUnboxedTuple @lhs.nested (map (@loc.addBang . text) @comps)
+                      lhs.th       = error "th Deal with UnboxedTupleLhs"
+  | Fun        lhs.pat      = error "pat Deal with Fun" -- @loc.addStrictGuard (@name >#< hv_sp (map @loc.addBang @args.th))
+               lhs.th       = \x -> TH.FunD (TH.mkName @name) [TH.Clause (map @loc.addBang @args.pat) (TH.NormalB x) []]
+  | Unwrap     lhs.pat      = error "pat Deal with Unwrap" -- pp_parens (@name >#< @sub.pp)
+               lhs.th       = error "th Deal with Unwrap"
+
+SEM Type
+  | Arr        lhs.th       = TH.AppT (TH.AppT TH.ArrowT @left.th) @right.th
+
+  | TypeApp
+      lhs.th = foldl TH.AppT @func.th @args.th
+
+  | CtxApp
+      lhs.th = TH.ForallT [] (map (\(n,ns) -> foldl (\xs x -> TH.AppT xs (TH.ConT (TH.mkName x))) (TH.ConT (TH.mkName n)) ns) @left) @right.th
+  | QuantApp
+      lhs.th = error ("Deal with quant: " ++ @left) -- >#< @right.pp
+
+  | TupleType  lhs.th      = tupleT False @lhs.nested @tps.th
+
+  | UnboxedTupleType  lhs.th      = tupleT True @lhs.nested @tps.th
+
+  | List       lhs.th      = TH.ListT `TH.AppT` @tp.th
+
+  | SimpleType lhs.th      = TH.ConT (TH.mkName @txt)
+
+  | NontermType  lhs.th    = foldl TH.AppT (TH.ConT (TH.mkName (@loc.prefix ++ @name))) (map (TH.VarT . TH.mkName) @params)
+                 loc.prefix = if @deforested
+                              then "T_"
+                              else ""
+  | TMaybe       lhs.th    = TH.ConT (TH.mkName "Maybe") `TH.AppT` @tp.th
+  | TEither      lhs.th    = TH.ConT (TH.mkName "Either") `TH.AppT` @left.th `TH.AppT` @right.th
+  | TMap         lhs.pp    = TH.ConT (TH.mkName "Data.Map.Map") `TH.AppT` @key.th `TH.AppT` @value.th
+  | TIntMap      lhs.pp    = TH.ConT (TH.mkName "Data.IntMap.IntMap") `TH.AppT` @value.th
+  | TSet         lhs.pp    = TH.ConT (TH.mkName "Data.Set.Set") `TH.AppT` @tp.th
+  | TIntSet      lhs.pp    = TH.ConT (TH.mkName "Data.IntSet.IntSet")
+
+
+-------------------------------------------------------------------------------
+--         Strict data fields
+-------------------------------------------------------------------------------
+
+ATTR DataAlt DataAlts [ strictPre: {TH.Bang} | | ]
+
+SEM Decl
+  | Data alts.strictPre = if @strict then TH.Bang TH.NoSourceUnpackedness TH.SourceStrict 
+                                     else TH.Bang TH.NoSourceUnpackedness TH.NoSourceStrictness
+
+-------------------------------------------------------------------------------
+--         Strict variables
+-------------------------------------------------------------------------------
+
+ATTR Pattern Patterns [ | | strictVars USE {++} {[]} : {[TH.Name]} ]
+SEM Pattern
+  | Alias
+      loc.strictVar
+        = if strictCases @lhs.options && not @lhs.isDeclOfLet
+          then [@loc.varName]
+          else []
+      loc.strictPatVars
+        = if stricterCases @lhs.options && not @lhs.isDeclOfLet
+          then @pat.strictVars
+          else []
+      lhs.strictVars
+        = @loc.strictVar ++ @loc.strictPatVars
+  | Irrefutable
+      lhs.strictVars = []
+
+-------------------------------------------------------------------------------
+--         Pretty printing patterns
+-------------------------------------------------------------------------------
+
+ATTR Patterns [ | | th USE {:} {[]} : {[TH.Pat]} ]
+
+SEM Pattern
+  | Constr Product Alias
+      loc.addBang = if bangpats @lhs.options && not @lhs.isDeclOfLet && not @lhs.belowIrrefutable then TH.BangP else id
+
+SEM Pattern [ | | th:{TH.Pat} ]
+  | Constr  lhs.th     = @loc.addBang $ TH.ConP (TH.mkName (getName @name)) @pats.th
+  | Product lhs.th     = @loc.addBang $ TH.TupP @pats.th
+  | Alias   loc.varName  = TH.mkName (attrname @lhs.options False @field @attr)
+            lhs.th     = @loc.addBang $ if @pat.isUnderscore
+                          then TH.VarP @loc.varName
+                          else TH.AsP @loc.varName @pat.th
+  | Irrefutable lhs.th = TH.TildeP @pat.th
+  | Underscore lhs.th  = TH.WildP
+
+SEM Pattern [ | | isUnderscore:{Bool}]
+ | Constr      lhs.isUnderscore = False
+ | Product     lhs.isUnderscore = False
+ | Alias       lhs.isUnderscore = False
+ | Underscore  lhs.isUnderscore = True
+
+ATTR Pattern Patterns [ belowIrrefutable : Bool | | ]
+SEM Pattern
+  | Irrefutable
+      pat.belowIrrefutable = True
+
+SEM Lhs
+  | Pattern3 Pattern3SM
+      pat3.belowIrrefutable = False
+
+-------------------------------------------------------------------------------
+--         Pretty printing patterns for SM
+-------------------------------------------------------------------------------
+
+-- SEM Patterns [ | | th' : {[TH.Pat]} ]
+--   | Cons lhs.th' = @hd.th' : @tl.th'
+--   | Nil  lhs.th' = []
+-- 
+-- SEM Pattern [ | | th':{TH.Pat} ]
+--   | Constr  lhs.th'     = pp_parens $ @name >#< hv_sp (map pp_parens @pats.th')
+--   | Product lhs.th'     = pp_block "(" ")" "," @pats.th'
+--   | Alias   lhs.th'     = let attribute | @field == _LOC || @field == nullIdent = locname' @attr
+--                                         | otherwise                             = attrname @lhs.options False @field @attr
+--                           in attribute >|< "@" >|< @pat.th'
+--   | Irrefutable lhs.th' = text "~" >|< pp_parens @pat.pp
+--   | Underscore lhs.th'  = text "_"
+-- 
+-- {
+-- locname' :: Identifier -> [Char]
+-- locname' n = "_loc_" ++ getName n
+-- }
+
+-------------------------------------------------------------------------------
+--         Determine if inside a Let
+-------------------------------------------------------------------------------
+
+ATTR Chunks Chunk Decls Decl Lhs Pattern Patterns [ isDeclOfLet : Bool | | ]
+SEM Program
+  | Program
+      chunks.isDeclOfLet = False
+
+SEM Expr
+  | Let
+      decls.isDeclOfLet = True
+  | Do
+      stmts.isDeclOfLet = False
+  | ResumeExpr
+      left.isDeclOfLet = False
+
+SEM CaseAlt
+  | CaseAlt
+      left.isDeclOfLet = False
+
+
+
+-------------------------------------------------------------------------------
+--         Alternative code printing to separate modules
+-------------------------------------------------------------------------------
+
+-- ATTR Program [ mainBlocksDoc : PP_Doc | | genIO : {IO ()} ]
+-- ATTR Program Chunks Chunk
+--   [ importBlocks : PP_Doc
+--     pragmaBlocks : String
+--     textBlocks : PP_Doc
+--     textBlockMap : {Map BlockInfo PP_Doc}
+--     optionsLine : String
+--     mainFile : String
+--     mainName : String
+--     moduleHeader : {String -> String -> String -> Bool -> String}
+--      | | ]
+-- 
+-- SEM Program
+--   | Program
+--       loc.mainModuleFile = @lhs.mainFile
+--       loc.genMainModule
+--         = writeModule @loc.mainModuleFile
+--             ( [ pp $ @lhs.pragmaBlocks
+--               , pp $ @lhs.optionsLine
+--               , pp $ @lhs.moduleHeader @lhs.mainName "" "" False
+--               , pp $ ("import " ++ @lhs.mainName ++ "_common\n")
+--               ]
+--               ++ map pp @chunks.imports
+--               ++ map vlist @chunks.appendMain
+--               ++ [@lhs.mainBlocksDoc]
+--             )
+-- 
+--       loc.commonFile = replaceBaseName @lhs.mainFile (takeBaseName @lhs.mainFile ++ "_common")
+--       loc.genCommonModule
+--         = writeModule @loc.commonFile
+--               ( [ pp $ @lhs.pragmaBlocks
+--                 , pp $ @lhs.optionsLine
+--                 , pp $ @lhs.moduleHeader @lhs.mainName "_common" "" True
+--                 , @lhs.importBlocks
+--                 , @lhs.textBlocks
+--                 ]
+--                 ++ map vlist @chunks.appendCommon
+--               )
+-- 
+-- 
+-- {
+-- renderDocs :: [PP_Doc] -> String
+-- renderDocs pps = foldr (.) id (map (\d -> (disp d 50000) . ( '\n':) ) pps) ""
+-- }
+-- 
+-- ATTR Chunk Chunks [ | | imports USE {++} {[]} : {[String]} ]
+-- SEM Chunk
+--   | Chunk
+--       lhs.imports = ["import " ++ @lhs.mainName ++ "_" ++ @name ++ "\n"]
+-- 
+-- ATTR Chunk Chunks [ | | appendCommon, appendMain USE {++} {[]} : {[[PP_Doc]]} ]
+-- 
+-- SEM Chunk
+--   | Chunk
+--       lhs.appendCommon
+--         = [ [@comment.pp]
+--           , @dataDef.pps
+--           , @semDom.pps
+--           , if reference @lhs.options then @semWrapper.pps else []
+--           ]
+--       lhs.appendMain
+--         = [ [@comment.pp]
+--           , @cataFun.pps
+--           , if reference @lhs.options then [] else @semWrapper.pps
+--           ]
+-- 
+-- SEM Chunk
+--   | Chunk
+--       loc.exports = concat $ intersperse "," @semNames
+-- 

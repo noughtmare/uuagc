@@ -80,6 +80,7 @@ library
     , Code
     , CodeSyntax
     , CodeSyntaxDump
+    , Code2TH
     , ConcreteSyntax
     , DeclBlocks
     , DefaultRules

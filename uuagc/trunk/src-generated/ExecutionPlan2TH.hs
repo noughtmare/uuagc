@@ -71,11 +71,25 @@ import Control.Monad.Identity (Identity)
 import qualified Control.Monad.Identity
 {-# LINE 39 "src-ag/ExecutionPlan2TH.ag" #-}
 
+(.->) :: TH.Type -> TH.Type -> TH.Type
+(.->) x y = TH.AppT (TH.AppT TH.ArrowT x) y
+
 nobang :: TH.Bang
 nobang = TH.Bang TH.NoSourceUnpackedness TH.NoSourceStrictness	
-{-# LINE 77 "src-generated/ExecutionPlan2TH.hs" #-}
+{-# LINE 80 "src-generated/ExecutionPlan2TH.hs" #-}
 
-{-# LINE 156 "src-ag/ExecutionPlan2TH.ag" #-}
+{-# LINE 163 "src-ag/ExecutionPlan2TH.ag" #-}
+
+classCtxsToCxt :: ClassContext -> TH.Cxt
+classCtxsToCxt cctx =
+  [ foldl TH.AppT
+          (TH.ConT (TH.mkName (getName con)))
+          (map (TH.VarT . TH.mkName) params)
+  | (con, params) <- cctx
+  ]
+
+classConstrsToCxt :: [Type] -> TH.Cxt
+classConstrsToCxt = map typeToTH
 
 typeToTH :: Type -> TH.Type
 typeToTH = either (error . ("Cannot convert type: " ++)) id . Meta.parseType . typeToHaskellString (error "Self types should have been resolved by now") []
@@ -85,20 +99,20 @@ identToName = TH.mkName . getName
 
 quantsTH :: ([TH.TyVarBndr] -> TH.Cxt -> x -> x) -> [Identifier] -> TH.Cxt -> x -> x
 quantsTH foral ids ctx con = snd $ foldr (\x ~(b, xs) -> (False, foral [] (if b then ctx else []) xs)) (True, con) ids
-{-# LINE 89 "src-generated/ExecutionPlan2TH.hs" #-}
+{-# LINE 103 "src-generated/ExecutionPlan2TH.hs" #-}
 
-{-# LINE 181 "src-ag/ExecutionPlan2TH.ag" #-}
+{-# LINE 199 "src-ag/ExecutionPlan2TH.ag" #-}
 
 conTH :: TH.Name -> Either [TH.VarBangType] [TH.BangType] -> TH.Con
 conTH nt (Left args) = TH.RecC nt args
 conTH nt (Right args) = TH.NormalC nt args
-{-# LINE 96 "src-generated/ExecutionPlan2TH.hs" #-}
+{-# LINE 110 "src-generated/ExecutionPlan2TH.hs" #-}
 
-{-# LINE 380 "src-ag/ExecutionPlan2TH.ag" #-}
+{-# LINE 399 "src-ag/ExecutionPlan2TH.ag" #-}
 type VisitStateState = (VisitIdentifier,StateIdentifier, StateIdentifier)
-{-# LINE 100 "src-generated/ExecutionPlan2TH.hs" #-}
+{-# LINE 114 "src-generated/ExecutionPlan2TH.hs" #-}
 
-{-# LINE 476 "src-ag/ExecutionPlan2TH.ag" #-}
+{-# LINE 495 "src-ag/ExecutionPlan2TH.ag" #-}
 
 -- conNmTVisit nt vId      = "T_" >|< nt >|< "_v"    >|< vId
 -- conNmTVisitIn nt vId    = "T_" >|< nt >|< "_vIn"  >|< vId
@@ -109,18 +123,18 @@ monadTypeTH :: Options -> TH.Type -> TH.Type
 monadTypeTH opts
   | parallelInvoke opts = TH.AppT (TH.ConT (TH.mkName "IO"))
   | otherwise           = TH.AppT (TH.ConT (TH.mkName "Identity"))
-{-# LINE 113 "src-generated/ExecutionPlan2TH.hs" #-}
+{-# LINE 127 "src-generated/ExecutionPlan2TH.hs" #-}
 
-{-# LINE 830 "src-ag/ExecutionPlan2TH.ag" #-}
+{-# LINE 866 "src-ag/ExecutionPlan2TH.ag" #-}
 
 resultValName :: String
 resultValName = "__result_"
 
 nextStName :: String
 nextStName = "__st_"
-{-# LINE 122 "src-generated/ExecutionPlan2TH.hs" #-}
+{-# LINE 136 "src-generated/ExecutionPlan2TH.hs" #-}
 
-{-# LINE 901 "src-ag/ExecutionPlan2TH.ag" #-}
+{-# LINE 937 "src-ag/ExecutionPlan2TH.ag" #-}
 
 parResultName :: String
 parResultName = "__outcome_"
@@ -131,9 +145,9 @@ parResultName = "__outcome_"
 --   FormatLetLine -> "let" >#< decl >#< "in"
 --   FormatDo | declPure  -> "let" >#< decl
 --            | otherwise -> pp decl
-{-# LINE 135 "src-generated/ExecutionPlan2TH.hs" #-}
+{-# LINE 149 "src-generated/ExecutionPlan2TH.hs" #-}
 
-{-# LINE 1227 "src-ag/ExecutionPlan2TH.ag" #-}
+{-# LINE 1263 "src-ag/ExecutionPlan2TH.ag" #-}
 
 data NonLocalAttr
   = AttrInh Identifier Identifier
@@ -164,23 +178,23 @@ mkNonLocalAttr False = AttrSyn
 noParameters :: Type -> Bool
 noParameters (Haskell _)   = True
 noParameters (NT _ args _) = null args
-{-# LINE 168 "src-generated/ExecutionPlan2TH.hs" #-}
+{-# LINE 182 "src-generated/ExecutionPlan2TH.hs" #-}
 
-{-# LINE 1336 "src-ag/ExecutionPlan2TH.ag" #-}
+{-# LINE 1372 "src-ag/ExecutionPlan2TH.ag" #-}
 
 unionWithSum = Map.unionWith (+)
-{-# LINE 173 "src-generated/ExecutionPlan2TH.hs" #-}
+{-# LINE 187 "src-generated/ExecutionPlan2TH.hs" #-}
 
-{-# LINE 1359 "src-ag/ExecutionPlan2TH.ag" #-}
+{-# LINE 1395 "src-ag/ExecutionPlan2TH.ag" #-}
 
 uwSetUnion :: (Ord a, Ord b) => Map a (Set b) -> Map a (Set b) -> Map a (Set b)
 uwSetUnion = Map.unionWith Set.union
 
 uwMapUnion :: (Ord a, Ord b) => Map a (Map b c) -> Map a (Map b c) -> Map a (Map b c)
 uwMapUnion = Map.unionWith Map.union
-{-# LINE 182 "src-generated/ExecutionPlan2TH.hs" #-}
+{-# LINE 196 "src-generated/ExecutionPlan2TH.hs" #-}
 
-{-# LINE 1576 "src-ag/ExecutionPlan2TH.ag" #-}
+{-# LINE 1612 "src-ag/ExecutionPlan2TH.ag" #-}
 
 -- renderDocs :: [PP_Doc] -> String
 -- renderDocs pps = foldr (.) id (map (\d -> (disp d 50000) . ( '\n':) ) pps) ""
@@ -198,9 +212,9 @@ uwMapUnion = Map.unionWith Map.union
 --   where
 --     output = renderDocs docs
 --     dumpIt = writeFile path output
-{-# LINE 202 "src-generated/ExecutionPlan2TH.hs" #-}
+{-# LINE 216 "src-generated/ExecutionPlan2TH.hs" #-}
 
-{-# LINE 1723 "src-ag/ExecutionPlan2TH.ag" #-}
+{-# LINE 1762 "src-ag/ExecutionPlan2TH.ag" #-}
 
 noInlineTH :: TH.Name -> TH.Dec
 noInlineTH = pragmaBindingTH TH.NoInline
@@ -242,7 +256,7 @@ pragmaBindingTH inl nm = TH.PragmaD (TH.InlineP nm inl TH.FunLike TH.AllPhases)
 --     then pp $ "{-# OPTIONS_GHC -feager-blackholing #-}"
 --     else empty
 --   ]
-{-# LINE 246 "src-generated/ExecutionPlan2TH.hs" #-}
+{-# LINE 260 "src-generated/ExecutionPlan2TH.hs" #-}
 -- EChild ------------------------------------------------------
 -- wrapper
 data Inh_EChild  = Inh_EChild { allInitStates_Inh_EChild :: (Map NontermIdent Int), con_Inh_EChild :: (ConstructorIdent), importBlocks_Inh_EChild :: ([String]), mainFile_Inh_EChild :: (String), mainName_Inh_EChild :: (String), moduleHeader_Inh_EChild :: (String -> String -> String -> Bool -> String), nt_Inh_EChild :: (NontermIdent), options_Inh_EChild :: (Options), pragmaBlocks_Inh_EChild :: (String), textBlocks_Inh_EChild :: ([String]) }
@@ -285,16 +299,16 @@ sem_EChild_EChild arg_name_ arg_tp_ arg_kind_ _ _ _ = T_EChild (return st2) wher
          _strNm = rule1 _lhsIcon _lhsInt arg_name_
          _field = rule2 _bang _tpTH
          _fieldVar = rule3 _bang _strNm _tpTH
-         _bang = rule4 _lhsIoptions
          _lhsOdatatype :: Maybe TH.BangType
-         _lhsOdatatype = rule5 _field arg_kind_
+         _lhsOdatatype = rule4 _field arg_kind_
          _lhsOargnamesw ::  Maybe TH.Exp 
-         _lhsOargnamesw = rule6 _nt arg_kind_ arg_name_
+         _lhsOargnamesw = rule5 _nt arg_kind_ arg_name_
          _lhsOargtps ::   Maybe (TH.Type -> TH.Type)  
-         _lhsOargtps = rule7 arg_kind_ arg_tp_
-         _argpats = rule8 arg_kind_ arg_name_
-         _nt = rule9 arg_tp_
-         _addbang = rule10 _lhsIoptions
+         _lhsOargtps = rule6 arg_kind_ arg_tp_
+         _argpats = rule7 arg_kind_ arg_name_
+         _nt = rule8 arg_tp_
+         _addbang = rule9 _lhsIoptions
+         _bang = rule10 _lhsIoptions
          _lhsOchildTypes :: Map Identifier Type
          _lhsOchildTypes = rule11 arg_name_ arg_tp_
          _initSt = rule12 _lhsIallInitStates _nt
@@ -310,96 +324,96 @@ sem_EChild_EChild arg_name_ arg_tp_ arg_kind_ _ _ _ = T_EChild (return st2) wher
          in __result_ )
      in C_EChild_s2 v1
    {-# INLINE rule0 #-}
-   {-# LINE 194 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# LINE 212 "src-ag/ExecutionPlan2TH.ag" #-}
    rule0 = \ tp_ ->
-                    {-# LINE 194 "src-ag/ExecutionPlan2TH.ag" #-}
+                    {-# LINE 212 "src-ag/ExecutionPlan2TH.ag" #-}
                     typeToTH (removeDeforested tp_)
-                    {-# LINE 318 "src-generated/ExecutionPlan2TH.hs" #-}
+                    {-# LINE 332 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule1 #-}
-   {-# LINE 195 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# LINE 213 "src-ag/ExecutionPlan2TH.ag" #-}
    rule1 = \ ((_lhsIcon) :: ConstructorIdent) ((_lhsInt) :: NontermIdent) name_ ->
-                     {-# LINE 195 "src-ag/ExecutionPlan2TH.ag" #-}
+                     {-# LINE 213 "src-ag/ExecutionPlan2TH.ag" #-}
                      recordFieldname _lhsInt _lhsIcon name_
-                     {-# LINE 324 "src-generated/ExecutionPlan2TH.hs" #-}
+                     {-# LINE 338 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule2 #-}
-   {-# LINE 196 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# LINE 214 "src-ag/ExecutionPlan2TH.ag" #-}
    rule2 = \ _bang _tpTH ->
-                    {-# LINE 196 "src-ag/ExecutionPlan2TH.ag" #-}
+                    {-# LINE 214 "src-ag/ExecutionPlan2TH.ag" #-}
                     (_bang    , _tpTH    )
-                    {-# LINE 330 "src-generated/ExecutionPlan2TH.hs" #-}
+                    {-# LINE 344 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule3 #-}
-   {-# LINE 197 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# LINE 215 "src-ag/ExecutionPlan2TH.ag" #-}
    rule3 = \ _bang _strNm _tpTH ->
-                       {-# LINE 197 "src-ag/ExecutionPlan2TH.ag" #-}
+                       {-# LINE 215 "src-ag/ExecutionPlan2TH.ag" #-}
                        (TH.mkName _strNm    , _bang    , _tpTH    )
-                       {-# LINE 336 "src-generated/ExecutionPlan2TH.hs" #-}
+                       {-# LINE 350 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule4 #-}
-   {-# LINE 198 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule4 = \ ((_lhsIoptions) :: Options) ->
-                   {-# LINE 198 "src-ag/ExecutionPlan2TH.ag" #-}
-                   TH.Bang TH.NoSourceUnpackedness (if strictData _lhsIoptions then TH.SourceStrict else TH.NoSourceStrictness)
-                   {-# LINE 342 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule5 #-}
-   {-# LINE 199 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule5 = \ _field kind_ ->
-                             {-# LINE 199 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# LINE 216 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule4 = \ _field kind_ ->
+                             {-# LINE 216 "src-ag/ExecutionPlan2TH.ag" #-}
                              case kind_ of
                                ChildAttr -> empty
                                _         -> pure _field
-                             {-# LINE 350 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule6 #-}
-   {-# LINE 346 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule6 = \ _nt kind_ name_ ->
-                             {-# LINE 346 "src-ag/ExecutionPlan2TH.ag" #-}
+                             {-# LINE 358 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule5 #-}
+   {-# LINE 365 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule5 = \ _nt kind_ name_ ->
+                             {-# LINE 365 "src-ag/ExecutionPlan2TH.ag" #-}
                              case kind_ of
                                ChildSyntax     -> Just $ TH.VarE (TH.mkName ("sem_" ++ getName _nt    ))
                                                         `TH.AppE` TH.VarE (TH.mkName (getName name_ ++ "_"))
                                ChildAttr       -> Nothing
                                ChildReplace tp -> Just $ TH.VarE (TH.mkName ("sem_" ++ getName (extractNonterminal tp)))
                                                         `TH.AppE` TH.VarE (TH.mkName (getName name_ ++ "_"))
-                             {-# LINE 361 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule7 #-}
-   {-# LINE 630 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule7 = \ kind_ tp_ ->
-                            {-# LINE 630 "src-ag/ExecutionPlan2TH.ag" #-}
+                             {-# LINE 369 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule6 #-}
+   {-# LINE 665 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule6 = \ kind_ tp_ ->
+                            {-# LINE 665 "src-ag/ExecutionPlan2TH.ag" #-}
                             case kind_ of
-                              ChildSyntax     -> pure (typeToTH tp_ `TH.AppT` TH.ArrowT `TH.AppT`)
-                              ChildReplace tp -> pure (typeToTH tp `TH.AppT` TH.ArrowT `TH.AppT`)
+                              ChildSyntax     -> pure (typeToTH tp_ .->)
+                              ChildReplace tp -> pure (typeToTH tp .->)
                               _               -> empty
-                            {-# LINE 370 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule8 #-}
-   {-# LINE 634 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule8 = \ kind_ name_ ->
-                           {-# LINE 634 "src-ag/ExecutionPlan2TH.ag" #-}
+                            {-# LINE 378 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule7 #-}
+   {-# LINE 669 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule7 = \ kind_ name_ ->
+                           {-# LINE 669 "src-ag/ExecutionPlan2TH.ag" #-}
                            case kind_ of
                              ChildSyntax    -> Just (TH.VarP (TH.mkName (getName name_ ++ "_")))
                              ChildReplace _ -> Just (TH.VarP (TH.mkName (getName name_ ++ "_")))
                              _              -> Nothing
-                           {-# LINE 379 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule9 #-}
-   {-# LINE 1025 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule9 = \ tp_ ->
-                            {-# LINE 1025 "src-ag/ExecutionPlan2TH.ag" #-}
+                           {-# LINE 387 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule8 #-}
+   {-# LINE 1061 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule8 = \ tp_ ->
+                            {-# LINE 1061 "src-ag/ExecutionPlan2TH.ag" #-}
                             extractNonterminal tp_
-                            {-# LINE 385 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule10 #-}
-   {-# LINE 1604 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule10 = \ ((_lhsIoptions) :: Options) ->
-                                                    {-# LINE 1604 "src-ag/ExecutionPlan2TH.ag" #-}
+                            {-# LINE 393 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule9 #-}
+   {-# LINE 1641 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule9 = \ ((_lhsIoptions) :: Options) ->
+                                                    {-# LINE 1641 "src-ag/ExecutionPlan2TH.ag" #-}
                                                     \x -> if bangpats _lhsIoptions then TH.BangP x else x
-                                                    {-# LINE 391 "src-generated/ExecutionPlan2TH.hs" #-}
+                                                    {-# LINE 399 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule10 #-}
+   {-# LINE 1642 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule10 = \ ((_lhsIoptions) :: Options) ->
+                                                    {-# LINE 1642 "src-ag/ExecutionPlan2TH.ag" #-}
+                                                    TH.Bang TH.NoSourceUnpackedness (if strictData _lhsIoptions then TH.SourceStrict else TH.NoSourceStrictness)
+                                                    {-# LINE 405 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule11 #-}
-   {-# LINE 1656 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# LINE 1695 "src-ag/ExecutionPlan2TH.ag" #-}
    rule11 = \ name_ tp_ ->
-                     {-# LINE 1656 "src-ag/ExecutionPlan2TH.ag" #-}
+                     {-# LINE 1695 "src-ag/ExecutionPlan2TH.ag" #-}
                      Map.singleton name_ tp_
-                     {-# LINE 397 "src-generated/ExecutionPlan2TH.hs" #-}
+                     {-# LINE 411 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule12 #-}
-   {-# LINE 1700 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# LINE 1739 "src-ag/ExecutionPlan2TH.ag" #-}
    rule12 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) _nt ->
-                 {-# LINE 1700 "src-ag/ExecutionPlan2TH.ag" #-}
+                 {-# LINE 1739 "src-ag/ExecutionPlan2TH.ag" #-}
                  Map.findWithDefault (error "nonterminal not in allInitStates map") _nt     _lhsIallInitStates
-                 {-# LINE 403 "src-generated/ExecutionPlan2TH.hs" #-}
+                 {-# LINE 417 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule13 #-}
    rule13 = \  (_ :: ()) ->
      Set.empty
@@ -423,17 +437,17 @@ sem_EChild_ETerm arg_name_ arg_tp_ = T_EChild (return st2) where
          _strNm = rule18 _lhsIcon _lhsInt arg_name_
          _field = rule19 _bang _tpTH
          _fieldVar = rule20 _bang _strNm _tpTH
-         _bang = rule21 _lhsIoptions
          _lhsOdatatype :: Maybe TH.BangType
-         _lhsOdatatype = rule22 _field
+         _lhsOdatatype = rule21 _field
          _lhsOdatatypeVar :: Maybe TH.VarBangType
-         _lhsOdatatypeVar = rule23 _fieldVar
+         _lhsOdatatypeVar = rule22 _fieldVar
          _lhsOargnamesw ::  Maybe TH.Exp 
-         _lhsOargnamesw = rule24 arg_name_
+         _lhsOargnamesw = rule23 arg_name_
          _lhsOargtps ::   Maybe (TH.Type -> TH.Type)  
-         _lhsOargtps = rule25 arg_tp_
-         _argpats = rule26 _addbang arg_name_
-         _addbang = rule27 _lhsIoptions
+         _lhsOargtps = rule24 arg_tp_
+         _argpats = rule25 _addbang arg_name_
+         _addbang = rule26 _lhsIoptions
+         _bang = rule27 _lhsIoptions
          _lhsOchildTypes :: Map Identifier Type
          _lhsOchildTypes = rule28 arg_name_ arg_tp_
          _lhsOterminaldefs :: Set String
@@ -446,77 +460,77 @@ sem_EChild_ETerm arg_name_ arg_tp_ = T_EChild (return st2) where
          in __result_ )
      in C_EChild_s2 v1
    {-# INLINE rule17 #-}
-   {-# LINE 194 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# LINE 212 "src-ag/ExecutionPlan2TH.ag" #-}
    rule17 = \ tp_ ->
-                    {-# LINE 194 "src-ag/ExecutionPlan2TH.ag" #-}
+                    {-# LINE 212 "src-ag/ExecutionPlan2TH.ag" #-}
                     typeToTH (removeDeforested tp_)
-                    {-# LINE 454 "src-generated/ExecutionPlan2TH.hs" #-}
+                    {-# LINE 468 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule18 #-}
-   {-# LINE 195 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# LINE 213 "src-ag/ExecutionPlan2TH.ag" #-}
    rule18 = \ ((_lhsIcon) :: ConstructorIdent) ((_lhsInt) :: NontermIdent) name_ ->
-                     {-# LINE 195 "src-ag/ExecutionPlan2TH.ag" #-}
+                     {-# LINE 213 "src-ag/ExecutionPlan2TH.ag" #-}
                      recordFieldname _lhsInt _lhsIcon name_
-                     {-# LINE 460 "src-generated/ExecutionPlan2TH.hs" #-}
+                     {-# LINE 474 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule19 #-}
-   {-# LINE 196 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# LINE 214 "src-ag/ExecutionPlan2TH.ag" #-}
    rule19 = \ _bang _tpTH ->
-                    {-# LINE 196 "src-ag/ExecutionPlan2TH.ag" #-}
+                    {-# LINE 214 "src-ag/ExecutionPlan2TH.ag" #-}
                     (_bang    , _tpTH    )
-                    {-# LINE 466 "src-generated/ExecutionPlan2TH.hs" #-}
+                    {-# LINE 480 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule20 #-}
-   {-# LINE 197 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# LINE 215 "src-ag/ExecutionPlan2TH.ag" #-}
    rule20 = \ _bang _strNm _tpTH ->
-                       {-# LINE 197 "src-ag/ExecutionPlan2TH.ag" #-}
+                       {-# LINE 215 "src-ag/ExecutionPlan2TH.ag" #-}
                        (TH.mkName _strNm    , _bang    , _tpTH    )
-                       {-# LINE 472 "src-generated/ExecutionPlan2TH.hs" #-}
+                       {-# LINE 486 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule21 #-}
-   {-# LINE 198 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule21 = \ ((_lhsIoptions) :: Options) ->
-                   {-# LINE 198 "src-ag/ExecutionPlan2TH.ag" #-}
-                   TH.Bang TH.NoSourceUnpackedness (if strictData _lhsIoptions then TH.SourceStrict else TH.NoSourceStrictness)
-                   {-# LINE 478 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule22 #-}
-   {-# LINE 203 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule22 = \ _field ->
-                             {-# LINE 203 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# LINE 220 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule21 = \ _field ->
+                             {-# LINE 220 "src-ag/ExecutionPlan2TH.ag" #-}
                              Just _field
-                             {-# LINE 484 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule23 #-}
-   {-# LINE 204 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule23 = \ _fieldVar ->
-                                {-# LINE 204 "src-ag/ExecutionPlan2TH.ag" #-}
+                             {-# LINE 492 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule22 #-}
+   {-# LINE 221 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule22 = \ _fieldVar ->
+                                {-# LINE 221 "src-ag/ExecutionPlan2TH.ag" #-}
                                 Just _fieldVar
-                                {-# LINE 490 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule24 #-}
-   {-# LINE 352 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule24 = \ name_ ->
-                             {-# LINE 352 "src-ag/ExecutionPlan2TH.ag" #-}
+                                {-# LINE 498 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule23 #-}
+   {-# LINE 371 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule23 = \ name_ ->
+                             {-# LINE 371 "src-ag/ExecutionPlan2TH.ag" #-}
                              Just $ TH.VarE (TH.mkName (fieldname name_))
-                             {-# LINE 496 "src-generated/ExecutionPlan2TH.hs" #-}
+                             {-# LINE 504 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule24 #-}
+   {-# LINE 673 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule24 = \ tp_ ->
+                           {-# LINE 673 "src-ag/ExecutionPlan2TH.ag" #-}
+                           pure $ \res -> (typeToTH tp_) .-> res
+                           {-# LINE 510 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule25 #-}
-   {-# LINE 638 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule25 = \ tp_ ->
-                           {-# LINE 638 "src-ag/ExecutionPlan2TH.ag" #-}
-                           pure $ \res -> (typeToTH tp_) `TH.AppT` TH.ArrowT `TH.AppT` res
-                           {-# LINE 502 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule26 #-}
-   {-# LINE 639 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule26 = \ _addbang name_ ->
-                           {-# LINE 639 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# LINE 674 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule25 = \ _addbang name_ ->
+                           {-# LINE 674 "src-ag/ExecutionPlan2TH.ag" #-}
                            pure $ _addbang     $ TH.VarP (TH.mkName (fieldname name_))
-                           {-# LINE 508 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule27 #-}
-   {-# LINE 1605 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule27 = \ ((_lhsIoptions) :: Options) ->
-                                                    {-# LINE 1605 "src-ag/ExecutionPlan2TH.ag" #-}
+                           {-# LINE 516 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule26 #-}
+   {-# LINE 1643 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule26 = \ ((_lhsIoptions) :: Options) ->
+                                                    {-# LINE 1643 "src-ag/ExecutionPlan2TH.ag" #-}
                                                     \x -> if bangpats _lhsIoptions then TH.BangP x else x
-                                                    {-# LINE 514 "src-generated/ExecutionPlan2TH.hs" #-}
+                                                    {-# LINE 522 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule27 #-}
+   {-# LINE 1644 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule27 = \ ((_lhsIoptions) :: Options) ->
+                                                    {-# LINE 1644 "src-ag/ExecutionPlan2TH.ag" #-}
+                                                    TH.Bang TH.NoSourceUnpackedness (if strictData _lhsIoptions then TH.SourceStrict else TH.NoSourceStrictness)
+                                                    {-# LINE 528 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule28 #-}
-   {-# LINE 1656 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# LINE 1695 "src-ag/ExecutionPlan2TH.ag" #-}
    rule28 = \ name_ tp_ ->
-                     {-# LINE 1656 "src-ag/ExecutionPlan2TH.ag" #-}
+                     {-# LINE 1695 "src-ag/ExecutionPlan2TH.ag" #-}
                      Map.singleton name_ tp_
-                     {-# LINE 520 "src-generated/ExecutionPlan2TH.hs" #-}
+                     {-# LINE 534 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule29 #-}
    rule29 = \  (_ :: ()) ->
      Set.empty
@@ -774,128 +788,167 @@ data T_ENonterminal_vIn7  = T_ENonterminal_vIn7 (Map VisitIdentifier (Int,Int)) 
 data T_ENonterminal_vOut7  = T_ENonterminal_vOut7 (Seq Error) (Map VisitIdentifier (Int,Int)) (Map NontermIdent Int) ([TH.Dec]) (Seq (TH.Name, TH.Exp)) (Seq (TH.VarBangType)) (Map VisitIdentifier VisitKind) (Map VisitIdentifier (Set Identifier)) (Map VisitIdentifier (Set Identifier))
 {-# NOINLINE sem_ENonterminal_ENonterminal #-}
 sem_ENonterminal_ENonterminal :: (NontermIdent) -> ([Identifier]) -> (ClassContext) -> (StateIdentifier) -> ([VisitIdentifier]) -> (Map StateIdentifier StateCtx) -> (Map StateIdentifier StateCtx) -> T_EProductions  -> (Bool) -> (HigherOrderInfo) -> T_ENonterminal 
-sem_ENonterminal_ENonterminal arg_nt_ arg_params_ _ arg_initial_ _ arg_nextVisits_ arg_prevVisits_ arg_prods_ arg_recursive_ _ = T_ENonterminal (return st8) where
+sem_ENonterminal_ENonterminal arg_nt_ arg_params_ arg_classCtxs_ arg_initial_ _ arg_nextVisits_ arg_prevVisits_ arg_prods_ arg_recursive_ _ = T_ENonterminal (return st8) where
    {-# NOINLINE st8 #-}
    st8 = let
       v7 :: T_ENonterminal_v7 
       v7 = \ (T_ENonterminal_vIn7 _lhsIallFromToStates _lhsIallInitStates _lhsIallVisitKinds _lhsIavisitdefs _lhsIavisituses _lhsIderivings _lhsIimportBlocks _lhsIinhmap _lhsIlocalAttrTypes _lhsImainFile _lhsImainName _lhsImoduleHeader _lhsIoptions _lhsIpragmaBlocks _lhsIsynmap _lhsItextBlocks _lhsItypeSyns _lhsIwrappers) -> ( let
          _prodsX17 = Control.Monad.Identity.runIdentity (attach_T_EProductions (arg_prods_))
-         (T_EProductions_vOut16 _prodsIallvisits _prodsIcount _prodsIdatatype _prodsIerrors _prodsIfromToStates _prodsIsemFunBndDefs _prodsIsemFunBndTps _prodsIsem_nt _prodsIvisitKinds _prodsIvisitdefs _prodsIvisituses) = inv_EProductions_s17 _prodsX17 (T_EProductions_vIn16 _prodsOallFromToStates _prodsOallInhmap _prodsOallInitStates _prodsOallSynmap _prodsOallVisitKinds _prodsOallstates _prodsOavisitdefs _prodsOavisituses _prodsOimportBlocks _prodsOinhmap _prodsOinitial _prodsOlocalAttrTypes _prodsOmainFile _prodsOmainName _prodsOmoduleHeader _prodsOnextVisits _prodsOnt _prodsOntType _prodsOoptions _prodsOparams _prodsOpragmaBlocks _prodsOprevVisits _prodsOrename _prodsOsynmap _prodsOtextBlocks)
+         (T_EProductions_vOut16 _prodsIallvisits _prodsIcount _prodsIdatatype _prodsIerrors _prodsIfromToStates _prodsIsemFunBndDefs _prodsIsemFunBndTps _prodsIsem_nt _prodsIvisitKinds _prodsIvisitdefs _prodsIvisituses) = inv_EProductions_s17 _prodsX17 (T_EProductions_vIn16 _prodsOallFromToStates _prodsOallInhmap _prodsOallInitStates _prodsOallSynmap _prodsOallVisitKinds _prodsOallstates _prodsOavisitdefs _prodsOavisituses _prodsOclassCtxs _prodsOimportBlocks _prodsOinhmap _prodsOinitial _prodsOlocalAttrTypes _prodsOmainFile _prodsOmainName _prodsOmoduleHeader _prodsOnextVisits _prodsOnt _prodsOntType _prodsOoptions _prodsOparams _prodsOpragmaBlocks _prodsOprevVisits _prodsOrename _prodsOsynmap _prodsOtextBlocks)
          _prodsOrename = rule68 _lhsIoptions
          _prodsOnt = rule69 arg_nt_
          _prodsOparams = rule70 arg_params_
+         _prodsOclassCtxs = rule71 arg_classCtxs_
          _lhsOoutput :: [TH.Dec]
-         _lhsOoutput = rule71 _datatype _lhsIoptions
-         _hasWrapper = rule72 _lhsIwrappers arg_nt_
-         _aliasPre = rule73 _t_params arg_nt_
-         _datatype = rule74 _aliasPre _derivings _lhsItypeSyns _prodsIdatatype _t_params arg_nt_
-         _derivings = rule75 _lhsIderivings arg_nt_
-         _fsemname = rule76  ()
-         _semname = rule77 _fsemname arg_nt_
-         _frecarg = rule78 _fsemname
-         _sem_tp = rule79 _quantTH _t_params _t_type arg_nt_
-         _quantTH = rule80 arg_params_
-         _sem_nt = rule81 _frecarg _fsemname _lhsItypeSyns _prodsIsem_nt _semPragma _sem_tp _semname arg_nt_
-         _inlineNt = rule82 _hasWrapper _lhsIoptions _prodsIcount arg_recursive_
-         _semPragma = rule83 _inlineNt _lhsIoptions _semname
-         (Just _prodsOinhmap) = rule84 _lhsIinhmap arg_nt_
-         (Just _prodsOsynmap) = rule85 _lhsIsynmap arg_nt_
-         _prodsOallInhmap = rule86 _lhsIinhmap
-         _prodsOallSynmap = rule87 _lhsIsynmap
-         _outedges = rule88 _prodsIallvisits
-         _inedges = rule89 _prodsIallvisits
-         _allstates = rule90 _inedges _outedges arg_initial_
-         _stvisits = rule91 _prodsIallvisits
-         _t_type = rule92 arg_nt_
-         _t_params = rule93 arg_params_
-         _t_init = rule94 _lhsIoptions _t_params _t_type arg_initial_
+         _lhsOoutput = rule72 _datatype _hasWrapper _lhsIoptions _sem_nt _t_init _wr_inh _wr_syn _wrapper
+         _hasWrapper = rule73 _lhsIwrappers arg_nt_
+         _aliasPre = rule74 _t_params arg_nt_
+         _datatype = rule75 _aliasPre _derivings _lhsItypeSyns _prodsIdatatype _t_params arg_nt_
+         _derivings = rule76 _lhsIderivings arg_nt_
+         _fsemname = rule77  ()
+         _semname = rule78 _fsemname arg_nt_
+         _frecarg = rule79 _fsemname
+         _sem_tp = rule80 _classTH _quantTH _t_params _t_type arg_nt_
+         _quantTH = rule81 arg_params_
+         _classTH = rule82 arg_classCtxs_
+         _sem_nt = rule83 _frecarg _fsemname _lhsItypeSyns _prodsIsem_nt _semPragma _sem_tp _semname arg_nt_
+         _inlineNt = rule84 _hasWrapper _lhsIoptions _prodsIcount arg_recursive_
+         _semPragma = rule85 _inlineNt _lhsIoptions _semname
+         (Just _prodsOinhmap) = rule86 _lhsIinhmap arg_nt_
+         (Just _prodsOsynmap) = rule87 _lhsIsynmap arg_nt_
+         _prodsOallInhmap = rule88 _lhsIinhmap
+         _prodsOallSynmap = rule89 _lhsIsynmap
+         _outedges = rule90 _prodsIallvisits
+         _inedges = rule91 _prodsIallvisits
+         _allstates = rule92 _inedges _outedges arg_initial_
+         _stvisits = rule93 _prodsIallvisits
+         _t_type = rule94 arg_nt_
+         _t_params = rule95 arg_params_
+         _t_init = rule96 _lhsIoptions _t_params _t_type arg_initial_
+         _wr_inh = rule97 _genwrap _wr_inhs
+         _wr_syn = rule98 _genwrap _wr_syns
+         _genwrap = rule99 _bang _t_params arg_nt_
+         _synAttrs = rule100 _lhsIinhmap arg_nt_
+         _wr_inhs = rule101 _synAttrs _wr_filter
+         _wr_inhs1 = rule102 _synAttrs
+         _wr_filter = rule103 _lhsIoptions
+         _wr_syns = rule104 _lhsIsynmap arg_nt_
+         _inhlist = rule105 _lhsIoptions _wr_inhs
+         _inhlist1 = rule106 _lhsIoptions _wr_inhs1
+         _synlist = rule107 _lhsIoptions _wr_syns
+         _wrapname = rule108 arg_nt_
+         _inhname = rule109 arg_nt_
+         _synname = rule110 arg_nt_
+         _firstVisitInfo = rule111 arg_initial_ arg_nextVisits_
+         _wrapper = rule112 _classTH _inhname _lhsIoptions _quantTH _synname _t_params _t_type _wrapPragma _wrapname
+         _wrapPragma = rule113 _lhsIoptions _wrapname
          _lhsOsemFunBndDefs :: Seq (TH.Name, TH.Exp)
-         _lhsOsemFunBndDefs = rule95 _prodsIsemFunBndDefs _semFunBndDef
+         _lhsOsemFunBndDefs = rule114 _prodsIsemFunBndDefs _semFunBndDef
          _lhsOsemFunBndTps :: Seq (TH.VarBangType)
-         _lhsOsemFunBndTps = rule96 _prodsIsemFunBndTps _semFunBndTp
-         _semFunBndDef = rule97 _semFunBndNm _semname
-         _semFunBndTp = rule98 _semFunBndNm _sem_tp
-         _semFunBndNm = rule99 arg_nt_
-         _prodsOinitial = rule100 arg_initial_
-         _prodsOallstates = rule101 _allstates
-         _addbang = rule102 _lhsIoptions
-         _addbangWrap = rule103  ()
-         _prodsOnextVisits = rule104 arg_nextVisits_
-         _prodsOprevVisits = rule105 arg_prevVisits_
-         _prodsOlocalAttrTypes = rule106 _lhsIlocalAttrTypes arg_nt_
+         _lhsOsemFunBndTps = rule115 _prodsIsemFunBndTps _semFunBndTp
+         _semFunBndDef = rule116 _semFunBndNm _semname
+         _semFunBndTp = rule117 _semFunBndNm _sem_tp
+         _semFunBndNm = rule118 arg_nt_
+         _prodsOinitial = rule119 arg_initial_
+         _prodsOallstates = rule120 _allstates
+         _addbang = rule121 _lhsIoptions
+         _bang = rule122 _lhsIoptions
+         _addbangWrap = rule123  ()
+         _prodsOnextVisits = rule124 arg_nextVisits_
+         _prodsOprevVisits = rule125 arg_prevVisits_
+         _prodsOlocalAttrTypes = rule126 _lhsIlocalAttrTypes arg_nt_
          _lhsOinitStates :: Map NontermIdent Int
-         _lhsOinitStates = rule107 arg_initial_ arg_nt_
-         _ntType = rule108 arg_nt_ arg_params_
+         _lhsOinitStates = rule127 arg_initial_ arg_nt_
+         _ntType = rule128 arg_nt_ arg_params_
          _lhsOerrors :: Seq Error
-         _lhsOerrors = rule109 _prodsIerrors
+         _lhsOerrors = rule129 _prodsIerrors
          _lhsOfromToStates :: Map VisitIdentifier (Int,Int)
-         _lhsOfromToStates = rule110 _prodsIfromToStates
+         _lhsOfromToStates = rule130 _prodsIfromToStates
          _lhsOvisitKinds :: Map VisitIdentifier VisitKind
-         _lhsOvisitKinds = rule111 _prodsIvisitKinds
+         _lhsOvisitKinds = rule131 _prodsIvisitKinds
          _lhsOvisitdefs :: Map VisitIdentifier (Set Identifier)
-         _lhsOvisitdefs = rule112 _prodsIvisitdefs
+         _lhsOvisitdefs = rule132 _prodsIvisitdefs
          _lhsOvisituses :: Map VisitIdentifier (Set Identifier)
-         _lhsOvisituses = rule113 _prodsIvisituses
-         _prodsOallFromToStates = rule114 _lhsIallFromToStates
-         _prodsOallInitStates = rule115 _lhsIallInitStates
-         _prodsOallVisitKinds = rule116 _lhsIallVisitKinds
-         _prodsOavisitdefs = rule117 _lhsIavisitdefs
-         _prodsOavisituses = rule118 _lhsIavisituses
-         _prodsOimportBlocks = rule119 _lhsIimportBlocks
-         _prodsOmainFile = rule120 _lhsImainFile
-         _prodsOmainName = rule121 _lhsImainName
-         _prodsOmoduleHeader = rule122 _lhsImoduleHeader
-         _prodsOntType = rule123 _ntType
-         _prodsOoptions = rule124 _lhsIoptions
-         _prodsOpragmaBlocks = rule125 _lhsIpragmaBlocks
-         _prodsOtextBlocks = rule126 _lhsItextBlocks
+         _lhsOvisituses = rule133 _prodsIvisituses
+         _prodsOallFromToStates = rule134 _lhsIallFromToStates
+         _prodsOallInitStates = rule135 _lhsIallInitStates
+         _prodsOallVisitKinds = rule136 _lhsIallVisitKinds
+         _prodsOavisitdefs = rule137 _lhsIavisitdefs
+         _prodsOavisituses = rule138 _lhsIavisituses
+         _prodsOimportBlocks = rule139 _lhsIimportBlocks
+         _prodsOmainFile = rule140 _lhsImainFile
+         _prodsOmainName = rule141 _lhsImainName
+         _prodsOmoduleHeader = rule142 _lhsImoduleHeader
+         _prodsOntType = rule143 _ntType
+         _prodsOoptions = rule144 _lhsIoptions
+         _prodsOpragmaBlocks = rule145 _lhsIpragmaBlocks
+         _prodsOtextBlocks = rule146 _lhsItextBlocks
          __result_ = T_ENonterminal_vOut7 _lhsOerrors _lhsOfromToStates _lhsOinitStates _lhsOoutput _lhsOsemFunBndDefs _lhsOsemFunBndTps _lhsOvisitKinds _lhsOvisitdefs _lhsOvisituses
          in __result_ )
      in C_ENonterminal_s8 v7
    {-# INLINE rule68 #-}
-   {-# LINE 68 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# LINE 71 "src-ag/ExecutionPlan2TH.ag" #-}
    rule68 = \ ((_lhsIoptions) :: Options) ->
-                                  {-# LINE 68 "src-ag/ExecutionPlan2TH.ag" #-}
+                                  {-# LINE 71 "src-ag/ExecutionPlan2TH.ag" #-}
                                   rename _lhsIoptions
-                                  {-# LINE 861 "src-generated/ExecutionPlan2TH.hs" #-}
+                                  {-# LINE 895 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule69 #-}
-   {-# LINE 76 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# LINE 79 "src-ag/ExecutionPlan2TH.ag" #-}
    rule69 = \ nt_ ->
-                              {-# LINE 76 "src-ag/ExecutionPlan2TH.ag" #-}
+                              {-# LINE 79 "src-ag/ExecutionPlan2TH.ag" #-}
                               nt_
-                              {-# LINE 867 "src-generated/ExecutionPlan2TH.hs" #-}
+                              {-# LINE 901 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule70 #-}
-   {-# LINE 88 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# LINE 91 "src-ag/ExecutionPlan2TH.ag" #-}
    rule70 = \ params_ ->
-                   {-# LINE 88 "src-ag/ExecutionPlan2TH.ag" #-}
+                   {-# LINE 91 "src-ag/ExecutionPlan2TH.ag" #-}
                    params_
-                   {-# LINE 873 "src-generated/ExecutionPlan2TH.hs" #-}
+                   {-# LINE 907 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule71 #-}
-   {-# LINE 105 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule71 = \ _datatype ((_lhsIoptions) :: Options) ->
-                                {-# LINE 105 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# LINE 95 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule71 = \ classCtxs_ ->
+                      {-# LINE 95 "src-ag/ExecutionPlan2TH.ag" #-}
+                      classCtxs_
+                      {-# LINE 913 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule72 #-}
+   {-# LINE 112 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule72 = \ _datatype _hasWrapper ((_lhsIoptions) :: Options) _sem_nt _t_init _wr_inh _wr_syn _wrapper ->
+                                {-# LINE 112 "src-ag/ExecutionPlan2TH.ag" #-}
                                 concat
                                 [ if dataTypes _lhsIoptions
                                     then [_datatype    ]
                                     else []
+                                , if _hasWrapper
+                                    then [ _wr_inh
+                                         , _wr_syn
+                                         ]
+                                         ++ _wrapper
+                                    else []
+                                , if folds _lhsIoptions
+                                    then _sem_nt
+                                    else []
+                                , if semfuns _lhsIoptions
+                                    then [ _t_init
+                                         ]
+                                    else []
                                 ]
-                                {-# LINE 883 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule72 #-}
-   {-# LINE 127 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule72 = \ ((_lhsIwrappers) :: Set NontermIdent) nt_ ->
-                                    {-# LINE 127 "src-ag/ExecutionPlan2TH.ag" #-}
-                                    nt_ `Set.member` _lhsIwrappers
-                                    {-# LINE 889 "src-generated/ExecutionPlan2TH.hs" #-}
+                                {-# LINE 936 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule73 #-}
-   {-# LINE 140 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule73 = \ _t_params nt_ ->
-                                  {-# LINE 140 "src-ag/ExecutionPlan2TH.ag" #-}
-                                  TH.TySynD (identToName nt_) (map TH.PlainTV _t_params    ) :: TH.Type -> TH.Dec
-                                  {-# LINE 895 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# LINE 134 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule73 = \ ((_lhsIwrappers) :: Set NontermIdent) nt_ ->
+                                    {-# LINE 134 "src-ag/ExecutionPlan2TH.ag" #-}
+                                    nt_ `Set.member` _lhsIwrappers
+                                    {-# LINE 942 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule74 #-}
-   {-# LINE 141 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule74 = \ _aliasPre _derivings ((_lhsItypeSyns) :: TypeSyns) ((_prodsIdatatype) :: [TH.Con]) _t_params nt_ ->
-                                  {-# LINE 141 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# LINE 147 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule74 = \ _t_params nt_ ->
+                                  {-# LINE 147 "src-ag/ExecutionPlan2TH.ag" #-}
+                                  TH.TySynD (identToName nt_) (map TH.PlainTV _t_params    ) :: TH.Type -> TH.Dec
+                                  {-# LINE 948 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule75 #-}
+   {-# LINE 148 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule75 = \ _aliasPre _derivings ((_lhsItypeSyns) :: TypeSyns) ((_prodsIdatatype) :: [TH.Con]) _t_params nt_ ->
+                                  {-# LINE 148 "src-ag/ExecutionPlan2TH.ag" #-}
                                   case lookup nt_ _lhsItypeSyns of
                                      Nothing -> TH.DataD [] (identToName nt_) (map TH.PlainTV _t_params    ) Nothing _prodsIdatatype _derivings
                                      Just (List t)     -> _aliasPre     (TH.AppT TH.ListT (typeToTH t))
@@ -906,51 +959,58 @@ sem_ENonterminal_ENonterminal arg_nt_ arg_params_ _ arg_initial_ _ arg_nextVisit
                                      Just (IntMap t)   -> _aliasPre     (TH.AppT (TH.ConT (TH.mkName "Data.IntMap.IntMap")) (typeToTH t))
                                      Just (OrdSet t)   -> _aliasPre     (TH.AppT (TH.ConT (TH.mkName "Data.Set.Set")) (typeToTH t))
                                      Just IntSet       -> _aliasPre     (TH.ConT (TH.mkName "Data.IntSet.IntSet"))
-                                  {-# LINE 910 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule75 #-}
-   {-# LINE 152 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule75 = \ ((_lhsIderivings) :: Derivings) nt_ ->
-                                   {-# LINE 152 "src-ag/ExecutionPlan2TH.ag" #-}
+                                  {-# LINE 963 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule76 #-}
+   {-# LINE 159 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule76 = \ ((_lhsIderivings) :: Derivings) nt_ ->
+                                   {-# LINE 159 "src-ag/ExecutionPlan2TH.ag" #-}
                                    case Map.lookup nt_ _lhsIderivings of
                                       Just s -> [TH.DerivClause Nothing (map (TH.ConT . identToName) (Set.toList s))]
                                       Nothing -> []
-                                   {-# LINE 918 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule76 #-}
-   {-# LINE 210 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule76 = \  (_ :: ()) ->
-                                  {-# LINE 210 "src-ag/ExecutionPlan2TH.ag" #-}
-                                  \x -> "sem_" ++ show x
-                                  {-# LINE 924 "src-generated/ExecutionPlan2TH.hs" #-}
+                                   {-# LINE 971 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule77 #-}
-   {-# LINE 211 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule77 = \ _fsemname nt_ ->
-                                 {-# LINE 211 "src-ag/ExecutionPlan2TH.ag" #-}
-                                 _fsemname     nt_
-                                 {-# LINE 930 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# LINE 227 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule77 = \  (_ :: ()) ->
+                                  {-# LINE 227 "src-ag/ExecutionPlan2TH.ag" #-}
+                                  \x -> "sem_" ++ show x
+                                  {-# LINE 977 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule78 #-}
-   {-# LINE 212 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule78 = \ _fsemname ->
-                                 {-# LINE 212 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# LINE 228 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule78 = \ _fsemname nt_ ->
+                                 {-# LINE 228 "src-ag/ExecutionPlan2TH.ag" #-}
+                                 _fsemname     nt_
+                                 {-# LINE 983 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule79 #-}
+   {-# LINE 229 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule79 = \ _fsemname ->
+                                 {-# LINE 229 "src-ag/ExecutionPlan2TH.ag" #-}
                                  \t x -> case t of
                                             NT nt _ _ -> TH.VarE (TH.mkName (_fsemname nt)) `TH.AppE` x
                                             _         -> x
-                                 {-# LINE 938 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule79 #-}
-   {-# LINE 222 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule79 = \ _quantTH _t_params _t_type nt_ ->
-                                 {-# LINE 222 "src-ag/ExecutionPlan2TH.ag" #-}
-                                 _quantTH     [             ] (TH.AppT (TH.AppT TH.ArrowT (foldl TH.AppT (TH.ConT (identToName nt_)) (map TH.VarT _t_params    ))) (foldl TH.AppT (TH.ConT (TH.mkName _t_type    )) (map TH.VarT _t_params    )))
-                                 {-# LINE 944 "src-generated/ExecutionPlan2TH.hs" #-}
+                                 {-# LINE 991 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule80 #-}
-   {-# LINE 223 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule80 = \ params_ ->
-                                 {-# LINE 223 "src-ag/ExecutionPlan2TH.ag" #-}
-                                 quantsTH TH.ForallT params_
-                                 {-# LINE 950 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# LINE 239 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule80 = \ _classTH _quantTH _t_params _t_type nt_ ->
+                                 {-# LINE 239 "src-ag/ExecutionPlan2TH.ag" #-}
+                                 _quantTH     _classTH     (foldl TH.AppT (TH.ConT (identToName nt_)) (map TH.VarT _t_params    )
+                                                        .-> foldl TH.AppT (TH.ConT (TH.mkName _t_type    )) (map TH.VarT _t_params    ))
+                                 {-# LINE 998 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule81 #-}
-   {-# LINE 224 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule81 = \ _frecarg _fsemname ((_lhsItypeSyns) :: TypeSyns) ((_prodsIsem_nt) :: [TH.Clause]) _semPragma _sem_tp _semname nt_ ->
-                                 {-# LINE 224 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# LINE 241 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule81 = \ params_ ->
+                                 {-# LINE 241 "src-ag/ExecutionPlan2TH.ag" #-}
+                                 quantsTH TH.ForallT params_
+                                 {-# LINE 1004 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule82 #-}
+   {-# LINE 242 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule82 = \ classCtxs_ ->
+                                 {-# LINE 242 "src-ag/ExecutionPlan2TH.ag" #-}
+                                 classCtxsToCxt classCtxs_
+                                 {-# LINE 1010 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule83 #-}
+   {-# LINE 243 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule83 = \ _frecarg _fsemname ((_lhsItypeSyns) :: TypeSyns) ((_prodsIsem_nt) :: [TH.Clause]) _semPragma _sem_tp _semname nt_ ->
+                                 {-# LINE 243 "src-ag/ExecutionPlan2TH.ag" #-}
                                  _semPragma
                                  ++
                                  [ TH.SigD (TH.mkName _semname    ) _sem_tp
@@ -1044,17 +1104,17 @@ sem_ENonterminal_ENonterminal arg_nt_ arg_params_ _ arg_initial_ _ arg_nextVisit
                                          ]
                                        Just x -> error $ "Type " ++ show x ++ " is not supported yet"
                                  ]
-                                 {-# LINE 1048 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule82 #-}
-   {-# LINE 319 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule82 = \ _hasWrapper ((_lhsIoptions) :: Options) ((_prodsIcount) :: Int) recursive_ ->
-                                  {-# LINE 319 "src-ag/ExecutionPlan2TH.ag" #-}
+                                 {-# LINE 1108 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule84 #-}
+   {-# LINE 338 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule84 = \ _hasWrapper ((_lhsIoptions) :: Options) ((_prodsIcount) :: Int) recursive_ ->
+                                  {-# LINE 338 "src-ag/ExecutionPlan2TH.ag" #-}
                                   not (lateHigherOrderBinding _lhsIoptions) && not recursive_ && (_prodsIcount == 1 || (aggressiveInlinePragmas _lhsIoptions && not _hasWrapper    ))
-                                  {-# LINE 1054 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule83 #-}
-   {-# LINE 320 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule83 = \ _inlineNt ((_lhsIoptions) :: Options) _semname ->
-                                  {-# LINE 320 "src-ag/ExecutionPlan2TH.ag" #-}
+                                  {-# LINE 1114 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule85 #-}
+   {-# LINE 339 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule85 = \ _inlineNt ((_lhsIoptions) :: Options) _semname ->
+                                  {-# LINE 339 "src-ag/ExecutionPlan2TH.ag" #-}
                                   if noInlinePragmas _lhsIoptions
                                   then empty
                                   else if _inlineNt
@@ -1062,213 +1122,347 @@ sem_ENonterminal_ENonterminal arg_nt_ arg_params_ _ arg_initial_ _ arg_nextVisit
                                        else if helpInlining _lhsIoptions && not (lateHigherOrderBinding _lhsIoptions)
                                             then pure $ inlinableTH (TH.mkName _semname    )
                                             else pure $ noInlineTH (TH.mkName _semname    )
-                                  {-# LINE 1066 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule84 #-}
-   {-# LINE 372 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule84 = \ ((_lhsIinhmap) :: Map NontermIdent Attributes) nt_ ->
-                                         {-# LINE 372 "src-ag/ExecutionPlan2TH.ag" #-}
-                                         Map.lookup nt_ _lhsIinhmap
-                                         {-# LINE 1072 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule85 #-}
-   {-# LINE 373 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule85 = \ ((_lhsIsynmap) :: Map NontermIdent Attributes) nt_ ->
-                                         {-# LINE 373 "src-ag/ExecutionPlan2TH.ag" #-}
-                                         Map.lookup nt_ _lhsIsynmap
-                                         {-# LINE 1078 "src-generated/ExecutionPlan2TH.hs" #-}
+                                  {-# LINE 1126 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule86 #-}
-   {-# LINE 374 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule86 = \ ((_lhsIinhmap) :: Map NontermIdent Attributes) ->
-                                     {-# LINE 374 "src-ag/ExecutionPlan2TH.ag" #-}
-                                     _lhsIinhmap
-                                     {-# LINE 1084 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# LINE 391 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule86 = \ ((_lhsIinhmap) :: Map NontermIdent Attributes) nt_ ->
+                                         {-# LINE 391 "src-ag/ExecutionPlan2TH.ag" #-}
+                                         Map.lookup nt_ _lhsIinhmap
+                                         {-# LINE 1132 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule87 #-}
-   {-# LINE 375 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule87 = \ ((_lhsIsynmap) :: Map NontermIdent Attributes) ->
-                                     {-# LINE 375 "src-ag/ExecutionPlan2TH.ag" #-}
-                                     _lhsIsynmap
-                                     {-# LINE 1090 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# LINE 392 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule87 = \ ((_lhsIsynmap) :: Map NontermIdent Attributes) nt_ ->
+                                         {-# LINE 392 "src-ag/ExecutionPlan2TH.ag" #-}
+                                         Map.lookup nt_ _lhsIsynmap
+                                         {-# LINE 1138 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule88 #-}
-   {-# LINE 396 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule88 = \ ((_prodsIallvisits) :: [VisitStateState]) ->
-                                   {-# LINE 396 "src-ag/ExecutionPlan2TH.ag" #-}
-                                   Set.fromList $ map (\(_,f,_) -> f) _prodsIallvisits
-                                   {-# LINE 1096 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# LINE 393 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule88 = \ ((_lhsIinhmap) :: Map NontermIdent Attributes) ->
+                                     {-# LINE 393 "src-ag/ExecutionPlan2TH.ag" #-}
+                                     _lhsIinhmap
+                                     {-# LINE 1144 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule89 #-}
-   {-# LINE 397 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule89 = \ ((_prodsIallvisits) :: [VisitStateState]) ->
-                                   {-# LINE 397 "src-ag/ExecutionPlan2TH.ag" #-}
-                                   Set.fromList $ map (\(_,_,t) -> t) _prodsIallvisits
-                                   {-# LINE 1102 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# LINE 394 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule89 = \ ((_lhsIsynmap) :: Map NontermIdent Attributes) ->
+                                     {-# LINE 394 "src-ag/ExecutionPlan2TH.ag" #-}
+                                     _lhsIsynmap
+                                     {-# LINE 1150 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule90 #-}
-   {-# LINE 398 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule90 = \ _inedges _outedges initial_ ->
-                                   {-# LINE 398 "src-ag/ExecutionPlan2TH.ag" #-}
-                                   Set.insert initial_ $ _inedges     `Set.union` _outedges
-                                   {-# LINE 1108 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# LINE 415 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule90 = \ ((_prodsIallvisits) :: [VisitStateState]) ->
+                                   {-# LINE 415 "src-ag/ExecutionPlan2TH.ag" #-}
+                                   Set.fromList $ map (\(_,f,_) -> f) _prodsIallvisits
+                                   {-# LINE 1156 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule91 #-}
-   {-# LINE 399 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# LINE 416 "src-ag/ExecutionPlan2TH.ag" #-}
    rule91 = \ ((_prodsIallvisits) :: [VisitStateState]) ->
-                                   {-# LINE 399 "src-ag/ExecutionPlan2TH.ag" #-}
-                                   \st -> filter (\(v,f,t) -> f == st) _prodsIallvisits
-                                   {-# LINE 1114 "src-generated/ExecutionPlan2TH.hs" #-}
+                                   {-# LINE 416 "src-ag/ExecutionPlan2TH.ag" #-}
+                                   Set.fromList $ map (\(_,_,t) -> t) _prodsIallvisits
+                                   {-# LINE 1162 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule92 #-}
-   {-# LINE 400 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule92 = \ nt_ ->
-                                   {-# LINE 400 "src-ag/ExecutionPlan2TH.ag" #-}
-                                   "T_" ++ getName nt_
-                                   {-# LINE 1120 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# LINE 417 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule92 = \ _inedges _outedges initial_ ->
+                                   {-# LINE 417 "src-ag/ExecutionPlan2TH.ag" #-}
+                                   Set.insert initial_ $ _inedges     `Set.union` _outedges
+                                   {-# LINE 1168 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule93 #-}
-   {-# LINE 401 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule93 = \ params_ ->
-                                   {-# LINE 401 "src-ag/ExecutionPlan2TH.ag" #-}
-                                   map (TH.mkName . getName) params_
-                                   {-# LINE 1126 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# LINE 418 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule93 = \ ((_prodsIallvisits) :: [VisitStateState]) ->
+                                   {-# LINE 418 "src-ag/ExecutionPlan2TH.ag" #-}
+                                   \st -> filter (\(v,f,t) -> f == st) _prodsIallvisits
+                                   {-# LINE 1174 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule94 #-}
-   {-# LINE 402 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule94 = \ ((_lhsIoptions) :: Options) _t_params _t_type initial_ ->
-                                   {-# LINE 402 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# LINE 419 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule94 = \ nt_ ->
+                                   {-# LINE 419 "src-ag/ExecutionPlan2TH.ag" #-}
+                                   "T_" ++ getName nt_
+                                   {-# LINE 1180 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule95 #-}
+   {-# LINE 420 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule95 = \ params_ ->
+                                   {-# LINE 420 "src-ag/ExecutionPlan2TH.ag" #-}
+                                   map (TH.mkName . getName) params_
+                                   {-# LINE 1186 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule96 #-}
+   {-# LINE 421 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule96 = \ ((_lhsIoptions) :: Options) _t_params _t_type initial_ ->
+                                   {-# LINE 421 "src-ag/ExecutionPlan2TH.ag" #-}
                                    TH.NewtypeD [] (TH.mkName _t_type    ) (map TH.PlainTV _t_params    ) Nothing
                                    (TH.RecC (TH.mkName _t_type    )
                                          [(TH.mkName ("attach_" ++ _t_type    ), nobang, monadTypeTH _lhsIoptions (foldl TH.AppT (TH.ConT (TH.mkName (_t_type     ++ "_s" ++ show initial_))) (map TH.VarT _t_params    )))
                                          ]) []
-                                   {-# LINE 1135 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule95 #-}
-   {-# LINE 575 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule95 = \ ((_prodsIsemFunBndDefs) :: Seq (TH.Name, TH.Exp)) _semFunBndDef ->
-                        {-# LINE 575 "src-ag/ExecutionPlan2TH.ag" #-}
-                        _semFunBndDef     Seq.<| _prodsIsemFunBndDefs
-                        {-# LINE 1141 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule96 #-}
-   {-# LINE 576 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule96 = \ ((_prodsIsemFunBndTps) :: Seq (TH.VarBangType)) _semFunBndTp ->
-                        {-# LINE 576 "src-ag/ExecutionPlan2TH.ag" #-}
-                        _semFunBndTp     Seq.<| _prodsIsemFunBndTps
-                        {-# LINE 1147 "src-generated/ExecutionPlan2TH.hs" #-}
+                                   {-# LINE 1195 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule97 #-}
-   {-# LINE 577 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule97 = \ _semFunBndNm _semname ->
-                        {-# LINE 577 "src-ag/ExecutionPlan2TH.ag" #-}
-                        (_semFunBndNm    , TH.VarE (TH.mkName _semname    ))
-                        {-# LINE 1153 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# LINE 511 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule97 = \ _genwrap _wr_inhs ->
+                                  {-# LINE 511 "src-ag/ExecutionPlan2TH.ag" #-}
+                                  _genwrap     "Inh" _wr_inhs
+                                  {-# LINE 1201 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule98 #-}
-   {-# LINE 578 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule98 = \ _semFunBndNm _sem_tp ->
-                        {-# LINE 578 "src-ag/ExecutionPlan2TH.ag" #-}
-                        (_semFunBndNm    , nobang, _sem_tp    )
-                        {-# LINE 1159 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# LINE 512 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule98 = \ _genwrap _wr_syns ->
+                                  {-# LINE 512 "src-ag/ExecutionPlan2TH.ag" #-}
+                                  _genwrap     "Syn" _wr_syns     :: TH.Dec
+                                  {-# LINE 1207 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule99 #-}
-   {-# LINE 579 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule99 = \ nt_ ->
-                        {-# LINE 579 "src-ag/ExecutionPlan2TH.ag" #-}
-                        TH.mkName (lateSemNtLabel nt_)
-                        {-# LINE 1165 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# LINE 513 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule99 = \ _bang _t_params nt_ ->
+                                  {-# LINE 513 "src-ag/ExecutionPlan2TH.ag" #-}
+                                  \nm attr -> TH.DataD
+                                    []
+                                    (TH.mkName (nm ++ "_" ++ getName nt_))
+                                    (map TH.PlainTV _t_params    )
+                                    Nothing
+                                    [TH.RecC (TH.mkName (nm ++ "_" ++ getName nt_))
+                                             (map (\(i,t) -> ( TH.mkName (getName i ++ "_" ++ nm ++ "_" ++ getName nt_)
+                                                             , _bang
+                                                             , either (error . ("Cannot convert type: " ++)) id
+                                                               $ Meta.parseType
+                                                               $ typeToHaskellString (Just nt_) [] t
+                                                             ))
+                                                  attr)]
+                                    []
+                                  {-# LINE 1226 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule100 #-}
-   {-# LINE 621 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule100 = \ initial_ ->
-                                     {-# LINE 621 "src-ag/ExecutionPlan2TH.ag" #-}
-                                     initial_
-                                     {-# LINE 1171 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# LINE 527 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule100 = \ ((_lhsIinhmap) :: Map NontermIdent Attributes) nt_ ->
+                                  {-# LINE 527 "src-ag/ExecutionPlan2TH.ag" #-}
+                                  fromJust $ Map.lookup nt_ _lhsIinhmap
+                                  {-# LINE 1232 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule101 #-}
-   {-# LINE 622 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule101 = \ _allstates ->
-                                     {-# LINE 622 "src-ag/ExecutionPlan2TH.ag" #-}
-                                     _allstates
-                                     {-# LINE 1177 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# LINE 528 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule101 = \ _synAttrs _wr_filter ->
+                                  {-# LINE 528 "src-ag/ExecutionPlan2TH.ag" #-}
+                                  Map.toList $ _wr_filter     $ _synAttrs
+                                  {-# LINE 1238 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule102 #-}
-   {-# LINE 1602 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule102 = \ ((_lhsIoptions) :: Options) ->
-                                                    {-# LINE 1602 "src-ag/ExecutionPlan2TH.ag" #-}
-                                                    \x -> if bangpats _lhsIoptions then TH.BangP x else x
-                                                    {-# LINE 1183 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# LINE 529 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule102 = \ _synAttrs ->
+                                  {-# LINE 529 "src-ag/ExecutionPlan2TH.ag" #-}
+                                  Map.toList _synAttrs
+                                  {-# LINE 1244 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule103 #-}
-   {-# LINE 1610 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule103 = \  (_ :: ()) ->
-                                                        {-# LINE 1610 "src-ag/ExecutionPlan2TH.ag" #-}
-                                                        id
-                                                        {-# LINE 1189 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# LINE 530 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule103 = \ ((_lhsIoptions) :: Options) ->
+                                   {-# LINE 530 "src-ag/ExecutionPlan2TH.ag" #-}
+                                   if lateHigherOrderBinding _lhsIoptions
+                                   then Map.delete idLateBindingAttr
+                                   else id
+                                   {-# LINE 1252 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule104 #-}
-   {-# LINE 1622 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule104 = \ nextVisits_ ->
-                       {-# LINE 1622 "src-ag/ExecutionPlan2TH.ag" #-}
-                       nextVisits_
-                       {-# LINE 1195 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# LINE 533 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule104 = \ ((_lhsIsynmap) :: Map NontermIdent Attributes) nt_ ->
+                                  {-# LINE 533 "src-ag/ExecutionPlan2TH.ag" #-}
+                                  Map.toList $ fromJust $ Map.lookup nt_ _lhsIsynmap
+                                  {-# LINE 1258 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule105 #-}
-   {-# LINE 1623 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule105 = \ prevVisits_ ->
-                       {-# LINE 1623 "src-ag/ExecutionPlan2TH.ag" #-}
-                       prevVisits_
-                       {-# LINE 1201 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# LINE 534 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule105 = \ ((_lhsIoptions) :: Options) _wr_inhs ->
+                                  {-# LINE 534 "src-ag/ExecutionPlan2TH.ag" #-}
+                                  map (lhsname _lhsIoptions True . fst) _wr_inhs
+                                  {-# LINE 1264 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule106 #-}
-   {-# LINE 1667 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule106 = \ ((_lhsIlocalAttrTypes) :: Map NontermIdent (Map ConstructorIdent (Map Identifier Type))) nt_ ->
-                           {-# LINE 1667 "src-ag/ExecutionPlan2TH.ag" #-}
-                           Map.findWithDefault Map.empty nt_ _lhsIlocalAttrTypes
-                           {-# LINE 1207 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# LINE 535 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule106 = \ ((_lhsIoptions) :: Options) _wr_inhs1 ->
+                                  {-# LINE 535 "src-ag/ExecutionPlan2TH.ag" #-}
+                                  map (lhsname _lhsIoptions True . fst) _wr_inhs1
+                                  {-# LINE 1270 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule107 #-}
-   {-# LINE 1694 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule107 = \ initial_ nt_ ->
-                     {-# LINE 1694 "src-ag/ExecutionPlan2TH.ag" #-}
-                     Map.singleton nt_ initial_
-                     {-# LINE 1213 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# LINE 536 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule107 = \ ((_lhsIoptions) :: Options) _wr_syns ->
+                                  {-# LINE 536 "src-ag/ExecutionPlan2TH.ag" #-}
+                                  map (lhsname _lhsIoptions False . fst) _wr_syns
+                                  {-# LINE 1276 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule108 #-}
-   {-# LINE 1708 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule108 = \ nt_ params_ ->
-                 {-# LINE 1708 "src-ag/ExecutionPlan2TH.ag" #-}
-                 NT nt_ (map show params_) False
-                 {-# LINE 1219 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# LINE 537 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule108 = \ nt_ ->
+                                  {-# LINE 537 "src-ag/ExecutionPlan2TH.ag" #-}
+                                  TH.mkName ("wrap_" ++ show nt_)
+                                  {-# LINE 1282 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule109 #-}
-   rule109 = \ ((_prodsIerrors) :: Seq Error) ->
-     _prodsIerrors
+   {-# LINE 538 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule109 = \ nt_ ->
+                                  {-# LINE 538 "src-ag/ExecutionPlan2TH.ag" #-}
+                                  TH.mkName ("Inh_" ++ show nt_)
+                                  {-# LINE 1288 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule110 #-}
-   rule110 = \ ((_prodsIfromToStates) :: Map VisitIdentifier (Int,Int)) ->
-     _prodsIfromToStates
+   {-# LINE 539 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule110 = \ nt_ ->
+                                  {-# LINE 539 "src-ag/ExecutionPlan2TH.ag" #-}
+                                  TH.mkName ("Syn_" ++ show nt_)
+                                  {-# LINE 1294 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule111 #-}
-   rule111 = \ ((_prodsIvisitKinds) :: Map VisitIdentifier VisitKind) ->
-     _prodsIvisitKinds
+   {-# LINE 540 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule111 = \ initial_ nextVisits_ ->
+                                        {-# LINE 540 "src-ag/ExecutionPlan2TH.ag" #-}
+                                        Map.findWithDefault ManyVis initial_ nextVisits_
+                                        {-# LINE 1300 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule112 #-}
-   rule112 = \ ((_prodsIvisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
-     _prodsIvisitdefs
+   {-# LINE 541 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule112 = \ _classTH _inhname ((_lhsIoptions) :: Options) _quantTH _synname _t_params _t_type _wrapPragma _wrapname ->
+                                  {-# LINE 541 "src-ag/ExecutionPlan2TH.ag" #-}
+                                  _wrapPragma     ++
+                                  [ TH.SigD _wrapname     (_quantTH     _classTH
+                                      (foldl TH.AppT (TH.ConT (TH.mkName _t_type    )) (map TH.VarT _t_params    )
+                                      .-> foldl TH.AppT (TH.ConT _inhname    ) (map TH.VarT _t_params    )
+                                      .-> ( if monadicWrappers _lhsIoptions
+                                              then monadTypeTH _lhsIoptions
+                                              else id) (foldl TH.AppT (TH.ConT _synname    ) (map TH.VarT _t_params    ))))
+                                  ]
+                                  {-# LINE 1313 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule113 #-}
-   rule113 = \ ((_prodsIvisituses) :: Map VisitIdentifier (Set Identifier)) ->
-     _prodsIvisituses
+   {-# LINE 598 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule113 = \ ((_lhsIoptions) :: Options) _wrapname ->
+                                    {-# LINE 598 "src-ag/ExecutionPlan2TH.ag" #-}
+                                    if parallelInvoke _lhsIoptions && not (monadicWrappers _lhsIoptions)
+                                    then pure $ noInlineTH _wrapname
+                                    else if noInlinePragmas _lhsIoptions
+                                         then empty
+                                         else pure $ inlinableTH _wrapname
+                                    {-# LINE 1323 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule114 #-}
-   rule114 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
-     _lhsIallFromToStates
+   {-# LINE 610 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule114 = \ ((_prodsIsemFunBndDefs) :: Seq (TH.Name, TH.Exp)) _semFunBndDef ->
+                        {-# LINE 610 "src-ag/ExecutionPlan2TH.ag" #-}
+                        _semFunBndDef     Seq.<| _prodsIsemFunBndDefs
+                        {-# LINE 1329 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule115 #-}
-   rule115 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
-     _lhsIallInitStates
+   {-# LINE 611 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule115 = \ ((_prodsIsemFunBndTps) :: Seq (TH.VarBangType)) _semFunBndTp ->
+                        {-# LINE 611 "src-ag/ExecutionPlan2TH.ag" #-}
+                        _semFunBndTp     Seq.<| _prodsIsemFunBndTps
+                        {-# LINE 1335 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule116 #-}
-   rule116 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
-     _lhsIallVisitKinds
+   {-# LINE 612 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule116 = \ _semFunBndNm _semname ->
+                        {-# LINE 612 "src-ag/ExecutionPlan2TH.ag" #-}
+                        (_semFunBndNm    , TH.VarE (TH.mkName _semname    ))
+                        {-# LINE 1341 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule117 #-}
-   rule117 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
-     _lhsIavisitdefs
+   {-# LINE 613 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule117 = \ _semFunBndNm _sem_tp ->
+                        {-# LINE 613 "src-ag/ExecutionPlan2TH.ag" #-}
+                        (_semFunBndNm    , nobang, _sem_tp    )
+                        {-# LINE 1347 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule118 #-}
-   rule118 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
-     _lhsIavisituses
+   {-# LINE 614 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule118 = \ nt_ ->
+                        {-# LINE 614 "src-ag/ExecutionPlan2TH.ag" #-}
+                        TH.mkName (lateSemNtLabel nt_)
+                        {-# LINE 1353 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule119 #-}
-   rule119 = \ ((_lhsIimportBlocks) :: [String]) ->
-     _lhsIimportBlocks
+   {-# LINE 656 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule119 = \ initial_ ->
+                                     {-# LINE 656 "src-ag/ExecutionPlan2TH.ag" #-}
+                                     initial_
+                                     {-# LINE 1359 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule120 #-}
-   rule120 = \ ((_lhsImainFile) :: String) ->
-     _lhsImainFile
+   {-# LINE 657 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule120 = \ _allstates ->
+                                     {-# LINE 657 "src-ag/ExecutionPlan2TH.ag" #-}
+                                     _allstates
+                                     {-# LINE 1365 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule121 #-}
-   rule121 = \ ((_lhsImainName) :: String) ->
-     _lhsImainName
+   {-# LINE 1638 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule121 = \ ((_lhsIoptions) :: Options) ->
+                                                    {-# LINE 1638 "src-ag/ExecutionPlan2TH.ag" #-}
+                                                    \x -> if bangpats _lhsIoptions then TH.BangP x else x
+                                                    {-# LINE 1371 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule122 #-}
-   rule122 = \ ((_lhsImoduleHeader) :: String -> String -> String -> Bool -> String) ->
-     _lhsImoduleHeader
+   {-# LINE 1639 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule122 = \ ((_lhsIoptions) :: Options) ->
+                                                    {-# LINE 1639 "src-ag/ExecutionPlan2TH.ag" #-}
+                                                    TH.Bang TH.NoSourceUnpackedness (if strictData _lhsIoptions then TH.SourceStrict else TH.NoSourceStrictness)
+                                                    {-# LINE 1377 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule123 #-}
-   rule123 = \ _ntType ->
-     _ntType
+   {-# LINE 1649 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule123 = \  (_ :: ()) ->
+                                                        {-# LINE 1649 "src-ag/ExecutionPlan2TH.ag" #-}
+                                                        id
+                                                        {-# LINE 1383 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule124 #-}
-   rule124 = \ ((_lhsIoptions) :: Options) ->
-     _lhsIoptions
+   {-# LINE 1661 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule124 = \ nextVisits_ ->
+                       {-# LINE 1661 "src-ag/ExecutionPlan2TH.ag" #-}
+                       nextVisits_
+                       {-# LINE 1389 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule125 #-}
-   rule125 = \ ((_lhsIpragmaBlocks) :: String) ->
-     _lhsIpragmaBlocks
+   {-# LINE 1662 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule125 = \ prevVisits_ ->
+                       {-# LINE 1662 "src-ag/ExecutionPlan2TH.ag" #-}
+                       prevVisits_
+                       {-# LINE 1395 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule126 #-}
-   rule126 = \ ((_lhsItextBlocks) :: [String]) ->
+   {-# LINE 1706 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule126 = \ ((_lhsIlocalAttrTypes) :: Map NontermIdent (Map ConstructorIdent (Map Identifier Type))) nt_ ->
+                           {-# LINE 1706 "src-ag/ExecutionPlan2TH.ag" #-}
+                           Map.findWithDefault Map.empty nt_ _lhsIlocalAttrTypes
+                           {-# LINE 1401 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule127 #-}
+   {-# LINE 1733 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule127 = \ initial_ nt_ ->
+                     {-# LINE 1733 "src-ag/ExecutionPlan2TH.ag" #-}
+                     Map.singleton nt_ initial_
+                     {-# LINE 1407 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule128 #-}
+   {-# LINE 1747 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule128 = \ nt_ params_ ->
+                 {-# LINE 1747 "src-ag/ExecutionPlan2TH.ag" #-}
+                 NT nt_ (map show params_) False
+                 {-# LINE 1413 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule129 #-}
+   rule129 = \ ((_prodsIerrors) :: Seq Error) ->
+     _prodsIerrors
+   {-# INLINE rule130 #-}
+   rule130 = \ ((_prodsIfromToStates) :: Map VisitIdentifier (Int,Int)) ->
+     _prodsIfromToStates
+   {-# INLINE rule131 #-}
+   rule131 = \ ((_prodsIvisitKinds) :: Map VisitIdentifier VisitKind) ->
+     _prodsIvisitKinds
+   {-# INLINE rule132 #-}
+   rule132 = \ ((_prodsIvisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
+     _prodsIvisitdefs
+   {-# INLINE rule133 #-}
+   rule133 = \ ((_prodsIvisituses) :: Map VisitIdentifier (Set Identifier)) ->
+     _prodsIvisituses
+   {-# INLINE rule134 #-}
+   rule134 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
+     _lhsIallFromToStates
+   {-# INLINE rule135 #-}
+   rule135 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
+     _lhsIallInitStates
+   {-# INLINE rule136 #-}
+   rule136 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
+     _lhsIallVisitKinds
+   {-# INLINE rule137 #-}
+   rule137 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
+     _lhsIavisitdefs
+   {-# INLINE rule138 #-}
+   rule138 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
+     _lhsIavisituses
+   {-# INLINE rule139 #-}
+   rule139 = \ ((_lhsIimportBlocks) :: [String]) ->
+     _lhsIimportBlocks
+   {-# INLINE rule140 #-}
+   rule140 = \ ((_lhsImainFile) :: String) ->
+     _lhsImainFile
+   {-# INLINE rule141 #-}
+   rule141 = \ ((_lhsImainName) :: String) ->
+     _lhsImainName
+   {-# INLINE rule142 #-}
+   rule142 = \ ((_lhsImoduleHeader) :: String -> String -> String -> Bool -> String) ->
+     _lhsImoduleHeader
+   {-# INLINE rule143 #-}
+   rule143 = \ _ntType ->
+     _ntType
+   {-# INLINE rule144 #-}
+   rule144 = \ ((_lhsIoptions) :: Options) ->
+     _lhsIoptions
+   {-# INLINE rule145 #-}
+   rule145 = \ ((_lhsIpragmaBlocks) :: String) ->
+     _lhsIpragmaBlocks
+   {-# INLINE rule146 #-}
+   rule146 = \ ((_lhsItextBlocks) :: [String]) ->
      _lhsItextBlocks
 
 -- ENonterminals -----------------------------------------------
@@ -1313,196 +1507,196 @@ sem_ENonterminals_Cons arg_hd_ arg_tl_ = T_ENonterminals (return st11) where
          (T_ENonterminal_vOut7 _hdIerrors _hdIfromToStates _hdIinitStates _hdIoutput _hdIsemFunBndDefs _hdIsemFunBndTps _hdIvisitKinds _hdIvisitdefs _hdIvisituses) = inv_ENonterminal_s8 _hdX8 (T_ENonterminal_vIn7 _hdOallFromToStates _hdOallInitStates _hdOallVisitKinds _hdOavisitdefs _hdOavisituses _hdOderivings _hdOimportBlocks _hdOinhmap _hdOlocalAttrTypes _hdOmainFile _hdOmainName _hdOmoduleHeader _hdOoptions _hdOpragmaBlocks _hdOsynmap _hdOtextBlocks _hdOtypeSyns _hdOwrappers)
          (T_ENonterminals_vOut10 _tlIerrors _tlIfromToStates _tlIinitStates _tlIoutput _tlIsemFunBndDefs _tlIsemFunBndTps _tlIvisitKinds _tlIvisitdefs _tlIvisituses) = inv_ENonterminals_s11 _tlX11 (T_ENonterminals_vIn10 _tlOallFromToStates _tlOallInitStates _tlOallVisitKinds _tlOavisitdefs _tlOavisituses _tlOderivings _tlOimportBlocks _tlOinhmap _tlOlocalAttrTypes _tlOmainFile _tlOmainName _tlOmoduleHeader _tlOoptions _tlOpragmaBlocks _tlOsynmap _tlOtextBlocks _tlOtypeSyns _tlOwrappers)
          _lhsOerrors :: Seq Error
-         _lhsOerrors = rule127 _hdIerrors _tlIerrors
+         _lhsOerrors = rule147 _hdIerrors _tlIerrors
          _lhsOfromToStates :: Map VisitIdentifier (Int,Int)
-         _lhsOfromToStates = rule128 _hdIfromToStates _tlIfromToStates
+         _lhsOfromToStates = rule148 _hdIfromToStates _tlIfromToStates
          _lhsOinitStates :: Map NontermIdent Int
-         _lhsOinitStates = rule129 _hdIinitStates _tlIinitStates
+         _lhsOinitStates = rule149 _hdIinitStates _tlIinitStates
          _lhsOoutput :: [TH.Dec]
-         _lhsOoutput = rule130 _hdIoutput _tlIoutput
+         _lhsOoutput = rule150 _hdIoutput _tlIoutput
          _lhsOsemFunBndDefs :: Seq (TH.Name, TH.Exp)
-         _lhsOsemFunBndDefs = rule131 _hdIsemFunBndDefs _tlIsemFunBndDefs
+         _lhsOsemFunBndDefs = rule151 _hdIsemFunBndDefs _tlIsemFunBndDefs
          _lhsOsemFunBndTps :: Seq (TH.VarBangType)
-         _lhsOsemFunBndTps = rule132 _hdIsemFunBndTps _tlIsemFunBndTps
+         _lhsOsemFunBndTps = rule152 _hdIsemFunBndTps _tlIsemFunBndTps
          _lhsOvisitKinds :: Map VisitIdentifier VisitKind
-         _lhsOvisitKinds = rule133 _hdIvisitKinds _tlIvisitKinds
+         _lhsOvisitKinds = rule153 _hdIvisitKinds _tlIvisitKinds
          _lhsOvisitdefs :: Map VisitIdentifier (Set Identifier)
-         _lhsOvisitdefs = rule134 _hdIvisitdefs _tlIvisitdefs
+         _lhsOvisitdefs = rule154 _hdIvisitdefs _tlIvisitdefs
          _lhsOvisituses :: Map VisitIdentifier (Set Identifier)
-         _lhsOvisituses = rule135 _hdIvisituses _tlIvisituses
-         _hdOallFromToStates = rule136 _lhsIallFromToStates
-         _hdOallInitStates = rule137 _lhsIallInitStates
-         _hdOallVisitKinds = rule138 _lhsIallVisitKinds
-         _hdOavisitdefs = rule139 _lhsIavisitdefs
-         _hdOavisituses = rule140 _lhsIavisituses
-         _hdOderivings = rule141 _lhsIderivings
-         _hdOimportBlocks = rule142 _lhsIimportBlocks
-         _hdOinhmap = rule143 _lhsIinhmap
-         _hdOlocalAttrTypes = rule144 _lhsIlocalAttrTypes
-         _hdOmainFile = rule145 _lhsImainFile
-         _hdOmainName = rule146 _lhsImainName
-         _hdOmoduleHeader = rule147 _lhsImoduleHeader
-         _hdOoptions = rule148 _lhsIoptions
-         _hdOpragmaBlocks = rule149 _lhsIpragmaBlocks
-         _hdOsynmap = rule150 _lhsIsynmap
-         _hdOtextBlocks = rule151 _lhsItextBlocks
-         _hdOtypeSyns = rule152 _lhsItypeSyns
-         _hdOwrappers = rule153 _lhsIwrappers
-         _tlOallFromToStates = rule154 _lhsIallFromToStates
-         _tlOallInitStates = rule155 _lhsIallInitStates
-         _tlOallVisitKinds = rule156 _lhsIallVisitKinds
-         _tlOavisitdefs = rule157 _lhsIavisitdefs
-         _tlOavisituses = rule158 _lhsIavisituses
-         _tlOderivings = rule159 _lhsIderivings
-         _tlOimportBlocks = rule160 _lhsIimportBlocks
-         _tlOinhmap = rule161 _lhsIinhmap
-         _tlOlocalAttrTypes = rule162 _lhsIlocalAttrTypes
-         _tlOmainFile = rule163 _lhsImainFile
-         _tlOmainName = rule164 _lhsImainName
-         _tlOmoduleHeader = rule165 _lhsImoduleHeader
-         _tlOoptions = rule166 _lhsIoptions
-         _tlOpragmaBlocks = rule167 _lhsIpragmaBlocks
-         _tlOsynmap = rule168 _lhsIsynmap
-         _tlOtextBlocks = rule169 _lhsItextBlocks
-         _tlOtypeSyns = rule170 _lhsItypeSyns
-         _tlOwrappers = rule171 _lhsIwrappers
+         _lhsOvisituses = rule155 _hdIvisituses _tlIvisituses
+         _hdOallFromToStates = rule156 _lhsIallFromToStates
+         _hdOallInitStates = rule157 _lhsIallInitStates
+         _hdOallVisitKinds = rule158 _lhsIallVisitKinds
+         _hdOavisitdefs = rule159 _lhsIavisitdefs
+         _hdOavisituses = rule160 _lhsIavisituses
+         _hdOderivings = rule161 _lhsIderivings
+         _hdOimportBlocks = rule162 _lhsIimportBlocks
+         _hdOinhmap = rule163 _lhsIinhmap
+         _hdOlocalAttrTypes = rule164 _lhsIlocalAttrTypes
+         _hdOmainFile = rule165 _lhsImainFile
+         _hdOmainName = rule166 _lhsImainName
+         _hdOmoduleHeader = rule167 _lhsImoduleHeader
+         _hdOoptions = rule168 _lhsIoptions
+         _hdOpragmaBlocks = rule169 _lhsIpragmaBlocks
+         _hdOsynmap = rule170 _lhsIsynmap
+         _hdOtextBlocks = rule171 _lhsItextBlocks
+         _hdOtypeSyns = rule172 _lhsItypeSyns
+         _hdOwrappers = rule173 _lhsIwrappers
+         _tlOallFromToStates = rule174 _lhsIallFromToStates
+         _tlOallInitStates = rule175 _lhsIallInitStates
+         _tlOallVisitKinds = rule176 _lhsIallVisitKinds
+         _tlOavisitdefs = rule177 _lhsIavisitdefs
+         _tlOavisituses = rule178 _lhsIavisituses
+         _tlOderivings = rule179 _lhsIderivings
+         _tlOimportBlocks = rule180 _lhsIimportBlocks
+         _tlOinhmap = rule181 _lhsIinhmap
+         _tlOlocalAttrTypes = rule182 _lhsIlocalAttrTypes
+         _tlOmainFile = rule183 _lhsImainFile
+         _tlOmainName = rule184 _lhsImainName
+         _tlOmoduleHeader = rule185 _lhsImoduleHeader
+         _tlOoptions = rule186 _lhsIoptions
+         _tlOpragmaBlocks = rule187 _lhsIpragmaBlocks
+         _tlOsynmap = rule188 _lhsIsynmap
+         _tlOtextBlocks = rule189 _lhsItextBlocks
+         _tlOtypeSyns = rule190 _lhsItypeSyns
+         _tlOwrappers = rule191 _lhsIwrappers
          __result_ = T_ENonterminals_vOut10 _lhsOerrors _lhsOfromToStates _lhsOinitStates _lhsOoutput _lhsOsemFunBndDefs _lhsOsemFunBndTps _lhsOvisitKinds _lhsOvisitdefs _lhsOvisituses
          in __result_ )
      in C_ENonterminals_s11 v10
-   {-# INLINE rule127 #-}
-   rule127 = \ ((_hdIerrors) :: Seq Error) ((_tlIerrors) :: Seq Error) ->
-     _hdIerrors Seq.>< _tlIerrors
-   {-# INLINE rule128 #-}
-   rule128 = \ ((_hdIfromToStates) :: Map VisitIdentifier (Int,Int)) ((_tlIfromToStates) :: Map VisitIdentifier (Int,Int)) ->
-     _hdIfromToStates `mappend` _tlIfromToStates
-   {-# INLINE rule129 #-}
-   rule129 = \ ((_hdIinitStates) :: Map NontermIdent Int) ((_tlIinitStates) :: Map NontermIdent Int) ->
-     _hdIinitStates `mappend` _tlIinitStates
-   {-# INLINE rule130 #-}
-   rule130 = \ ((_hdIoutput) :: [TH.Dec]) ((_tlIoutput) :: [TH.Dec]) ->
-     _hdIoutput ++ _tlIoutput
-   {-# INLINE rule131 #-}
-   rule131 = \ ((_hdIsemFunBndDefs) :: Seq (TH.Name, TH.Exp)) ((_tlIsemFunBndDefs) :: Seq (TH.Name, TH.Exp)) ->
-     _hdIsemFunBndDefs Seq.>< _tlIsemFunBndDefs
-   {-# INLINE rule132 #-}
-   rule132 = \ ((_hdIsemFunBndTps) :: Seq (TH.VarBangType)) ((_tlIsemFunBndTps) :: Seq (TH.VarBangType)) ->
-     _hdIsemFunBndTps Seq.>< _tlIsemFunBndTps
-   {-# INLINE rule133 #-}
-   rule133 = \ ((_hdIvisitKinds) :: Map VisitIdentifier VisitKind) ((_tlIvisitKinds) :: Map VisitIdentifier VisitKind) ->
-     _hdIvisitKinds `mappend` _tlIvisitKinds
-   {-# INLINE rule134 #-}
-   rule134 = \ ((_hdIvisitdefs) :: Map VisitIdentifier (Set Identifier)) ((_tlIvisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
-     _hdIvisitdefs `uwSetUnion` _tlIvisitdefs
-   {-# INLINE rule135 #-}
-   rule135 = \ ((_hdIvisituses) :: Map VisitIdentifier (Set Identifier)) ((_tlIvisituses) :: Map VisitIdentifier (Set Identifier)) ->
-     _hdIvisituses `uwSetUnion` _tlIvisituses
-   {-# INLINE rule136 #-}
-   rule136 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
-     _lhsIallFromToStates
-   {-# INLINE rule137 #-}
-   rule137 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
-     _lhsIallInitStates
-   {-# INLINE rule138 #-}
-   rule138 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
-     _lhsIallVisitKinds
-   {-# INLINE rule139 #-}
-   rule139 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
-     _lhsIavisitdefs
-   {-# INLINE rule140 #-}
-   rule140 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
-     _lhsIavisituses
-   {-# INLINE rule141 #-}
-   rule141 = \ ((_lhsIderivings) :: Derivings) ->
-     _lhsIderivings
-   {-# INLINE rule142 #-}
-   rule142 = \ ((_lhsIimportBlocks) :: [String]) ->
-     _lhsIimportBlocks
-   {-# INLINE rule143 #-}
-   rule143 = \ ((_lhsIinhmap) :: Map NontermIdent Attributes) ->
-     _lhsIinhmap
-   {-# INLINE rule144 #-}
-   rule144 = \ ((_lhsIlocalAttrTypes) :: Map NontermIdent (Map ConstructorIdent (Map Identifier Type))) ->
-     _lhsIlocalAttrTypes
-   {-# INLINE rule145 #-}
-   rule145 = \ ((_lhsImainFile) :: String) ->
-     _lhsImainFile
-   {-# INLINE rule146 #-}
-   rule146 = \ ((_lhsImainName) :: String) ->
-     _lhsImainName
    {-# INLINE rule147 #-}
-   rule147 = \ ((_lhsImoduleHeader) :: String -> String -> String -> Bool -> String) ->
-     _lhsImoduleHeader
+   rule147 = \ ((_hdIerrors) :: Seq Error) ((_tlIerrors) :: Seq Error) ->
+     _hdIerrors Seq.>< _tlIerrors
    {-# INLINE rule148 #-}
-   rule148 = \ ((_lhsIoptions) :: Options) ->
-     _lhsIoptions
+   rule148 = \ ((_hdIfromToStates) :: Map VisitIdentifier (Int,Int)) ((_tlIfromToStates) :: Map VisitIdentifier (Int,Int)) ->
+     _hdIfromToStates `mappend` _tlIfromToStates
    {-# INLINE rule149 #-}
-   rule149 = \ ((_lhsIpragmaBlocks) :: String) ->
-     _lhsIpragmaBlocks
+   rule149 = \ ((_hdIinitStates) :: Map NontermIdent Int) ((_tlIinitStates) :: Map NontermIdent Int) ->
+     _hdIinitStates `mappend` _tlIinitStates
    {-# INLINE rule150 #-}
-   rule150 = \ ((_lhsIsynmap) :: Map NontermIdent Attributes) ->
-     _lhsIsynmap
+   rule150 = \ ((_hdIoutput) :: [TH.Dec]) ((_tlIoutput) :: [TH.Dec]) ->
+     _hdIoutput ++ _tlIoutput
    {-# INLINE rule151 #-}
-   rule151 = \ ((_lhsItextBlocks) :: [String]) ->
-     _lhsItextBlocks
+   rule151 = \ ((_hdIsemFunBndDefs) :: Seq (TH.Name, TH.Exp)) ((_tlIsemFunBndDefs) :: Seq (TH.Name, TH.Exp)) ->
+     _hdIsemFunBndDefs Seq.>< _tlIsemFunBndDefs
    {-# INLINE rule152 #-}
-   rule152 = \ ((_lhsItypeSyns) :: TypeSyns) ->
-     _lhsItypeSyns
+   rule152 = \ ((_hdIsemFunBndTps) :: Seq (TH.VarBangType)) ((_tlIsemFunBndTps) :: Seq (TH.VarBangType)) ->
+     _hdIsemFunBndTps Seq.>< _tlIsemFunBndTps
    {-# INLINE rule153 #-}
-   rule153 = \ ((_lhsIwrappers) :: Set NontermIdent) ->
-     _lhsIwrappers
+   rule153 = \ ((_hdIvisitKinds) :: Map VisitIdentifier VisitKind) ((_tlIvisitKinds) :: Map VisitIdentifier VisitKind) ->
+     _hdIvisitKinds `mappend` _tlIvisitKinds
    {-# INLINE rule154 #-}
-   rule154 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
-     _lhsIallFromToStates
+   rule154 = \ ((_hdIvisitdefs) :: Map VisitIdentifier (Set Identifier)) ((_tlIvisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
+     _hdIvisitdefs `uwSetUnion` _tlIvisitdefs
    {-# INLINE rule155 #-}
-   rule155 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
-     _lhsIallInitStates
+   rule155 = \ ((_hdIvisituses) :: Map VisitIdentifier (Set Identifier)) ((_tlIvisituses) :: Map VisitIdentifier (Set Identifier)) ->
+     _hdIvisituses `uwSetUnion` _tlIvisituses
    {-# INLINE rule156 #-}
-   rule156 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
-     _lhsIallVisitKinds
+   rule156 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
+     _lhsIallFromToStates
    {-# INLINE rule157 #-}
-   rule157 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
-     _lhsIavisitdefs
+   rule157 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
+     _lhsIallInitStates
    {-# INLINE rule158 #-}
-   rule158 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
-     _lhsIavisituses
+   rule158 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
+     _lhsIallVisitKinds
    {-# INLINE rule159 #-}
-   rule159 = \ ((_lhsIderivings) :: Derivings) ->
-     _lhsIderivings
+   rule159 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
+     _lhsIavisitdefs
    {-# INLINE rule160 #-}
-   rule160 = \ ((_lhsIimportBlocks) :: [String]) ->
-     _lhsIimportBlocks
+   rule160 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
+     _lhsIavisituses
    {-# INLINE rule161 #-}
-   rule161 = \ ((_lhsIinhmap) :: Map NontermIdent Attributes) ->
-     _lhsIinhmap
+   rule161 = \ ((_lhsIderivings) :: Derivings) ->
+     _lhsIderivings
    {-# INLINE rule162 #-}
-   rule162 = \ ((_lhsIlocalAttrTypes) :: Map NontermIdent (Map ConstructorIdent (Map Identifier Type))) ->
-     _lhsIlocalAttrTypes
+   rule162 = \ ((_lhsIimportBlocks) :: [String]) ->
+     _lhsIimportBlocks
    {-# INLINE rule163 #-}
-   rule163 = \ ((_lhsImainFile) :: String) ->
-     _lhsImainFile
+   rule163 = \ ((_lhsIinhmap) :: Map NontermIdent Attributes) ->
+     _lhsIinhmap
    {-# INLINE rule164 #-}
-   rule164 = \ ((_lhsImainName) :: String) ->
-     _lhsImainName
+   rule164 = \ ((_lhsIlocalAttrTypes) :: Map NontermIdent (Map ConstructorIdent (Map Identifier Type))) ->
+     _lhsIlocalAttrTypes
    {-# INLINE rule165 #-}
-   rule165 = \ ((_lhsImoduleHeader) :: String -> String -> String -> Bool -> String) ->
-     _lhsImoduleHeader
+   rule165 = \ ((_lhsImainFile) :: String) ->
+     _lhsImainFile
    {-# INLINE rule166 #-}
-   rule166 = \ ((_lhsIoptions) :: Options) ->
-     _lhsIoptions
+   rule166 = \ ((_lhsImainName) :: String) ->
+     _lhsImainName
    {-# INLINE rule167 #-}
-   rule167 = \ ((_lhsIpragmaBlocks) :: String) ->
-     _lhsIpragmaBlocks
+   rule167 = \ ((_lhsImoduleHeader) :: String -> String -> String -> Bool -> String) ->
+     _lhsImoduleHeader
    {-# INLINE rule168 #-}
-   rule168 = \ ((_lhsIsynmap) :: Map NontermIdent Attributes) ->
-     _lhsIsynmap
+   rule168 = \ ((_lhsIoptions) :: Options) ->
+     _lhsIoptions
    {-# INLINE rule169 #-}
-   rule169 = \ ((_lhsItextBlocks) :: [String]) ->
-     _lhsItextBlocks
+   rule169 = \ ((_lhsIpragmaBlocks) :: String) ->
+     _lhsIpragmaBlocks
    {-# INLINE rule170 #-}
-   rule170 = \ ((_lhsItypeSyns) :: TypeSyns) ->
-     _lhsItypeSyns
+   rule170 = \ ((_lhsIsynmap) :: Map NontermIdent Attributes) ->
+     _lhsIsynmap
    {-# INLINE rule171 #-}
-   rule171 = \ ((_lhsIwrappers) :: Set NontermIdent) ->
+   rule171 = \ ((_lhsItextBlocks) :: [String]) ->
+     _lhsItextBlocks
+   {-# INLINE rule172 #-}
+   rule172 = \ ((_lhsItypeSyns) :: TypeSyns) ->
+     _lhsItypeSyns
+   {-# INLINE rule173 #-}
+   rule173 = \ ((_lhsIwrappers) :: Set NontermIdent) ->
+     _lhsIwrappers
+   {-# INLINE rule174 #-}
+   rule174 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
+     _lhsIallFromToStates
+   {-# INLINE rule175 #-}
+   rule175 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
+     _lhsIallInitStates
+   {-# INLINE rule176 #-}
+   rule176 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
+     _lhsIallVisitKinds
+   {-# INLINE rule177 #-}
+   rule177 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
+     _lhsIavisitdefs
+   {-# INLINE rule178 #-}
+   rule178 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
+     _lhsIavisituses
+   {-# INLINE rule179 #-}
+   rule179 = \ ((_lhsIderivings) :: Derivings) ->
+     _lhsIderivings
+   {-# INLINE rule180 #-}
+   rule180 = \ ((_lhsIimportBlocks) :: [String]) ->
+     _lhsIimportBlocks
+   {-# INLINE rule181 #-}
+   rule181 = \ ((_lhsIinhmap) :: Map NontermIdent Attributes) ->
+     _lhsIinhmap
+   {-# INLINE rule182 #-}
+   rule182 = \ ((_lhsIlocalAttrTypes) :: Map NontermIdent (Map ConstructorIdent (Map Identifier Type))) ->
+     _lhsIlocalAttrTypes
+   {-# INLINE rule183 #-}
+   rule183 = \ ((_lhsImainFile) :: String) ->
+     _lhsImainFile
+   {-# INLINE rule184 #-}
+   rule184 = \ ((_lhsImainName) :: String) ->
+     _lhsImainName
+   {-# INLINE rule185 #-}
+   rule185 = \ ((_lhsImoduleHeader) :: String -> String -> String -> Bool -> String) ->
+     _lhsImoduleHeader
+   {-# INLINE rule186 #-}
+   rule186 = \ ((_lhsIoptions) :: Options) ->
+     _lhsIoptions
+   {-# INLINE rule187 #-}
+   rule187 = \ ((_lhsIpragmaBlocks) :: String) ->
+     _lhsIpragmaBlocks
+   {-# INLINE rule188 #-}
+   rule188 = \ ((_lhsIsynmap) :: Map NontermIdent Attributes) ->
+     _lhsIsynmap
+   {-# INLINE rule189 #-}
+   rule189 = \ ((_lhsItextBlocks) :: [String]) ->
+     _lhsItextBlocks
+   {-# INLINE rule190 #-}
+   rule190 = \ ((_lhsItypeSyns) :: TypeSyns) ->
+     _lhsItypeSyns
+   {-# INLINE rule191 #-}
+   rule191 = \ ((_lhsIwrappers) :: Set NontermIdent) ->
      _lhsIwrappers
 {-# NOINLINE sem_ENonterminals_Nil #-}
 sem_ENonterminals_Nil ::  T_ENonterminals 
@@ -1512,64 +1706,64 @@ sem_ENonterminals_Nil  = T_ENonterminals (return st11) where
       v10 :: T_ENonterminals_v10 
       v10 = \ (T_ENonterminals_vIn10 _lhsIallFromToStates _lhsIallInitStates _lhsIallVisitKinds _lhsIavisitdefs _lhsIavisituses _lhsIderivings _lhsIimportBlocks _lhsIinhmap _lhsIlocalAttrTypes _lhsImainFile _lhsImainName _lhsImoduleHeader _lhsIoptions _lhsIpragmaBlocks _lhsIsynmap _lhsItextBlocks _lhsItypeSyns _lhsIwrappers) -> ( let
          _lhsOerrors :: Seq Error
-         _lhsOerrors = rule172  ()
+         _lhsOerrors = rule192  ()
          _lhsOfromToStates :: Map VisitIdentifier (Int,Int)
-         _lhsOfromToStates = rule173  ()
+         _lhsOfromToStates = rule193  ()
          _lhsOinitStates :: Map NontermIdent Int
-         _lhsOinitStates = rule174  ()
+         _lhsOinitStates = rule194  ()
          _lhsOoutput :: [TH.Dec]
-         _lhsOoutput = rule175  ()
+         _lhsOoutput = rule195  ()
          _lhsOsemFunBndDefs :: Seq (TH.Name, TH.Exp)
-         _lhsOsemFunBndDefs = rule176  ()
+         _lhsOsemFunBndDefs = rule196  ()
          _lhsOsemFunBndTps :: Seq (TH.VarBangType)
-         _lhsOsemFunBndTps = rule177  ()
+         _lhsOsemFunBndTps = rule197  ()
          _lhsOvisitKinds :: Map VisitIdentifier VisitKind
-         _lhsOvisitKinds = rule178  ()
+         _lhsOvisitKinds = rule198  ()
          _lhsOvisitdefs :: Map VisitIdentifier (Set Identifier)
-         _lhsOvisitdefs = rule179  ()
+         _lhsOvisitdefs = rule199  ()
          _lhsOvisituses :: Map VisitIdentifier (Set Identifier)
-         _lhsOvisituses = rule180  ()
+         _lhsOvisituses = rule200  ()
          __result_ = T_ENonterminals_vOut10 _lhsOerrors _lhsOfromToStates _lhsOinitStates _lhsOoutput _lhsOsemFunBndDefs _lhsOsemFunBndTps _lhsOvisitKinds _lhsOvisitdefs _lhsOvisituses
          in __result_ )
      in C_ENonterminals_s11 v10
-   {-# INLINE rule172 #-}
-   rule172 = \  (_ :: ()) ->
+   {-# INLINE rule192 #-}
+   rule192 = \  (_ :: ()) ->
      Seq.empty
-   {-# INLINE rule173 #-}
-   rule173 = \  (_ :: ()) ->
+   {-# INLINE rule193 #-}
+   rule193 = \  (_ :: ()) ->
      mempty
-   {-# INLINE rule174 #-}
-   rule174 = \  (_ :: ()) ->
+   {-# INLINE rule194 #-}
+   rule194 = \  (_ :: ()) ->
      mempty
-   {-# INLINE rule175 #-}
-   rule175 = \  (_ :: ()) ->
+   {-# INLINE rule195 #-}
+   rule195 = \  (_ :: ()) ->
      []
-   {-# INLINE rule176 #-}
-   rule176 = \  (_ :: ()) ->
+   {-# INLINE rule196 #-}
+   rule196 = \  (_ :: ()) ->
      Seq.empty
-   {-# INLINE rule177 #-}
-   rule177 = \  (_ :: ()) ->
+   {-# INLINE rule197 #-}
+   rule197 = \  (_ :: ()) ->
      Seq.empty
-   {-# INLINE rule178 #-}
-   rule178 = \  (_ :: ()) ->
+   {-# INLINE rule198 #-}
+   rule198 = \  (_ :: ()) ->
      mempty
-   {-# INLINE rule179 #-}
-   rule179 = \  (_ :: ()) ->
+   {-# INLINE rule199 #-}
+   rule199 = \  (_ :: ()) ->
      Map.empty
-   {-# INLINE rule180 #-}
-   rule180 = \  (_ :: ()) ->
+   {-# INLINE rule200 #-}
+   rule200 = \  (_ :: ()) ->
      Map.empty
 
 -- EProduction -------------------------------------------------
 -- wrapper
-data Inh_EProduction  = Inh_EProduction { allFromToStates_Inh_EProduction :: (Map VisitIdentifier (Int,Int)), allInhmap_Inh_EProduction :: (Map NontermIdent Attributes), allInitStates_Inh_EProduction :: (Map NontermIdent Int), allSynmap_Inh_EProduction :: (Map NontermIdent Attributes), allVisitKinds_Inh_EProduction :: (Map VisitIdentifier VisitKind), allstates_Inh_EProduction :: (Set StateIdentifier), avisitdefs_Inh_EProduction :: (Map VisitIdentifier (Set Identifier)), avisituses_Inh_EProduction :: (Map VisitIdentifier (Set Identifier)), importBlocks_Inh_EProduction :: ([String]), inhmap_Inh_EProduction :: (Attributes), initial_Inh_EProduction :: (StateIdentifier), localAttrTypes_Inh_EProduction :: (Map ConstructorIdent (Map Identifier Type)), mainFile_Inh_EProduction :: (String), mainName_Inh_EProduction :: (String), moduleHeader_Inh_EProduction :: (String -> String -> String -> Bool -> String), nextVisits_Inh_EProduction :: (Map StateIdentifier StateCtx), nt_Inh_EProduction :: (NontermIdent), ntType_Inh_EProduction :: (Type), options_Inh_EProduction :: (Options), params_Inh_EProduction :: ([Identifier]), pragmaBlocks_Inh_EProduction :: (String), prevVisits_Inh_EProduction :: (Map StateIdentifier StateCtx), rename_Inh_EProduction :: (Bool), synmap_Inh_EProduction :: (Attributes), textBlocks_Inh_EProduction :: ([String]) }
+data Inh_EProduction  = Inh_EProduction { allFromToStates_Inh_EProduction :: (Map VisitIdentifier (Int,Int)), allInhmap_Inh_EProduction :: (Map NontermIdent Attributes), allInitStates_Inh_EProduction :: (Map NontermIdent Int), allSynmap_Inh_EProduction :: (Map NontermIdent Attributes), allVisitKinds_Inh_EProduction :: (Map VisitIdentifier VisitKind), allstates_Inh_EProduction :: (Set StateIdentifier), avisitdefs_Inh_EProduction :: (Map VisitIdentifier (Set Identifier)), avisituses_Inh_EProduction :: (Map VisitIdentifier (Set Identifier)), classCtxs_Inh_EProduction :: (ClassContext), importBlocks_Inh_EProduction :: ([String]), inhmap_Inh_EProduction :: (Attributes), initial_Inh_EProduction :: (StateIdentifier), localAttrTypes_Inh_EProduction :: (Map ConstructorIdent (Map Identifier Type)), mainFile_Inh_EProduction :: (String), mainName_Inh_EProduction :: (String), moduleHeader_Inh_EProduction :: (String -> String -> String -> Bool -> String), nextVisits_Inh_EProduction :: (Map StateIdentifier StateCtx), nt_Inh_EProduction :: (NontermIdent), ntType_Inh_EProduction :: (Type), options_Inh_EProduction :: (Options), params_Inh_EProduction :: ([Identifier]), pragmaBlocks_Inh_EProduction :: (String), prevVisits_Inh_EProduction :: (Map StateIdentifier StateCtx), rename_Inh_EProduction :: (Bool), synmap_Inh_EProduction :: (Attributes), textBlocks_Inh_EProduction :: ([String]) }
 data Syn_EProduction  = Syn_EProduction { allvisits_Syn_EProduction :: ([VisitStateState]), count_Syn_EProduction :: (Int), datatype_Syn_EProduction :: (TH.Con), errors_Syn_EProduction :: (Seq Error), fromToStates_Syn_EProduction :: (Map VisitIdentifier (Int,Int)), semFunBndDefs_Syn_EProduction :: (Seq (TH.Name, TH.Exp)), semFunBndTps_Syn_EProduction :: (Seq (TH.VarBangType)), sem_nt_Syn_EProduction :: ([TH.Clause]), visitKinds_Syn_EProduction :: (Map VisitIdentifier VisitKind), visitdefs_Syn_EProduction :: (Map VisitIdentifier (Set Identifier)), visituses_Syn_EProduction :: (Map VisitIdentifier (Set Identifier)) }
 {-# INLINABLE wrap_EProduction #-}
 wrap_EProduction :: T_EProduction  -> Inh_EProduction  -> (Syn_EProduction )
-wrap_EProduction (T_EProduction act) (Inh_EProduction _lhsIallFromToStates _lhsIallInhmap _lhsIallInitStates _lhsIallSynmap _lhsIallVisitKinds _lhsIallstates _lhsIavisitdefs _lhsIavisituses _lhsIimportBlocks _lhsIinhmap _lhsIinitial _lhsIlocalAttrTypes _lhsImainFile _lhsImainName _lhsImoduleHeader _lhsInextVisits _lhsInt _lhsIntType _lhsIoptions _lhsIparams _lhsIpragmaBlocks _lhsIprevVisits _lhsIrename _lhsIsynmap _lhsItextBlocks) =
+wrap_EProduction (T_EProduction act) (Inh_EProduction _lhsIallFromToStates _lhsIallInhmap _lhsIallInitStates _lhsIallSynmap _lhsIallVisitKinds _lhsIallstates _lhsIavisitdefs _lhsIavisituses _lhsIclassCtxs _lhsIimportBlocks _lhsIinhmap _lhsIinitial _lhsIlocalAttrTypes _lhsImainFile _lhsImainName _lhsImoduleHeader _lhsInextVisits _lhsInt _lhsIntType _lhsIoptions _lhsIparams _lhsIpragmaBlocks _lhsIprevVisits _lhsIrename _lhsIsynmap _lhsItextBlocks) =
    Control.Monad.Identity.runIdentity (
      do sem <- act
-        let arg13 = T_EProduction_vIn13 _lhsIallFromToStates _lhsIallInhmap _lhsIallInitStates _lhsIallSynmap _lhsIallVisitKinds _lhsIallstates _lhsIavisitdefs _lhsIavisituses _lhsIimportBlocks _lhsIinhmap _lhsIinitial _lhsIlocalAttrTypes _lhsImainFile _lhsImainName _lhsImoduleHeader _lhsInextVisits _lhsInt _lhsIntType _lhsIoptions _lhsIparams _lhsIpragmaBlocks _lhsIprevVisits _lhsIrename _lhsIsynmap _lhsItextBlocks
+        let arg13 = T_EProduction_vIn13 _lhsIallFromToStates _lhsIallInhmap _lhsIallInitStates _lhsIallSynmap _lhsIallVisitKinds _lhsIallstates _lhsIavisitdefs _lhsIavisituses _lhsIclassCtxs _lhsIimportBlocks _lhsIinhmap _lhsIinitial _lhsIlocalAttrTypes _lhsImainFile _lhsImainName _lhsImoduleHeader _lhsInextVisits _lhsInt _lhsIntType _lhsIoptions _lhsIparams _lhsIpragmaBlocks _lhsIprevVisits _lhsIrename _lhsIsynmap _lhsItextBlocks
         (T_EProduction_vOut13 _lhsOallvisits _lhsOcount _lhsOdatatype _lhsOerrors _lhsOfromToStates _lhsOsemFunBndDefs _lhsOsemFunBndTps _lhsOsem_nt _lhsOvisitKinds _lhsOvisitdefs _lhsOvisituses) <- return (inv_EProduction_s14 sem arg13)
         return (Syn_EProduction _lhsOallvisits _lhsOcount _lhsOdatatype _lhsOerrors _lhsOfromToStates _lhsOsemFunBndDefs _lhsOsemFunBndTps _lhsOsem_nt _lhsOvisitKinds _lhsOvisitdefs _lhsOvisituses)
    )
@@ -1588,7 +1782,7 @@ newtype T_EProduction_s14  = C_EProduction_s14 {
                                                }
 data T_EProduction_s15  = C_EProduction_s15
 type T_EProduction_v13  = (T_EProduction_vIn13 ) -> (T_EProduction_vOut13 )
-data T_EProduction_vIn13  = T_EProduction_vIn13 (Map VisitIdentifier (Int,Int)) (Map NontermIdent Attributes) (Map NontermIdent Int) (Map NontermIdent Attributes) (Map VisitIdentifier VisitKind) (Set StateIdentifier) (Map VisitIdentifier (Set Identifier)) (Map VisitIdentifier (Set Identifier)) ([String]) (Attributes) (StateIdentifier) (Map ConstructorIdent (Map Identifier Type)) (String) (String) (String -> String -> String -> Bool -> String) (Map StateIdentifier StateCtx) (NontermIdent) (Type) (Options) ([Identifier]) (String) (Map StateIdentifier StateCtx) (Bool) (Attributes) ([String])
+data T_EProduction_vIn13  = T_EProduction_vIn13 (Map VisitIdentifier (Int,Int)) (Map NontermIdent Attributes) (Map NontermIdent Int) (Map NontermIdent Attributes) (Map VisitIdentifier VisitKind) (Set StateIdentifier) (Map VisitIdentifier (Set Identifier)) (Map VisitIdentifier (Set Identifier)) (ClassContext) ([String]) (Attributes) (StateIdentifier) (Map ConstructorIdent (Map Identifier Type)) (String) (String) (String -> String -> String -> Bool -> String) (Map StateIdentifier StateCtx) (NontermIdent) (Type) (Options) ([Identifier]) (String) (Map StateIdentifier StateCtx) (Bool) (Attributes) ([String])
 data T_EProduction_vOut13  = T_EProduction_vOut13 ([VisitStateState]) (Int) (TH.Con) (Seq Error) (Map VisitIdentifier (Int,Int)) (Seq (TH.Name, TH.Exp)) (Seq (TH.VarBangType)) ([TH.Clause]) (Map VisitIdentifier VisitKind) (Map VisitIdentifier (Set Identifier)) (Map VisitIdentifier (Set Identifier))
 {-# NOINLINE sem_EProduction_EProduction #-}
 sem_EProduction_EProduction :: (ConstructorIdent) -> ([Identifier]) -> ([Type]) -> T_ERules  -> T_EChildren  -> T_Visits  -> T_EProduction 
@@ -1596,408 +1790,415 @@ sem_EProduction_EProduction arg_con_ arg_params_ arg_constraints_ arg_rules_ arg
    {-# NOINLINE st14 #-}
    st14 = let
       v13 :: T_EProduction_v13 
-      v13 = \ (T_EProduction_vIn13 _lhsIallFromToStates _lhsIallInhmap _lhsIallInitStates _lhsIallSynmap _lhsIallVisitKinds _lhsIallstates _lhsIavisitdefs _lhsIavisituses _lhsIimportBlocks _lhsIinhmap _lhsIinitial _lhsIlocalAttrTypes _lhsImainFile _lhsImainName _lhsImoduleHeader _lhsInextVisits _lhsInt _lhsIntType _lhsIoptions _lhsIparams _lhsIpragmaBlocks _lhsIprevVisits _lhsIrename _lhsIsynmap _lhsItextBlocks) -> ( let
+      v13 = \ (T_EProduction_vIn13 _lhsIallFromToStates _lhsIallInhmap _lhsIallInitStates _lhsIallSynmap _lhsIallVisitKinds _lhsIallstates _lhsIavisitdefs _lhsIavisituses _lhsIclassCtxs _lhsIimportBlocks _lhsIinhmap _lhsIinitial _lhsIlocalAttrTypes _lhsImainFile _lhsImainName _lhsImoduleHeader _lhsInextVisits _lhsInt _lhsIntType _lhsIoptions _lhsIparams _lhsIpragmaBlocks _lhsIprevVisits _lhsIrename _lhsIsynmap _lhsItextBlocks) -> ( let
          _rulesX23 = Control.Monad.Identity.runIdentity (attach_T_ERules (arg_rules_))
          _childrenX5 = Control.Monad.Identity.runIdentity (attach_T_EChildren (arg_children_))
          _visitsX56 = Control.Monad.Identity.runIdentity (attach_T_Visits (arg_visits_))
          (T_ERules_vOut22 _rulesIerrors _rulesIruledefs _rulesIruleuses _rulesIusedArgs) = inv_ERules_s23 _rulesX23 (T_ERules_vIn22 _rulesOallInhmap _rulesOallSynmap _rulesOchildTypes _rulesOcon _rulesOimportBlocks _rulesOinhmap _rulesOlazyIntras _rulesOlocalAttrTypes _rulesOmainFile _rulesOmainName _rulesOmoduleHeader _rulesOnt _rulesOoptions _rulesOpragmaBlocks _rulesOruleKinds _rulesOsynmap _rulesOtextBlocks _rulesOusageInfo)
          (T_EChildren_vOut4 _childrenIargnamesw _childrenIargpats _childrenIargtps _childrenIchildTypes _childrenIdatatype _childrenIdatatypeVar _childrenIterminaldefs _childrenIusedArgs) = inv_EChildren_s5 _childrenX5 (T_EChildren_vIn4 _childrenOallInitStates _childrenOcon _childrenOimportBlocks _childrenOmainFile _childrenOmainName _childrenOmoduleHeader _childrenOnt _childrenOoptions _childrenOpragmaBlocks _childrenOtextBlocks)
          (T_Visits_vOut55 _visitsIallvisits _visitsIerrors _visitsIfromToStates _visitsIintramap _visitsIlazyIntras _visitsIruleKinds _visitsIruleUsage _visitsIusedArgs _visitsIvisitKinds _visitsIvisitdefs _visitsIvisituses) = inv_Visits_s56 _visitsX56 (T_Visits_vIn55 _visitsOallFromToStates _visitsOallInhmap _visitsOallInitStates _visitsOallSynmap _visitsOallVisitKinds _visitsOallintramap _visitsOavisitdefs _visitsOavisituses _visitsOchildTypes _visitsOcon _visitsOinhmap _visitsOnextVisits _visitsOnt _visitsOoptions _visitsOparams _visitsOprevVisits _visitsOruledefs _visitsOruleuses _visitsOsynmap _visitsOterminaldefs)
-         _childrenOcon = rule181 arg_con_
-         _rulesOcon = rule182 arg_con_
-         _visitsOcon = rule183 arg_con_
+         _childrenOcon = rule201 arg_con_
+         _rulesOcon = rule202 arg_con_
+         _visitsOcon = rule203 arg_con_
          _lhsOdatatype :: TH.Con
-         _lhsOdatatype = rule184 _childrenIdatatype _childrenIdatatypeVar _classTH1 _lhsInt _lhsIoptions _lhsIrename _quantTH1 arg_con_
-         _classTH1 = rule185 arg_constraints_
-         _quantTH1 = rule186 arg_params_
+         _lhsOdatatype = rule204 _childrenIdatatype _childrenIdatatypeVar _classTH1 _lhsInt _lhsIoptions _lhsIrename _quantTH1 arg_con_
+         _classTH1 = rule205 arg_constraints_
+         _quantTH1 = rule206 arg_params_
          _lhsOcount :: Int
-         _lhsOcount = rule187  ()
+         _lhsOcount = rule207  ()
          _lhsOsem_nt :: [TH.Clause]
-         _lhsOsem_nt = rule188 _childrenIargnamesw _childrenIargpats _lhsInt _lhsIrename arg_con_
+         _lhsOsem_nt = rule208 _childrenIargnamesw _childrenIargpats _lhsInt _lhsIrename arg_con_
          _lhsOsemFunBndDefs :: Seq (TH.Name, TH.Exp)
-         _lhsOsemFunBndDefs = rule189 _semFunBndDef
+         _lhsOsemFunBndDefs = rule209 _semFunBndDef
          _lhsOsemFunBndTps :: Seq (TH.VarBangType)
-         _lhsOsemFunBndTps = rule190 _semFunBndTp
-         _semFunBndDef = rule191 _semFunBndNm _semname
-         _semFunBndTp = rule192 _semFunBndNm _sem_tp
-         _semFunBndNm = rule193 _lhsInt arg_con_
-         _t_type = rule194 _lhsInt
-         _t_params = rule195 _lhsIparams
-         _semname = rule196 _lhsInt arg_con_
-         _sem_tp = rule197 _childrenIargtps _classTH1 _quantTH2 _t_params _t_type
-         _quantTH2 = rule198 _lhsIparams arg_params_
-         _rulesOusageInfo = rule199 _visitsIruleUsage
-         _lazyIntras = rule200 _visitsIlazyIntras
-         _addbang = rule201 _lhsIoptions
-         _childTypes = rule202 _childrenIchildTypes _lhsIntType
-         _localAttrTypes = rule203 _lhsIlocalAttrTypes arg_con_
+         _lhsOsemFunBndTps = rule210 _semFunBndTp
+         _semFunBndDef = rule211 _semFunBndNm _semname
+         _semFunBndTp = rule212 _semFunBndNm _sem_tp
+         _semFunBndNm = rule213 _lhsInt arg_con_
+         _t_type = rule214 _lhsInt
+         _t_params = rule215 _lhsIparams
+         _semname = rule216 _lhsInt arg_con_
+         _sem_tp = rule217 _childrenIargtps _classTH2 _quantTH2 _t_params _t_type
+         _classTH2 = rule218 _lhsIclassCtxs arg_constraints_
+         _quantTH2 = rule219 _lhsIparams arg_params_
+         _rulesOusageInfo = rule220 _visitsIruleUsage
+         _lazyIntras = rule221 _visitsIlazyIntras
+         _addbang = rule222 _lhsIoptions
+         _childTypes = rule223 _childrenIchildTypes _lhsIntType
+         _localAttrTypes = rule224 _lhsIlocalAttrTypes arg_con_
          _lhsOerrors :: Seq Error
-         _lhsOerrors = rule204 _rulesIerrors _visitsIerrors
+         _lhsOerrors = rule225 _rulesIerrors _visitsIerrors
          _lhsOfromToStates :: Map VisitIdentifier (Int,Int)
-         _lhsOfromToStates = rule205 _visitsIfromToStates
+         _lhsOfromToStates = rule226 _visitsIfromToStates
          _lhsOvisitKinds :: Map VisitIdentifier VisitKind
-         _lhsOvisitKinds = rule206 _visitsIvisitKinds
+         _lhsOvisitKinds = rule227 _visitsIvisitKinds
          _lhsOvisitdefs :: Map VisitIdentifier (Set Identifier)
-         _lhsOvisitdefs = rule207 _visitsIvisitdefs
+         _lhsOvisitdefs = rule228 _visitsIvisitdefs
          _lhsOvisituses :: Map VisitIdentifier (Set Identifier)
-         _lhsOvisituses = rule208 _visitsIvisituses
+         _lhsOvisituses = rule229 _visitsIvisituses
          _lhsOallvisits :: [VisitStateState]
-         _lhsOallvisits = rule209 _visitsIallvisits
-         _rulesOallInhmap = rule210 _lhsIallInhmap
-         _rulesOallSynmap = rule211 _lhsIallSynmap
-         _rulesOchildTypes = rule212 _childTypes
-         _rulesOimportBlocks = rule213 _lhsIimportBlocks
-         _rulesOinhmap = rule214 _lhsIinhmap
-         _rulesOlazyIntras = rule215 _lazyIntras
-         _rulesOlocalAttrTypes = rule216 _localAttrTypes
-         _rulesOmainFile = rule217 _lhsImainFile
-         _rulesOmainName = rule218 _lhsImainName
-         _rulesOmoduleHeader = rule219 _lhsImoduleHeader
-         _rulesOnt = rule220 _lhsInt
-         _rulesOoptions = rule221 _lhsIoptions
-         _rulesOpragmaBlocks = rule222 _lhsIpragmaBlocks
-         _rulesOruleKinds = rule223  ()
-         _rulesOsynmap = rule224 _lhsIsynmap
-         _rulesOtextBlocks = rule225 _lhsItextBlocks
-         _childrenOallInitStates = rule226 _lhsIallInitStates
-         _childrenOimportBlocks = rule227 _lhsIimportBlocks
-         _childrenOmainFile = rule228 _lhsImainFile
-         _childrenOmainName = rule229 _lhsImainName
-         _childrenOmoduleHeader = rule230 _lhsImoduleHeader
-         _childrenOnt = rule231 _lhsInt
-         _childrenOoptions = rule232 _lhsIoptions
-         _childrenOpragmaBlocks = rule233 _lhsIpragmaBlocks
-         _childrenOtextBlocks = rule234 _lhsItextBlocks
-         _visitsOallFromToStates = rule235 _lhsIallFromToStates
-         _visitsOallInhmap = rule236 _lhsIallInhmap
-         _visitsOallInitStates = rule237 _lhsIallInitStates
-         _visitsOallSynmap = rule238 _lhsIallSynmap
-         _visitsOallVisitKinds = rule239 _lhsIallVisitKinds
-         _visitsOallintramap = rule240  ()
-         _visitsOavisitdefs = rule241 _lhsIavisitdefs
-         _visitsOavisituses = rule242 _lhsIavisituses
-         _visitsOchildTypes = rule243 _childTypes
-         _visitsOinhmap = rule244 _lhsIinhmap
-         _visitsOnextVisits = rule245 _lhsInextVisits
-         _visitsOnt = rule246 _lhsInt
-         _visitsOoptions = rule247 _lhsIoptions
-         _visitsOparams = rule248 _lhsIparams
-         _visitsOprevVisits = rule249 _lhsIprevVisits
-         _visitsOruledefs = rule250 _rulesIruledefs
-         _visitsOruleuses = rule251 _rulesIruleuses
-         _visitsOsynmap = rule252 _lhsIsynmap
-         _visitsOterminaldefs = rule253 _childrenIterminaldefs
+         _lhsOallvisits = rule230 _visitsIallvisits
+         _rulesOallInhmap = rule231 _lhsIallInhmap
+         _rulesOallSynmap = rule232 _lhsIallSynmap
+         _rulesOchildTypes = rule233 _childTypes
+         _rulesOimportBlocks = rule234 _lhsIimportBlocks
+         _rulesOinhmap = rule235 _lhsIinhmap
+         _rulesOlazyIntras = rule236 _lazyIntras
+         _rulesOlocalAttrTypes = rule237 _localAttrTypes
+         _rulesOmainFile = rule238 _lhsImainFile
+         _rulesOmainName = rule239 _lhsImainName
+         _rulesOmoduleHeader = rule240 _lhsImoduleHeader
+         _rulesOnt = rule241 _lhsInt
+         _rulesOoptions = rule242 _lhsIoptions
+         _rulesOpragmaBlocks = rule243 _lhsIpragmaBlocks
+         _rulesOruleKinds = rule244  ()
+         _rulesOsynmap = rule245 _lhsIsynmap
+         _rulesOtextBlocks = rule246 _lhsItextBlocks
+         _childrenOallInitStates = rule247 _lhsIallInitStates
+         _childrenOimportBlocks = rule248 _lhsIimportBlocks
+         _childrenOmainFile = rule249 _lhsImainFile
+         _childrenOmainName = rule250 _lhsImainName
+         _childrenOmoduleHeader = rule251 _lhsImoduleHeader
+         _childrenOnt = rule252 _lhsInt
+         _childrenOoptions = rule253 _lhsIoptions
+         _childrenOpragmaBlocks = rule254 _lhsIpragmaBlocks
+         _childrenOtextBlocks = rule255 _lhsItextBlocks
+         _visitsOallFromToStates = rule256 _lhsIallFromToStates
+         _visitsOallInhmap = rule257 _lhsIallInhmap
+         _visitsOallInitStates = rule258 _lhsIallInitStates
+         _visitsOallSynmap = rule259 _lhsIallSynmap
+         _visitsOallVisitKinds = rule260 _lhsIallVisitKinds
+         _visitsOallintramap = rule261  ()
+         _visitsOavisitdefs = rule262 _lhsIavisitdefs
+         _visitsOavisituses = rule263 _lhsIavisituses
+         _visitsOchildTypes = rule264 _childTypes
+         _visitsOinhmap = rule265 _lhsIinhmap
+         _visitsOnextVisits = rule266 _lhsInextVisits
+         _visitsOnt = rule267 _lhsInt
+         _visitsOoptions = rule268 _lhsIoptions
+         _visitsOparams = rule269 _lhsIparams
+         _visitsOprevVisits = rule270 _lhsIprevVisits
+         _visitsOruledefs = rule271 _rulesIruledefs
+         _visitsOruleuses = rule272 _rulesIruleuses
+         _visitsOsynmap = rule273 _lhsIsynmap
+         _visitsOterminaldefs = rule274 _childrenIterminaldefs
          __result_ = T_EProduction_vOut13 _lhsOallvisits _lhsOcount _lhsOdatatype _lhsOerrors _lhsOfromToStates _lhsOsemFunBndDefs _lhsOsemFunBndTps _lhsOsem_nt _lhsOvisitKinds _lhsOvisitdefs _lhsOvisituses
          in __result_ )
      in C_EProduction_s14 v13
-   {-# INLINE rule181 #-}
-   {-# LINE 82 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule181 = \ con_ ->
-                                 {-# LINE 82 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# INLINE rule201 #-}
+   {-# LINE 85 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule201 = \ con_ ->
+                                 {-# LINE 85 "src-ag/ExecutionPlan2TH.ag" #-}
                                  con_
-                                 {-# LINE 1699 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule182 #-}
-   {-# LINE 83 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule182 = \ con_ ->
-                                 {-# LINE 83 "src-ag/ExecutionPlan2TH.ag" #-}
+                                 {-# LINE 1894 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule202 #-}
+   {-# LINE 86 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule202 = \ con_ ->
+                                 {-# LINE 86 "src-ag/ExecutionPlan2TH.ag" #-}
                                  con_
-                                 {-# LINE 1705 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule183 #-}
-   {-# LINE 84 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule183 = \ con_ ->
-                                 {-# LINE 84 "src-ag/ExecutionPlan2TH.ag" #-}
+                                 {-# LINE 1900 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule203 #-}
+   {-# LINE 87 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule203 = \ con_ ->
+                                 {-# LINE 87 "src-ag/ExecutionPlan2TH.ag" #-}
                                  con_
-                                 {-# LINE 1711 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule184 #-}
-   {-# LINE 173 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule184 = \ ((_childrenIdatatype) :: [TH.BangType]) ((_childrenIdatatypeVar) :: [TH.VarBangType]) _classTH1 ((_lhsInt) :: NontermIdent) ((_lhsIoptions) :: Options) ((_lhsIrename) :: Bool) _quantTH1 con_ ->
-                                 {-# LINE 173 "src-ag/ExecutionPlan2TH.ag" #-}
+                                 {-# LINE 1906 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule204 #-}
+   {-# LINE 191 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule204 = \ ((_childrenIdatatype) :: [TH.BangType]) ((_childrenIdatatypeVar) :: [TH.VarBangType]) _classTH1 ((_lhsInt) :: NontermIdent) ((_lhsIoptions) :: Options) ((_lhsIrename) :: Bool) _quantTH1 con_ ->
+                                 {-# LINE 191 "src-ag/ExecutionPlan2TH.ag" #-}
                                  _quantTH1     _classTH1
                                  (conTH (TH.mkName (conname _lhsIrename _lhsInt con_))
                                         (if dataRecords _lhsIoptions
                                            then Left _childrenIdatatypeVar
                                            else Right _childrenIdatatype))
-                                 {-# LINE 1721 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule185 #-}
-   {-# LINE 178 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule185 = \ constraints_ ->
-                                 {-# LINE 178 "src-ag/ExecutionPlan2TH.ag" #-}
+                                 {-# LINE 1916 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule205 #-}
+   {-# LINE 196 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule205 = \ constraints_ ->
+                                 {-# LINE 196 "src-ag/ExecutionPlan2TH.ag" #-}
                                  map typeToTH constraints_
-                                 {-# LINE 1727 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule186 #-}
-   {-# LINE 179 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule186 = \ params_ ->
-                                 {-# LINE 179 "src-ag/ExecutionPlan2TH.ag" #-}
+                                 {-# LINE 1922 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule206 #-}
+   {-# LINE 197 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule206 = \ params_ ->
+                                 {-# LINE 197 "src-ag/ExecutionPlan2TH.ag" #-}
                                  quantsTH TH.ForallC params_
-                                 {-# LINE 1733 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule187 #-}
-   {-# LINE 330 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule187 = \  (_ :: ()) ->
-                                              {-# LINE 330 "src-ag/ExecutionPlan2TH.ag" #-}
+                                 {-# LINE 1928 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule207 #-}
+   {-# LINE 349 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule207 = \  (_ :: ()) ->
+                                              {-# LINE 349 "src-ag/ExecutionPlan2TH.ag" #-}
                                               1
-                                              {-# LINE 1739 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule188 #-}
-   {-# LINE 335 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule188 = \ ((_childrenIargnamesw) :: [TH.Exp]) ((_childrenIargpats) ::  [TH.Pat] ) ((_lhsInt) :: NontermIdent) ((_lhsIrename) :: Bool) con_ ->
-                               {-# LINE 335 "src-ag/ExecutionPlan2TH.ag" #-}
+                                              {-# LINE 1934 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule208 #-}
+   {-# LINE 354 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule208 = \ ((_childrenIargnamesw) :: [TH.Exp]) ((_childrenIargpats) ::  [TH.Pat] ) ((_lhsInt) :: NontermIdent) ((_lhsIrename) :: Bool) con_ ->
+                               {-# LINE 354 "src-ag/ExecutionPlan2TH.ag" #-}
                                [ TH.Clause [TH.ConP (TH.mkName (conname _lhsIrename _lhsInt con_)) _childrenIargpats]
                                            (TH.NormalB (foldl TH.AppE
                                                               (TH.VarE (TH.mkName ("sem_" ++ getName _lhsInt ++ "_" ++ getName con_)))
                                                               _childrenIargnamesw))
                                            []
                                ]
-                               {-# LINE 1750 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule189 #-}
-   {-# LINE 582 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule189 = \ _semFunBndDef ->
-                        {-# LINE 582 "src-ag/ExecutionPlan2TH.ag" #-}
-                        Seq.singleton _semFunBndDef
-                        {-# LINE 1756 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule190 #-}
-   {-# LINE 583 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule190 = \ _semFunBndTp ->
-                        {-# LINE 583 "src-ag/ExecutionPlan2TH.ag" #-}
-                        Seq.singleton _semFunBndTp
-                        {-# LINE 1762 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule191 #-}
-   {-# LINE 584 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule191 = \ _semFunBndNm _semname ->
-                        {-# LINE 584 "src-ag/ExecutionPlan2TH.ag" #-}
-                        (_semFunBndNm    , TH.VarE _semname    )
-                        {-# LINE 1768 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule192 #-}
-   {-# LINE 585 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule192 = \ _semFunBndNm _sem_tp ->
-                        {-# LINE 585 "src-ag/ExecutionPlan2TH.ag" #-}
-                        (_semFunBndNm    , nobang, _sem_tp    )
-                        {-# LINE 1774 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule193 #-}
-   {-# LINE 586 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule193 = \ ((_lhsInt) :: NontermIdent) con_ ->
-                        {-# LINE 586 "src-ag/ExecutionPlan2TH.ag" #-}
-                        TH.mkName (lateSemConLabel _lhsInt con_)
-                        {-# LINE 1780 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule194 #-}
-   {-# LINE 648 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule194 = \ ((_lhsInt) :: NontermIdent) ->
-                                 {-# LINE 648 "src-ag/ExecutionPlan2TH.ag" #-}
-                                 TH.ConT (TH.mkName ("T_" ++ getName _lhsInt))
-                                 {-# LINE 1786 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule195 #-}
-   {-# LINE 649 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule195 = \ ((_lhsIparams) :: [Identifier]) ->
-                                 {-# LINE 649 "src-ag/ExecutionPlan2TH.ag" #-}
-                                 map (TH.VarT . TH.mkName . getName) _lhsIparams
-                                 {-# LINE 1792 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule196 #-}
-   {-# LINE 660 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule196 = \ ((_lhsInt) :: NontermIdent) con_ ->
-                                 {-# LINE 660 "src-ag/ExecutionPlan2TH.ag" #-}
-                                 TH.mkName ("sem_" ++ show _lhsInt ++ "_" ++ show con_)
-                                 {-# LINE 1798 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule197 #-}
-   {-# LINE 661 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule197 = \ ((_childrenIargtps) ::  TH.Type -> TH.Type ) _classTH1 _quantTH2 _t_params _t_type ->
-                                 {-# LINE 661 "src-ag/ExecutionPlan2TH.ag" #-}
-                                 _quantTH2     _classTH1     (_childrenIargtps (foldl TH.AppT _t_type     _t_params    ))
-                                 {-# LINE 1804 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule198 #-}
-   {-# LINE 662 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule198 = \ ((_lhsIparams) :: [Identifier]) params_ ->
-                                 {-# LINE 662 "src-ag/ExecutionPlan2TH.ag" #-}
-                                 quantsTH TH.ForallT (_lhsIparams ++ params_)
-                                 {-# LINE 1810 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule199 #-}
-   {-# LINE 1332 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule199 = \ ((_visitsIruleUsage) :: Map Identifier Int) ->
-                                                   {-# LINE 1332 "src-ag/ExecutionPlan2TH.ag" #-}
-                                                   _visitsIruleUsage
-                                                   {-# LINE 1816 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule200 #-}
-   {-# LINE 1456 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule200 = \ ((_visitsIlazyIntras) :: Set String) ->
-                     {-# LINE 1456 "src-ag/ExecutionPlan2TH.ag" #-}
-                     _visitsIlazyIntras
-                     {-# LINE 1822 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule201 #-}
-   {-# LINE 1603 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule201 = \ ((_lhsIoptions) :: Options) ->
-                                                    {-# LINE 1603 "src-ag/ExecutionPlan2TH.ag" #-}
-                                                    \x -> if bangpats _lhsIoptions then TH.BangP x else x
-                                                    {-# LINE 1828 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule202 #-}
-   {-# LINE 1653 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule202 = \ ((_childrenIchildTypes) :: Map Identifier Type) ((_lhsIntType) :: Type) ->
-                     {-# LINE 1653 "src-ag/ExecutionPlan2TH.ag" #-}
-                     Map.singleton _LHS _lhsIntType `Map.union` _childrenIchildTypes
-                     {-# LINE 1834 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule203 #-}
-   {-# LINE 1670 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule203 = \ ((_lhsIlocalAttrTypes) :: Map ConstructorIdent (Map Identifier Type)) con_ ->
-                           {-# LINE 1670 "src-ag/ExecutionPlan2TH.ag" #-}
-                           Map.findWithDefault Map.empty con_ _lhsIlocalAttrTypes
-                           {-# LINE 1840 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule204 #-}
-   rule204 = \ ((_rulesIerrors) :: Seq Error) ((_visitsIerrors) :: Seq Error) ->
-     _rulesIerrors Seq.>< _visitsIerrors
-   {-# INLINE rule205 #-}
-   rule205 = \ ((_visitsIfromToStates) :: Map VisitIdentifier (Int,Int)) ->
-     _visitsIfromToStates
-   {-# INLINE rule206 #-}
-   rule206 = \ ((_visitsIvisitKinds) :: Map VisitIdentifier VisitKind) ->
-     _visitsIvisitKinds
-   {-# INLINE rule207 #-}
-   rule207 = \ ((_visitsIvisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
-     _visitsIvisitdefs
-   {-# INLINE rule208 #-}
-   rule208 = \ ((_visitsIvisituses) :: Map VisitIdentifier (Set Identifier)) ->
-     _visitsIvisituses
+                               {-# LINE 1945 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule209 #-}
-   rule209 = \ ((_visitsIallvisits) :: [VisitStateState]) ->
-     _visitsIallvisits
+   {-# LINE 617 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule209 = \ _semFunBndDef ->
+                        {-# LINE 617 "src-ag/ExecutionPlan2TH.ag" #-}
+                        Seq.singleton _semFunBndDef
+                        {-# LINE 1951 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule210 #-}
-   rule210 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
-     _lhsIallInhmap
+   {-# LINE 618 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule210 = \ _semFunBndTp ->
+                        {-# LINE 618 "src-ag/ExecutionPlan2TH.ag" #-}
+                        Seq.singleton _semFunBndTp
+                        {-# LINE 1957 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule211 #-}
-   rule211 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
-     _lhsIallSynmap
+   {-# LINE 619 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule211 = \ _semFunBndNm _semname ->
+                        {-# LINE 619 "src-ag/ExecutionPlan2TH.ag" #-}
+                        (_semFunBndNm    , TH.VarE _semname    )
+                        {-# LINE 1963 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule212 #-}
-   rule212 = \ _childTypes ->
-     _childTypes
+   {-# LINE 620 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule212 = \ _semFunBndNm _sem_tp ->
+                        {-# LINE 620 "src-ag/ExecutionPlan2TH.ag" #-}
+                        (_semFunBndNm    , nobang, _sem_tp    )
+                        {-# LINE 1969 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule213 #-}
-   rule213 = \ ((_lhsIimportBlocks) :: [String]) ->
-     _lhsIimportBlocks
+   {-# LINE 621 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule213 = \ ((_lhsInt) :: NontermIdent) con_ ->
+                        {-# LINE 621 "src-ag/ExecutionPlan2TH.ag" #-}
+                        TH.mkName (lateSemConLabel _lhsInt con_)
+                        {-# LINE 1975 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule214 #-}
-   rule214 = \ ((_lhsIinhmap) :: Attributes) ->
-     _lhsIinhmap
+   {-# LINE 683 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule214 = \ ((_lhsInt) :: NontermIdent) ->
+                                 {-# LINE 683 "src-ag/ExecutionPlan2TH.ag" #-}
+                                 TH.ConT (TH.mkName ("T_" ++ getName _lhsInt))
+                                 {-# LINE 1981 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule215 #-}
-   rule215 = \ _lazyIntras ->
-     _lazyIntras
+   {-# LINE 684 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule215 = \ ((_lhsIparams) :: [Identifier]) ->
+                                 {-# LINE 684 "src-ag/ExecutionPlan2TH.ag" #-}
+                                 map (TH.VarT . TH.mkName . getName) _lhsIparams
+                                 {-# LINE 1987 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule216 #-}
-   rule216 = \ _localAttrTypes ->
-     _localAttrTypes
+   {-# LINE 695 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule216 = \ ((_lhsInt) :: NontermIdent) con_ ->
+                                 {-# LINE 695 "src-ag/ExecutionPlan2TH.ag" #-}
+                                 TH.mkName ("sem_" ++ show _lhsInt ++ "_" ++ show con_)
+                                 {-# LINE 1993 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule217 #-}
-   rule217 = \ ((_lhsImainFile) :: String) ->
-     _lhsImainFile
+   {-# LINE 696 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule217 = \ ((_childrenIargtps) ::  TH.Type -> TH.Type ) _classTH2 _quantTH2 _t_params _t_type ->
+                                 {-# LINE 696 "src-ag/ExecutionPlan2TH.ag" #-}
+                                 _quantTH2     _classTH2     (_childrenIargtps (foldl TH.AppT _t_type     _t_params    ))
+                                 {-# LINE 1999 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule218 #-}
-   rule218 = \ ((_lhsImainName) :: String) ->
-     _lhsImainName
+   {-# LINE 697 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule218 = \ ((_lhsIclassCtxs) :: ClassContext) constraints_ ->
+                                 {-# LINE 697 "src-ag/ExecutionPlan2TH.ag" #-}
+                                 classCtxsToCxt _lhsIclassCtxs ++ classConstrsToCxt constraints_
+                                 {-# LINE 2005 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule219 #-}
-   rule219 = \ ((_lhsImoduleHeader) :: String -> String -> String -> Bool -> String) ->
-     _lhsImoduleHeader
+   {-# LINE 698 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule219 = \ ((_lhsIparams) :: [Identifier]) params_ ->
+                                 {-# LINE 698 "src-ag/ExecutionPlan2TH.ag" #-}
+                                 quantsTH TH.ForallT (_lhsIparams ++ params_)
+                                 {-# LINE 2011 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule220 #-}
-   rule220 = \ ((_lhsInt) :: NontermIdent) ->
-     _lhsInt
+   {-# LINE 1368 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule220 = \ ((_visitsIruleUsage) :: Map Identifier Int) ->
+                                                   {-# LINE 1368 "src-ag/ExecutionPlan2TH.ag" #-}
+                                                   _visitsIruleUsage
+                                                   {-# LINE 2017 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule221 #-}
-   rule221 = \ ((_lhsIoptions) :: Options) ->
-     _lhsIoptions
+   {-# LINE 1492 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule221 = \ ((_visitsIlazyIntras) :: Set String) ->
+                     {-# LINE 1492 "src-ag/ExecutionPlan2TH.ag" #-}
+                     _visitsIlazyIntras
+                     {-# LINE 2023 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule222 #-}
-   rule222 = \ ((_lhsIpragmaBlocks) :: String) ->
-     _lhsIpragmaBlocks
+   {-# LINE 1640 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule222 = \ ((_lhsIoptions) :: Options) ->
+                                                    {-# LINE 1640 "src-ag/ExecutionPlan2TH.ag" #-}
+                                                    \x -> if bangpats _lhsIoptions then TH.BangP x else x
+                                                    {-# LINE 2029 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule223 #-}
-   rule223 = \  (_ :: ()) ->
-     error "missing rule: EProduction.EProduction.rules.ruleKinds"
+   {-# LINE 1692 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule223 = \ ((_childrenIchildTypes) :: Map Identifier Type) ((_lhsIntType) :: Type) ->
+                     {-# LINE 1692 "src-ag/ExecutionPlan2TH.ag" #-}
+                     Map.singleton _LHS _lhsIntType `Map.union` _childrenIchildTypes
+                     {-# LINE 2035 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule224 #-}
-   rule224 = \ ((_lhsIsynmap) :: Attributes) ->
-     _lhsIsynmap
+   {-# LINE 1709 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule224 = \ ((_lhsIlocalAttrTypes) :: Map ConstructorIdent (Map Identifier Type)) con_ ->
+                           {-# LINE 1709 "src-ag/ExecutionPlan2TH.ag" #-}
+                           Map.findWithDefault Map.empty con_ _lhsIlocalAttrTypes
+                           {-# LINE 2041 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule225 #-}
-   rule225 = \ ((_lhsItextBlocks) :: [String]) ->
-     _lhsItextBlocks
+   rule225 = \ ((_rulesIerrors) :: Seq Error) ((_visitsIerrors) :: Seq Error) ->
+     _rulesIerrors Seq.>< _visitsIerrors
    {-# INLINE rule226 #-}
-   rule226 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
-     _lhsIallInitStates
+   rule226 = \ ((_visitsIfromToStates) :: Map VisitIdentifier (Int,Int)) ->
+     _visitsIfromToStates
    {-# INLINE rule227 #-}
-   rule227 = \ ((_lhsIimportBlocks) :: [String]) ->
-     _lhsIimportBlocks
+   rule227 = \ ((_visitsIvisitKinds) :: Map VisitIdentifier VisitKind) ->
+     _visitsIvisitKinds
    {-# INLINE rule228 #-}
-   rule228 = \ ((_lhsImainFile) :: String) ->
-     _lhsImainFile
+   rule228 = \ ((_visitsIvisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
+     _visitsIvisitdefs
    {-# INLINE rule229 #-}
-   rule229 = \ ((_lhsImainName) :: String) ->
-     _lhsImainName
+   rule229 = \ ((_visitsIvisituses) :: Map VisitIdentifier (Set Identifier)) ->
+     _visitsIvisituses
    {-# INLINE rule230 #-}
-   rule230 = \ ((_lhsImoduleHeader) :: String -> String -> String -> Bool -> String) ->
-     _lhsImoduleHeader
+   rule230 = \ ((_visitsIallvisits) :: [VisitStateState]) ->
+     _visitsIallvisits
    {-# INLINE rule231 #-}
-   rule231 = \ ((_lhsInt) :: NontermIdent) ->
-     _lhsInt
-   {-# INLINE rule232 #-}
-   rule232 = \ ((_lhsIoptions) :: Options) ->
-     _lhsIoptions
-   {-# INLINE rule233 #-}
-   rule233 = \ ((_lhsIpragmaBlocks) :: String) ->
-     _lhsIpragmaBlocks
-   {-# INLINE rule234 #-}
-   rule234 = \ ((_lhsItextBlocks) :: [String]) ->
-     _lhsItextBlocks
-   {-# INLINE rule235 #-}
-   rule235 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
-     _lhsIallFromToStates
-   {-# INLINE rule236 #-}
-   rule236 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
+   rule231 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
      _lhsIallInhmap
-   {-# INLINE rule237 #-}
-   rule237 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
-     _lhsIallInitStates
-   {-# INLINE rule238 #-}
-   rule238 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
+   {-# INLINE rule232 #-}
+   rule232 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
      _lhsIallSynmap
-   {-# INLINE rule239 #-}
-   rule239 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
-     _lhsIallVisitKinds
-   {-# INLINE rule240 #-}
-   rule240 = \  (_ :: ()) ->
-     error "missing rule: EProduction.EProduction.visits.allintramap"
-   {-# INLINE rule241 #-}
-   rule241 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
-     _lhsIavisitdefs
-   {-# INLINE rule242 #-}
-   rule242 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
-     _lhsIavisituses
-   {-# INLINE rule243 #-}
-   rule243 = \ _childTypes ->
+   {-# INLINE rule233 #-}
+   rule233 = \ _childTypes ->
      _childTypes
-   {-# INLINE rule244 #-}
-   rule244 = \ ((_lhsIinhmap) :: Attributes) ->
+   {-# INLINE rule234 #-}
+   rule234 = \ ((_lhsIimportBlocks) :: [String]) ->
+     _lhsIimportBlocks
+   {-# INLINE rule235 #-}
+   rule235 = \ ((_lhsIinhmap) :: Attributes) ->
      _lhsIinhmap
-   {-# INLINE rule245 #-}
-   rule245 = \ ((_lhsInextVisits) :: Map StateIdentifier StateCtx) ->
-     _lhsInextVisits
-   {-# INLINE rule246 #-}
-   rule246 = \ ((_lhsInt) :: NontermIdent) ->
+   {-# INLINE rule236 #-}
+   rule236 = \ _lazyIntras ->
+     _lazyIntras
+   {-# INLINE rule237 #-}
+   rule237 = \ _localAttrTypes ->
+     _localAttrTypes
+   {-# INLINE rule238 #-}
+   rule238 = \ ((_lhsImainFile) :: String) ->
+     _lhsImainFile
+   {-# INLINE rule239 #-}
+   rule239 = \ ((_lhsImainName) :: String) ->
+     _lhsImainName
+   {-# INLINE rule240 #-}
+   rule240 = \ ((_lhsImoduleHeader) :: String -> String -> String -> Bool -> String) ->
+     _lhsImoduleHeader
+   {-# INLINE rule241 #-}
+   rule241 = \ ((_lhsInt) :: NontermIdent) ->
      _lhsInt
-   {-# INLINE rule247 #-}
-   rule247 = \ ((_lhsIoptions) :: Options) ->
+   {-# INLINE rule242 #-}
+   rule242 = \ ((_lhsIoptions) :: Options) ->
      _lhsIoptions
-   {-# INLINE rule248 #-}
-   rule248 = \ ((_lhsIparams) :: [Identifier]) ->
-     _lhsIparams
-   {-# INLINE rule249 #-}
-   rule249 = \ ((_lhsIprevVisits) :: Map StateIdentifier StateCtx) ->
-     _lhsIprevVisits
-   {-# INLINE rule250 #-}
-   rule250 = \ ((_rulesIruledefs) :: Map Identifier (Set String)) ->
-     _rulesIruledefs
-   {-# INLINE rule251 #-}
-   rule251 = \ ((_rulesIruleuses) :: Map Identifier (Map String (Maybe NonLocalAttr))) ->
-     _rulesIruleuses
-   {-# INLINE rule252 #-}
-   rule252 = \ ((_lhsIsynmap) :: Attributes) ->
+   {-# INLINE rule243 #-}
+   rule243 = \ ((_lhsIpragmaBlocks) :: String) ->
+     _lhsIpragmaBlocks
+   {-# INLINE rule244 #-}
+   rule244 = \  (_ :: ()) ->
+     error "missing rule: EProduction.EProduction.rules.ruleKinds"
+   {-# INLINE rule245 #-}
+   rule245 = \ ((_lhsIsynmap) :: Attributes) ->
      _lhsIsynmap
+   {-# INLINE rule246 #-}
+   rule246 = \ ((_lhsItextBlocks) :: [String]) ->
+     _lhsItextBlocks
+   {-# INLINE rule247 #-}
+   rule247 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
+     _lhsIallInitStates
+   {-# INLINE rule248 #-}
+   rule248 = \ ((_lhsIimportBlocks) :: [String]) ->
+     _lhsIimportBlocks
+   {-# INLINE rule249 #-}
+   rule249 = \ ((_lhsImainFile) :: String) ->
+     _lhsImainFile
+   {-# INLINE rule250 #-}
+   rule250 = \ ((_lhsImainName) :: String) ->
+     _lhsImainName
+   {-# INLINE rule251 #-}
+   rule251 = \ ((_lhsImoduleHeader) :: String -> String -> String -> Bool -> String) ->
+     _lhsImoduleHeader
+   {-# INLINE rule252 #-}
+   rule252 = \ ((_lhsInt) :: NontermIdent) ->
+     _lhsInt
    {-# INLINE rule253 #-}
-   rule253 = \ ((_childrenIterminaldefs) :: Set String) ->
+   rule253 = \ ((_lhsIoptions) :: Options) ->
+     _lhsIoptions
+   {-# INLINE rule254 #-}
+   rule254 = \ ((_lhsIpragmaBlocks) :: String) ->
+     _lhsIpragmaBlocks
+   {-# INLINE rule255 #-}
+   rule255 = \ ((_lhsItextBlocks) :: [String]) ->
+     _lhsItextBlocks
+   {-# INLINE rule256 #-}
+   rule256 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
+     _lhsIallFromToStates
+   {-# INLINE rule257 #-}
+   rule257 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
+     _lhsIallInhmap
+   {-# INLINE rule258 #-}
+   rule258 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
+     _lhsIallInitStates
+   {-# INLINE rule259 #-}
+   rule259 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
+     _lhsIallSynmap
+   {-# INLINE rule260 #-}
+   rule260 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
+     _lhsIallVisitKinds
+   {-# INLINE rule261 #-}
+   rule261 = \  (_ :: ()) ->
+     error "missing rule: EProduction.EProduction.visits.allintramap"
+   {-# INLINE rule262 #-}
+   rule262 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
+     _lhsIavisitdefs
+   {-# INLINE rule263 #-}
+   rule263 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
+     _lhsIavisituses
+   {-# INLINE rule264 #-}
+   rule264 = \ _childTypes ->
+     _childTypes
+   {-# INLINE rule265 #-}
+   rule265 = \ ((_lhsIinhmap) :: Attributes) ->
+     _lhsIinhmap
+   {-# INLINE rule266 #-}
+   rule266 = \ ((_lhsInextVisits) :: Map StateIdentifier StateCtx) ->
+     _lhsInextVisits
+   {-# INLINE rule267 #-}
+   rule267 = \ ((_lhsInt) :: NontermIdent) ->
+     _lhsInt
+   {-# INLINE rule268 #-}
+   rule268 = \ ((_lhsIoptions) :: Options) ->
+     _lhsIoptions
+   {-# INLINE rule269 #-}
+   rule269 = \ ((_lhsIparams) :: [Identifier]) ->
+     _lhsIparams
+   {-# INLINE rule270 #-}
+   rule270 = \ ((_lhsIprevVisits) :: Map StateIdentifier StateCtx) ->
+     _lhsIprevVisits
+   {-# INLINE rule271 #-}
+   rule271 = \ ((_rulesIruledefs) :: Map Identifier (Set String)) ->
+     _rulesIruledefs
+   {-# INLINE rule272 #-}
+   rule272 = \ ((_rulesIruleuses) :: Map Identifier (Map String (Maybe NonLocalAttr))) ->
+     _rulesIruleuses
+   {-# INLINE rule273 #-}
+   rule273 = \ ((_lhsIsynmap) :: Attributes) ->
+     _lhsIsynmap
+   {-# INLINE rule274 #-}
+   rule274 = \ ((_childrenIterminaldefs) :: Set String) ->
      _childrenIterminaldefs
 
 -- EProductions ------------------------------------------------
 -- wrapper
-data Inh_EProductions  = Inh_EProductions { allFromToStates_Inh_EProductions :: (Map VisitIdentifier (Int,Int)), allInhmap_Inh_EProductions :: (Map NontermIdent Attributes), allInitStates_Inh_EProductions :: (Map NontermIdent Int), allSynmap_Inh_EProductions :: (Map NontermIdent Attributes), allVisitKinds_Inh_EProductions :: (Map VisitIdentifier VisitKind), allstates_Inh_EProductions :: (Set StateIdentifier), avisitdefs_Inh_EProductions :: (Map VisitIdentifier (Set Identifier)), avisituses_Inh_EProductions :: (Map VisitIdentifier (Set Identifier)), importBlocks_Inh_EProductions :: ([String]), inhmap_Inh_EProductions :: (Attributes), initial_Inh_EProductions :: (StateIdentifier), localAttrTypes_Inh_EProductions :: (Map ConstructorIdent (Map Identifier Type)), mainFile_Inh_EProductions :: (String), mainName_Inh_EProductions :: (String), moduleHeader_Inh_EProductions :: (String -> String -> String -> Bool -> String), nextVisits_Inh_EProductions :: (Map StateIdentifier StateCtx), nt_Inh_EProductions :: (NontermIdent), ntType_Inh_EProductions :: (Type), options_Inh_EProductions :: (Options), params_Inh_EProductions :: ([Identifier]), pragmaBlocks_Inh_EProductions :: (String), prevVisits_Inh_EProductions :: (Map StateIdentifier StateCtx), rename_Inh_EProductions :: (Bool), synmap_Inh_EProductions :: (Attributes), textBlocks_Inh_EProductions :: ([String]) }
+data Inh_EProductions  = Inh_EProductions { allFromToStates_Inh_EProductions :: (Map VisitIdentifier (Int,Int)), allInhmap_Inh_EProductions :: (Map NontermIdent Attributes), allInitStates_Inh_EProductions :: (Map NontermIdent Int), allSynmap_Inh_EProductions :: (Map NontermIdent Attributes), allVisitKinds_Inh_EProductions :: (Map VisitIdentifier VisitKind), allstates_Inh_EProductions :: (Set StateIdentifier), avisitdefs_Inh_EProductions :: (Map VisitIdentifier (Set Identifier)), avisituses_Inh_EProductions :: (Map VisitIdentifier (Set Identifier)), classCtxs_Inh_EProductions :: (ClassContext), importBlocks_Inh_EProductions :: ([String]), inhmap_Inh_EProductions :: (Attributes), initial_Inh_EProductions :: (StateIdentifier), localAttrTypes_Inh_EProductions :: (Map ConstructorIdent (Map Identifier Type)), mainFile_Inh_EProductions :: (String), mainName_Inh_EProductions :: (String), moduleHeader_Inh_EProductions :: (String -> String -> String -> Bool -> String), nextVisits_Inh_EProductions :: (Map StateIdentifier StateCtx), nt_Inh_EProductions :: (NontermIdent), ntType_Inh_EProductions :: (Type), options_Inh_EProductions :: (Options), params_Inh_EProductions :: ([Identifier]), pragmaBlocks_Inh_EProductions :: (String), prevVisits_Inh_EProductions :: (Map StateIdentifier StateCtx), rename_Inh_EProductions :: (Bool), synmap_Inh_EProductions :: (Attributes), textBlocks_Inh_EProductions :: ([String]) }
 data Syn_EProductions  = Syn_EProductions { allvisits_Syn_EProductions :: ([VisitStateState]), count_Syn_EProductions :: (Int), datatype_Syn_EProductions :: ([TH.Con]), errors_Syn_EProductions :: (Seq Error), fromToStates_Syn_EProductions :: (Map VisitIdentifier (Int,Int)), semFunBndDefs_Syn_EProductions :: (Seq (TH.Name, TH.Exp)), semFunBndTps_Syn_EProductions :: (Seq (TH.VarBangType)), sem_nt_Syn_EProductions :: ([TH.Clause]), visitKinds_Syn_EProductions :: (Map VisitIdentifier VisitKind), visitdefs_Syn_EProductions :: (Map VisitIdentifier (Set Identifier)), visituses_Syn_EProductions :: (Map VisitIdentifier (Set Identifier)) }
 {-# INLINABLE wrap_EProductions #-}
 wrap_EProductions :: T_EProductions  -> Inh_EProductions  -> (Syn_EProductions )
-wrap_EProductions (T_EProductions act) (Inh_EProductions _lhsIallFromToStates _lhsIallInhmap _lhsIallInitStates _lhsIallSynmap _lhsIallVisitKinds _lhsIallstates _lhsIavisitdefs _lhsIavisituses _lhsIimportBlocks _lhsIinhmap _lhsIinitial _lhsIlocalAttrTypes _lhsImainFile _lhsImainName _lhsImoduleHeader _lhsInextVisits _lhsInt _lhsIntType _lhsIoptions _lhsIparams _lhsIpragmaBlocks _lhsIprevVisits _lhsIrename _lhsIsynmap _lhsItextBlocks) =
+wrap_EProductions (T_EProductions act) (Inh_EProductions _lhsIallFromToStates _lhsIallInhmap _lhsIallInitStates _lhsIallSynmap _lhsIallVisitKinds _lhsIallstates _lhsIavisitdefs _lhsIavisituses _lhsIclassCtxs _lhsIimportBlocks _lhsIinhmap _lhsIinitial _lhsIlocalAttrTypes _lhsImainFile _lhsImainName _lhsImoduleHeader _lhsInextVisits _lhsInt _lhsIntType _lhsIoptions _lhsIparams _lhsIpragmaBlocks _lhsIprevVisits _lhsIrename _lhsIsynmap _lhsItextBlocks) =
    Control.Monad.Identity.runIdentity (
      do sem <- act
-        let arg16 = T_EProductions_vIn16 _lhsIallFromToStates _lhsIallInhmap _lhsIallInitStates _lhsIallSynmap _lhsIallVisitKinds _lhsIallstates _lhsIavisitdefs _lhsIavisituses _lhsIimportBlocks _lhsIinhmap _lhsIinitial _lhsIlocalAttrTypes _lhsImainFile _lhsImainName _lhsImoduleHeader _lhsInextVisits _lhsInt _lhsIntType _lhsIoptions _lhsIparams _lhsIpragmaBlocks _lhsIprevVisits _lhsIrename _lhsIsynmap _lhsItextBlocks
+        let arg16 = T_EProductions_vIn16 _lhsIallFromToStates _lhsIallInhmap _lhsIallInitStates _lhsIallSynmap _lhsIallVisitKinds _lhsIallstates _lhsIavisitdefs _lhsIavisituses _lhsIclassCtxs _lhsIimportBlocks _lhsIinhmap _lhsIinitial _lhsIlocalAttrTypes _lhsImainFile _lhsImainName _lhsImoduleHeader _lhsInextVisits _lhsInt _lhsIntType _lhsIoptions _lhsIparams _lhsIpragmaBlocks _lhsIprevVisits _lhsIrename _lhsIsynmap _lhsItextBlocks
         (T_EProductions_vOut16 _lhsOallvisits _lhsOcount _lhsOdatatype _lhsOerrors _lhsOfromToStates _lhsOsemFunBndDefs _lhsOsemFunBndTps _lhsOsem_nt _lhsOvisitKinds _lhsOvisitdefs _lhsOvisituses) <- return (inv_EProductions_s17 sem arg16)
         return (Syn_EProductions _lhsOallvisits _lhsOcount _lhsOdatatype _lhsOerrors _lhsOfromToStates _lhsOsemFunBndDefs _lhsOsemFunBndTps _lhsOsem_nt _lhsOvisitKinds _lhsOvisitdefs _lhsOvisituses)
    )
@@ -2016,7 +2217,7 @@ newtype T_EProductions_s17  = C_EProductions_s17 {
                                                  }
 data T_EProductions_s18  = C_EProductions_s18
 type T_EProductions_v16  = (T_EProductions_vIn16 ) -> (T_EProductions_vOut16 )
-data T_EProductions_vIn16  = T_EProductions_vIn16 (Map VisitIdentifier (Int,Int)) (Map NontermIdent Attributes) (Map NontermIdent Int) (Map NontermIdent Attributes) (Map VisitIdentifier VisitKind) (Set StateIdentifier) (Map VisitIdentifier (Set Identifier)) (Map VisitIdentifier (Set Identifier)) ([String]) (Attributes) (StateIdentifier) (Map ConstructorIdent (Map Identifier Type)) (String) (String) (String -> String -> String -> Bool -> String) (Map StateIdentifier StateCtx) (NontermIdent) (Type) (Options) ([Identifier]) (String) (Map StateIdentifier StateCtx) (Bool) (Attributes) ([String])
+data T_EProductions_vIn16  = T_EProductions_vIn16 (Map VisitIdentifier (Int,Int)) (Map NontermIdent Attributes) (Map NontermIdent Int) (Map NontermIdent Attributes) (Map VisitIdentifier VisitKind) (Set StateIdentifier) (Map VisitIdentifier (Set Identifier)) (Map VisitIdentifier (Set Identifier)) (ClassContext) ([String]) (Attributes) (StateIdentifier) (Map ConstructorIdent (Map Identifier Type)) (String) (String) (String -> String -> String -> Bool -> String) (Map StateIdentifier StateCtx) (NontermIdent) (Type) (Options) ([Identifier]) (String) (Map StateIdentifier StateCtx) (Bool) (Attributes) ([String])
 data T_EProductions_vOut16  = T_EProductions_vOut16 ([VisitStateState]) (Int) ([TH.Con]) (Seq Error) (Map VisitIdentifier (Int,Int)) (Seq (TH.Name, TH.Exp)) (Seq (TH.VarBangType)) ([TH.Clause]) (Map VisitIdentifier VisitKind) (Map VisitIdentifier (Set Identifier)) (Map VisitIdentifier (Set Identifier))
 {-# NOINLINE sem_EProductions_Cons #-}
 sem_EProductions_Cons :: T_EProduction  -> T_EProductions  -> T_EProductions 
@@ -2024,271 +2225,279 @@ sem_EProductions_Cons arg_hd_ arg_tl_ = T_EProductions (return st17) where
    {-# NOINLINE st17 #-}
    st17 = let
       v16 :: T_EProductions_v16 
-      v16 = \ (T_EProductions_vIn16 _lhsIallFromToStates _lhsIallInhmap _lhsIallInitStates _lhsIallSynmap _lhsIallVisitKinds _lhsIallstates _lhsIavisitdefs _lhsIavisituses _lhsIimportBlocks _lhsIinhmap _lhsIinitial _lhsIlocalAttrTypes _lhsImainFile _lhsImainName _lhsImoduleHeader _lhsInextVisits _lhsInt _lhsIntType _lhsIoptions _lhsIparams _lhsIpragmaBlocks _lhsIprevVisits _lhsIrename _lhsIsynmap _lhsItextBlocks) -> ( let
+      v16 = \ (T_EProductions_vIn16 _lhsIallFromToStates _lhsIallInhmap _lhsIallInitStates _lhsIallSynmap _lhsIallVisitKinds _lhsIallstates _lhsIavisitdefs _lhsIavisituses _lhsIclassCtxs _lhsIimportBlocks _lhsIinhmap _lhsIinitial _lhsIlocalAttrTypes _lhsImainFile _lhsImainName _lhsImoduleHeader _lhsInextVisits _lhsInt _lhsIntType _lhsIoptions _lhsIparams _lhsIpragmaBlocks _lhsIprevVisits _lhsIrename _lhsIsynmap _lhsItextBlocks) -> ( let
          _hdX14 = Control.Monad.Identity.runIdentity (attach_T_EProduction (arg_hd_))
          _tlX17 = Control.Monad.Identity.runIdentity (attach_T_EProductions (arg_tl_))
-         (T_EProduction_vOut13 _hdIallvisits _hdIcount _hdIdatatype _hdIerrors _hdIfromToStates _hdIsemFunBndDefs _hdIsemFunBndTps _hdIsem_nt _hdIvisitKinds _hdIvisitdefs _hdIvisituses) = inv_EProduction_s14 _hdX14 (T_EProduction_vIn13 _hdOallFromToStates _hdOallInhmap _hdOallInitStates _hdOallSynmap _hdOallVisitKinds _hdOallstates _hdOavisitdefs _hdOavisituses _hdOimportBlocks _hdOinhmap _hdOinitial _hdOlocalAttrTypes _hdOmainFile _hdOmainName _hdOmoduleHeader _hdOnextVisits _hdOnt _hdOntType _hdOoptions _hdOparams _hdOpragmaBlocks _hdOprevVisits _hdOrename _hdOsynmap _hdOtextBlocks)
-         (T_EProductions_vOut16 _tlIallvisits _tlIcount _tlIdatatype _tlIerrors _tlIfromToStates _tlIsemFunBndDefs _tlIsemFunBndTps _tlIsem_nt _tlIvisitKinds _tlIvisitdefs _tlIvisituses) = inv_EProductions_s17 _tlX17 (T_EProductions_vIn16 _tlOallFromToStates _tlOallInhmap _tlOallInitStates _tlOallSynmap _tlOallVisitKinds _tlOallstates _tlOavisitdefs _tlOavisituses _tlOimportBlocks _tlOinhmap _tlOinitial _tlOlocalAttrTypes _tlOmainFile _tlOmainName _tlOmoduleHeader _tlOnextVisits _tlOnt _tlOntType _tlOoptions _tlOparams _tlOpragmaBlocks _tlOprevVisits _tlOrename _tlOsynmap _tlOtextBlocks)
+         (T_EProduction_vOut13 _hdIallvisits _hdIcount _hdIdatatype _hdIerrors _hdIfromToStates _hdIsemFunBndDefs _hdIsemFunBndTps _hdIsem_nt _hdIvisitKinds _hdIvisitdefs _hdIvisituses) = inv_EProduction_s14 _hdX14 (T_EProduction_vIn13 _hdOallFromToStates _hdOallInhmap _hdOallInitStates _hdOallSynmap _hdOallVisitKinds _hdOallstates _hdOavisitdefs _hdOavisituses _hdOclassCtxs _hdOimportBlocks _hdOinhmap _hdOinitial _hdOlocalAttrTypes _hdOmainFile _hdOmainName _hdOmoduleHeader _hdOnextVisits _hdOnt _hdOntType _hdOoptions _hdOparams _hdOpragmaBlocks _hdOprevVisits _hdOrename _hdOsynmap _hdOtextBlocks)
+         (T_EProductions_vOut16 _tlIallvisits _tlIcount _tlIdatatype _tlIerrors _tlIfromToStates _tlIsemFunBndDefs _tlIsemFunBndTps _tlIsem_nt _tlIvisitKinds _tlIvisitdefs _tlIvisituses) = inv_EProductions_s17 _tlX17 (T_EProductions_vIn16 _tlOallFromToStates _tlOallInhmap _tlOallInitStates _tlOallSynmap _tlOallVisitKinds _tlOallstates _tlOavisitdefs _tlOavisituses _tlOclassCtxs _tlOimportBlocks _tlOinhmap _tlOinitial _tlOlocalAttrTypes _tlOmainFile _tlOmainName _tlOmoduleHeader _tlOnextVisits _tlOnt _tlOntType _tlOoptions _tlOparams _tlOpragmaBlocks _tlOprevVisits _tlOrename _tlOsynmap _tlOtextBlocks)
          _lhsOallvisits :: [VisitStateState]
-         _lhsOallvisits = rule254 _hdIallvisits
+         _lhsOallvisits = rule275 _hdIallvisits
          _lhsOcount :: Int
-         _lhsOcount = rule255 _hdIcount _tlIcount
+         _lhsOcount = rule276 _hdIcount _tlIcount
          _lhsOdatatype :: [TH.Con]
-         _lhsOdatatype = rule256 _hdIdatatype _tlIdatatype
+         _lhsOdatatype = rule277 _hdIdatatype _tlIdatatype
          _lhsOerrors :: Seq Error
-         _lhsOerrors = rule257 _hdIerrors _tlIerrors
+         _lhsOerrors = rule278 _hdIerrors _tlIerrors
          _lhsOfromToStates :: Map VisitIdentifier (Int,Int)
-         _lhsOfromToStates = rule258 _hdIfromToStates _tlIfromToStates
+         _lhsOfromToStates = rule279 _hdIfromToStates _tlIfromToStates
          _lhsOsemFunBndDefs :: Seq (TH.Name, TH.Exp)
-         _lhsOsemFunBndDefs = rule259 _hdIsemFunBndDefs _tlIsemFunBndDefs
+         _lhsOsemFunBndDefs = rule280 _hdIsemFunBndDefs _tlIsemFunBndDefs
          _lhsOsemFunBndTps :: Seq (TH.VarBangType)
-         _lhsOsemFunBndTps = rule260 _hdIsemFunBndTps _tlIsemFunBndTps
+         _lhsOsemFunBndTps = rule281 _hdIsemFunBndTps _tlIsemFunBndTps
          _lhsOsem_nt :: [TH.Clause]
-         _lhsOsem_nt = rule261 _hdIsem_nt _tlIsem_nt
+         _lhsOsem_nt = rule282 _hdIsem_nt _tlIsem_nt
          _lhsOvisitKinds :: Map VisitIdentifier VisitKind
-         _lhsOvisitKinds = rule262 _hdIvisitKinds _tlIvisitKinds
+         _lhsOvisitKinds = rule283 _hdIvisitKinds _tlIvisitKinds
          _lhsOvisitdefs :: Map VisitIdentifier (Set Identifier)
-         _lhsOvisitdefs = rule263 _hdIvisitdefs _tlIvisitdefs
+         _lhsOvisitdefs = rule284 _hdIvisitdefs _tlIvisitdefs
          _lhsOvisituses :: Map VisitIdentifier (Set Identifier)
-         _lhsOvisituses = rule264 _hdIvisituses _tlIvisituses
-         _hdOallFromToStates = rule265 _lhsIallFromToStates
-         _hdOallInhmap = rule266 _lhsIallInhmap
-         _hdOallInitStates = rule267 _lhsIallInitStates
-         _hdOallSynmap = rule268 _lhsIallSynmap
-         _hdOallVisitKinds = rule269 _lhsIallVisitKinds
-         _hdOallstates = rule270 _lhsIallstates
-         _hdOavisitdefs = rule271 _lhsIavisitdefs
-         _hdOavisituses = rule272 _lhsIavisituses
-         _hdOimportBlocks = rule273 _lhsIimportBlocks
-         _hdOinhmap = rule274 _lhsIinhmap
-         _hdOinitial = rule275 _lhsIinitial
-         _hdOlocalAttrTypes = rule276 _lhsIlocalAttrTypes
-         _hdOmainFile = rule277 _lhsImainFile
-         _hdOmainName = rule278 _lhsImainName
-         _hdOmoduleHeader = rule279 _lhsImoduleHeader
-         _hdOnextVisits = rule280 _lhsInextVisits
-         _hdOnt = rule281 _lhsInt
-         _hdOntType = rule282 _lhsIntType
-         _hdOoptions = rule283 _lhsIoptions
-         _hdOparams = rule284 _lhsIparams
-         _hdOpragmaBlocks = rule285 _lhsIpragmaBlocks
-         _hdOprevVisits = rule286 _lhsIprevVisits
-         _hdOrename = rule287 _lhsIrename
-         _hdOsynmap = rule288 _lhsIsynmap
-         _hdOtextBlocks = rule289 _lhsItextBlocks
-         _tlOallFromToStates = rule290 _lhsIallFromToStates
-         _tlOallInhmap = rule291 _lhsIallInhmap
-         _tlOallInitStates = rule292 _lhsIallInitStates
-         _tlOallSynmap = rule293 _lhsIallSynmap
-         _tlOallVisitKinds = rule294 _lhsIallVisitKinds
-         _tlOallstates = rule295 _lhsIallstates
-         _tlOavisitdefs = rule296 _lhsIavisitdefs
-         _tlOavisituses = rule297 _lhsIavisituses
-         _tlOimportBlocks = rule298 _lhsIimportBlocks
-         _tlOinhmap = rule299 _lhsIinhmap
-         _tlOinitial = rule300 _lhsIinitial
-         _tlOlocalAttrTypes = rule301 _lhsIlocalAttrTypes
-         _tlOmainFile = rule302 _lhsImainFile
-         _tlOmainName = rule303 _lhsImainName
-         _tlOmoduleHeader = rule304 _lhsImoduleHeader
-         _tlOnextVisits = rule305 _lhsInextVisits
-         _tlOnt = rule306 _lhsInt
-         _tlOntType = rule307 _lhsIntType
-         _tlOoptions = rule308 _lhsIoptions
-         _tlOparams = rule309 _lhsIparams
-         _tlOpragmaBlocks = rule310 _lhsIpragmaBlocks
-         _tlOprevVisits = rule311 _lhsIprevVisits
-         _tlOrename = rule312 _lhsIrename
-         _tlOsynmap = rule313 _lhsIsynmap
-         _tlOtextBlocks = rule314 _lhsItextBlocks
+         _lhsOvisituses = rule285 _hdIvisituses _tlIvisituses
+         _hdOallFromToStates = rule286 _lhsIallFromToStates
+         _hdOallInhmap = rule287 _lhsIallInhmap
+         _hdOallInitStates = rule288 _lhsIallInitStates
+         _hdOallSynmap = rule289 _lhsIallSynmap
+         _hdOallVisitKinds = rule290 _lhsIallVisitKinds
+         _hdOallstates = rule291 _lhsIallstates
+         _hdOavisitdefs = rule292 _lhsIavisitdefs
+         _hdOavisituses = rule293 _lhsIavisituses
+         _hdOclassCtxs = rule294 _lhsIclassCtxs
+         _hdOimportBlocks = rule295 _lhsIimportBlocks
+         _hdOinhmap = rule296 _lhsIinhmap
+         _hdOinitial = rule297 _lhsIinitial
+         _hdOlocalAttrTypes = rule298 _lhsIlocalAttrTypes
+         _hdOmainFile = rule299 _lhsImainFile
+         _hdOmainName = rule300 _lhsImainName
+         _hdOmoduleHeader = rule301 _lhsImoduleHeader
+         _hdOnextVisits = rule302 _lhsInextVisits
+         _hdOnt = rule303 _lhsInt
+         _hdOntType = rule304 _lhsIntType
+         _hdOoptions = rule305 _lhsIoptions
+         _hdOparams = rule306 _lhsIparams
+         _hdOpragmaBlocks = rule307 _lhsIpragmaBlocks
+         _hdOprevVisits = rule308 _lhsIprevVisits
+         _hdOrename = rule309 _lhsIrename
+         _hdOsynmap = rule310 _lhsIsynmap
+         _hdOtextBlocks = rule311 _lhsItextBlocks
+         _tlOallFromToStates = rule312 _lhsIallFromToStates
+         _tlOallInhmap = rule313 _lhsIallInhmap
+         _tlOallInitStates = rule314 _lhsIallInitStates
+         _tlOallSynmap = rule315 _lhsIallSynmap
+         _tlOallVisitKinds = rule316 _lhsIallVisitKinds
+         _tlOallstates = rule317 _lhsIallstates
+         _tlOavisitdefs = rule318 _lhsIavisitdefs
+         _tlOavisituses = rule319 _lhsIavisituses
+         _tlOclassCtxs = rule320 _lhsIclassCtxs
+         _tlOimportBlocks = rule321 _lhsIimportBlocks
+         _tlOinhmap = rule322 _lhsIinhmap
+         _tlOinitial = rule323 _lhsIinitial
+         _tlOlocalAttrTypes = rule324 _lhsIlocalAttrTypes
+         _tlOmainFile = rule325 _lhsImainFile
+         _tlOmainName = rule326 _lhsImainName
+         _tlOmoduleHeader = rule327 _lhsImoduleHeader
+         _tlOnextVisits = rule328 _lhsInextVisits
+         _tlOnt = rule329 _lhsInt
+         _tlOntType = rule330 _lhsIntType
+         _tlOoptions = rule331 _lhsIoptions
+         _tlOparams = rule332 _lhsIparams
+         _tlOpragmaBlocks = rule333 _lhsIpragmaBlocks
+         _tlOprevVisits = rule334 _lhsIprevVisits
+         _tlOrename = rule335 _lhsIrename
+         _tlOsynmap = rule336 _lhsIsynmap
+         _tlOtextBlocks = rule337 _lhsItextBlocks
          __result_ = T_EProductions_vOut16 _lhsOallvisits _lhsOcount _lhsOdatatype _lhsOerrors _lhsOfromToStates _lhsOsemFunBndDefs _lhsOsemFunBndTps _lhsOsem_nt _lhsOvisitKinds _lhsOvisitdefs _lhsOvisituses
          in __result_ )
      in C_EProductions_s17 v16
-   {-# INLINE rule254 #-}
-   {-# LINE 391 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule254 = \ ((_hdIallvisits) :: [VisitStateState]) ->
-                           {-# LINE 391 "src-ag/ExecutionPlan2TH.ag" #-}
-                           _hdIallvisits
-                           {-# LINE 2113 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule255 #-}
-   rule255 = \ ((_hdIcount) :: Int) ((_tlIcount) :: Int) ->
-     _hdIcount + _tlIcount
-   {-# INLINE rule256 #-}
-   rule256 = \ ((_hdIdatatype) :: TH.Con) ((_tlIdatatype) :: [TH.Con]) ->
-     _hdIdatatype : _tlIdatatype
-   {-# INLINE rule257 #-}
-   rule257 = \ ((_hdIerrors) :: Seq Error) ((_tlIerrors) :: Seq Error) ->
-     _hdIerrors Seq.>< _tlIerrors
-   {-# INLINE rule258 #-}
-   rule258 = \ ((_hdIfromToStates) :: Map VisitIdentifier (Int,Int)) ((_tlIfromToStates) :: Map VisitIdentifier (Int,Int)) ->
-     _hdIfromToStates `mappend` _tlIfromToStates
-   {-# INLINE rule259 #-}
-   rule259 = \ ((_hdIsemFunBndDefs) :: Seq (TH.Name, TH.Exp)) ((_tlIsemFunBndDefs) :: Seq (TH.Name, TH.Exp)) ->
-     _hdIsemFunBndDefs Seq.>< _tlIsemFunBndDefs
-   {-# INLINE rule260 #-}
-   rule260 = \ ((_hdIsemFunBndTps) :: Seq (TH.VarBangType)) ((_tlIsemFunBndTps) :: Seq (TH.VarBangType)) ->
-     _hdIsemFunBndTps Seq.>< _tlIsemFunBndTps
-   {-# INLINE rule261 #-}
-   rule261 = \ ((_hdIsem_nt) :: [TH.Clause]) ((_tlIsem_nt) :: [TH.Clause]) ->
-     _hdIsem_nt ++ _tlIsem_nt
-   {-# INLINE rule262 #-}
-   rule262 = \ ((_hdIvisitKinds) :: Map VisitIdentifier VisitKind) ((_tlIvisitKinds) :: Map VisitIdentifier VisitKind) ->
-     _hdIvisitKinds `mappend` _tlIvisitKinds
-   {-# INLINE rule263 #-}
-   rule263 = \ ((_hdIvisitdefs) :: Map VisitIdentifier (Set Identifier)) ((_tlIvisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
-     _hdIvisitdefs `uwSetUnion` _tlIvisitdefs
-   {-# INLINE rule264 #-}
-   rule264 = \ ((_hdIvisituses) :: Map VisitIdentifier (Set Identifier)) ((_tlIvisituses) :: Map VisitIdentifier (Set Identifier)) ->
-     _hdIvisituses `uwSetUnion` _tlIvisituses
-   {-# INLINE rule265 #-}
-   rule265 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
-     _lhsIallFromToStates
-   {-# INLINE rule266 #-}
-   rule266 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
-     _lhsIallInhmap
-   {-# INLINE rule267 #-}
-   rule267 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
-     _lhsIallInitStates
-   {-# INLINE rule268 #-}
-   rule268 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
-     _lhsIallSynmap
-   {-# INLINE rule269 #-}
-   rule269 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
-     _lhsIallVisitKinds
-   {-# INLINE rule270 #-}
-   rule270 = \ ((_lhsIallstates) :: Set StateIdentifier) ->
-     _lhsIallstates
-   {-# INLINE rule271 #-}
-   rule271 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
-     _lhsIavisitdefs
-   {-# INLINE rule272 #-}
-   rule272 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
-     _lhsIavisituses
-   {-# INLINE rule273 #-}
-   rule273 = \ ((_lhsIimportBlocks) :: [String]) ->
-     _lhsIimportBlocks
-   {-# INLINE rule274 #-}
-   rule274 = \ ((_lhsIinhmap) :: Attributes) ->
-     _lhsIinhmap
    {-# INLINE rule275 #-}
-   rule275 = \ ((_lhsIinitial) :: StateIdentifier) ->
-     _lhsIinitial
+   {-# LINE 410 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule275 = \ ((_hdIallvisits) :: [VisitStateState]) ->
+                           {-# LINE 410 "src-ag/ExecutionPlan2TH.ag" #-}
+                           _hdIallvisits
+                           {-# LINE 2316 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule276 #-}
-   rule276 = \ ((_lhsIlocalAttrTypes) :: Map ConstructorIdent (Map Identifier Type)) ->
-     _lhsIlocalAttrTypes
+   rule276 = \ ((_hdIcount) :: Int) ((_tlIcount) :: Int) ->
+     _hdIcount + _tlIcount
    {-# INLINE rule277 #-}
-   rule277 = \ ((_lhsImainFile) :: String) ->
-     _lhsImainFile
+   rule277 = \ ((_hdIdatatype) :: TH.Con) ((_tlIdatatype) :: [TH.Con]) ->
+     _hdIdatatype : _tlIdatatype
    {-# INLINE rule278 #-}
-   rule278 = \ ((_lhsImainName) :: String) ->
-     _lhsImainName
+   rule278 = \ ((_hdIerrors) :: Seq Error) ((_tlIerrors) :: Seq Error) ->
+     _hdIerrors Seq.>< _tlIerrors
    {-# INLINE rule279 #-}
-   rule279 = \ ((_lhsImoduleHeader) :: String -> String -> String -> Bool -> String) ->
-     _lhsImoduleHeader
+   rule279 = \ ((_hdIfromToStates) :: Map VisitIdentifier (Int,Int)) ((_tlIfromToStates) :: Map VisitIdentifier (Int,Int)) ->
+     _hdIfromToStates `mappend` _tlIfromToStates
    {-# INLINE rule280 #-}
-   rule280 = \ ((_lhsInextVisits) :: Map StateIdentifier StateCtx) ->
-     _lhsInextVisits
+   rule280 = \ ((_hdIsemFunBndDefs) :: Seq (TH.Name, TH.Exp)) ((_tlIsemFunBndDefs) :: Seq (TH.Name, TH.Exp)) ->
+     _hdIsemFunBndDefs Seq.>< _tlIsemFunBndDefs
    {-# INLINE rule281 #-}
-   rule281 = \ ((_lhsInt) :: NontermIdent) ->
-     _lhsInt
+   rule281 = \ ((_hdIsemFunBndTps) :: Seq (TH.VarBangType)) ((_tlIsemFunBndTps) :: Seq (TH.VarBangType)) ->
+     _hdIsemFunBndTps Seq.>< _tlIsemFunBndTps
    {-# INLINE rule282 #-}
-   rule282 = \ ((_lhsIntType) :: Type) ->
-     _lhsIntType
+   rule282 = \ ((_hdIsem_nt) :: [TH.Clause]) ((_tlIsem_nt) :: [TH.Clause]) ->
+     _hdIsem_nt ++ _tlIsem_nt
    {-# INLINE rule283 #-}
-   rule283 = \ ((_lhsIoptions) :: Options) ->
-     _lhsIoptions
+   rule283 = \ ((_hdIvisitKinds) :: Map VisitIdentifier VisitKind) ((_tlIvisitKinds) :: Map VisitIdentifier VisitKind) ->
+     _hdIvisitKinds `mappend` _tlIvisitKinds
    {-# INLINE rule284 #-}
-   rule284 = \ ((_lhsIparams) :: [Identifier]) ->
-     _lhsIparams
+   rule284 = \ ((_hdIvisitdefs) :: Map VisitIdentifier (Set Identifier)) ((_tlIvisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
+     _hdIvisitdefs `uwSetUnion` _tlIvisitdefs
    {-# INLINE rule285 #-}
-   rule285 = \ ((_lhsIpragmaBlocks) :: String) ->
-     _lhsIpragmaBlocks
+   rule285 = \ ((_hdIvisituses) :: Map VisitIdentifier (Set Identifier)) ((_tlIvisituses) :: Map VisitIdentifier (Set Identifier)) ->
+     _hdIvisituses `uwSetUnion` _tlIvisituses
    {-# INLINE rule286 #-}
-   rule286 = \ ((_lhsIprevVisits) :: Map StateIdentifier StateCtx) ->
-     _lhsIprevVisits
-   {-# INLINE rule287 #-}
-   rule287 = \ ((_lhsIrename) :: Bool) ->
-     _lhsIrename
-   {-# INLINE rule288 #-}
-   rule288 = \ ((_lhsIsynmap) :: Attributes) ->
-     _lhsIsynmap
-   {-# INLINE rule289 #-}
-   rule289 = \ ((_lhsItextBlocks) :: [String]) ->
-     _lhsItextBlocks
-   {-# INLINE rule290 #-}
-   rule290 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
+   rule286 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
      _lhsIallFromToStates
-   {-# INLINE rule291 #-}
-   rule291 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
+   {-# INLINE rule287 #-}
+   rule287 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
      _lhsIallInhmap
-   {-# INLINE rule292 #-}
-   rule292 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
+   {-# INLINE rule288 #-}
+   rule288 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
      _lhsIallInitStates
-   {-# INLINE rule293 #-}
-   rule293 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
+   {-# INLINE rule289 #-}
+   rule289 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
      _lhsIallSynmap
-   {-# INLINE rule294 #-}
-   rule294 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
+   {-# INLINE rule290 #-}
+   rule290 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
      _lhsIallVisitKinds
-   {-# INLINE rule295 #-}
-   rule295 = \ ((_lhsIallstates) :: Set StateIdentifier) ->
+   {-# INLINE rule291 #-}
+   rule291 = \ ((_lhsIallstates) :: Set StateIdentifier) ->
      _lhsIallstates
-   {-# INLINE rule296 #-}
-   rule296 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
+   {-# INLINE rule292 #-}
+   rule292 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
      _lhsIavisitdefs
-   {-# INLINE rule297 #-}
-   rule297 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
+   {-# INLINE rule293 #-}
+   rule293 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
      _lhsIavisituses
-   {-# INLINE rule298 #-}
-   rule298 = \ ((_lhsIimportBlocks) :: [String]) ->
+   {-# INLINE rule294 #-}
+   rule294 = \ ((_lhsIclassCtxs) :: ClassContext) ->
+     _lhsIclassCtxs
+   {-# INLINE rule295 #-}
+   rule295 = \ ((_lhsIimportBlocks) :: [String]) ->
      _lhsIimportBlocks
-   {-# INLINE rule299 #-}
-   rule299 = \ ((_lhsIinhmap) :: Attributes) ->
+   {-# INLINE rule296 #-}
+   rule296 = \ ((_lhsIinhmap) :: Attributes) ->
      _lhsIinhmap
-   {-# INLINE rule300 #-}
-   rule300 = \ ((_lhsIinitial) :: StateIdentifier) ->
+   {-# INLINE rule297 #-}
+   rule297 = \ ((_lhsIinitial) :: StateIdentifier) ->
      _lhsIinitial
-   {-# INLINE rule301 #-}
-   rule301 = \ ((_lhsIlocalAttrTypes) :: Map ConstructorIdent (Map Identifier Type)) ->
+   {-# INLINE rule298 #-}
+   rule298 = \ ((_lhsIlocalAttrTypes) :: Map ConstructorIdent (Map Identifier Type)) ->
      _lhsIlocalAttrTypes
-   {-# INLINE rule302 #-}
-   rule302 = \ ((_lhsImainFile) :: String) ->
+   {-# INLINE rule299 #-}
+   rule299 = \ ((_lhsImainFile) :: String) ->
      _lhsImainFile
-   {-# INLINE rule303 #-}
-   rule303 = \ ((_lhsImainName) :: String) ->
+   {-# INLINE rule300 #-}
+   rule300 = \ ((_lhsImainName) :: String) ->
      _lhsImainName
-   {-# INLINE rule304 #-}
-   rule304 = \ ((_lhsImoduleHeader) :: String -> String -> String -> Bool -> String) ->
+   {-# INLINE rule301 #-}
+   rule301 = \ ((_lhsImoduleHeader) :: String -> String -> String -> Bool -> String) ->
      _lhsImoduleHeader
-   {-# INLINE rule305 #-}
-   rule305 = \ ((_lhsInextVisits) :: Map StateIdentifier StateCtx) ->
+   {-# INLINE rule302 #-}
+   rule302 = \ ((_lhsInextVisits) :: Map StateIdentifier StateCtx) ->
      _lhsInextVisits
-   {-# INLINE rule306 #-}
-   rule306 = \ ((_lhsInt) :: NontermIdent) ->
+   {-# INLINE rule303 #-}
+   rule303 = \ ((_lhsInt) :: NontermIdent) ->
      _lhsInt
-   {-# INLINE rule307 #-}
-   rule307 = \ ((_lhsIntType) :: Type) ->
+   {-# INLINE rule304 #-}
+   rule304 = \ ((_lhsIntType) :: Type) ->
      _lhsIntType
-   {-# INLINE rule308 #-}
-   rule308 = \ ((_lhsIoptions) :: Options) ->
+   {-# INLINE rule305 #-}
+   rule305 = \ ((_lhsIoptions) :: Options) ->
      _lhsIoptions
-   {-# INLINE rule309 #-}
-   rule309 = \ ((_lhsIparams) :: [Identifier]) ->
+   {-# INLINE rule306 #-}
+   rule306 = \ ((_lhsIparams) :: [Identifier]) ->
      _lhsIparams
-   {-# INLINE rule310 #-}
-   rule310 = \ ((_lhsIpragmaBlocks) :: String) ->
+   {-# INLINE rule307 #-}
+   rule307 = \ ((_lhsIpragmaBlocks) :: String) ->
      _lhsIpragmaBlocks
-   {-# INLINE rule311 #-}
-   rule311 = \ ((_lhsIprevVisits) :: Map StateIdentifier StateCtx) ->
+   {-# INLINE rule308 #-}
+   rule308 = \ ((_lhsIprevVisits) :: Map StateIdentifier StateCtx) ->
      _lhsIprevVisits
-   {-# INLINE rule312 #-}
-   rule312 = \ ((_lhsIrename) :: Bool) ->
+   {-# INLINE rule309 #-}
+   rule309 = \ ((_lhsIrename) :: Bool) ->
      _lhsIrename
-   {-# INLINE rule313 #-}
-   rule313 = \ ((_lhsIsynmap) :: Attributes) ->
+   {-# INLINE rule310 #-}
+   rule310 = \ ((_lhsIsynmap) :: Attributes) ->
      _lhsIsynmap
+   {-# INLINE rule311 #-}
+   rule311 = \ ((_lhsItextBlocks) :: [String]) ->
+     _lhsItextBlocks
+   {-# INLINE rule312 #-}
+   rule312 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
+     _lhsIallFromToStates
+   {-# INLINE rule313 #-}
+   rule313 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
+     _lhsIallInhmap
    {-# INLINE rule314 #-}
-   rule314 = \ ((_lhsItextBlocks) :: [String]) ->
+   rule314 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
+     _lhsIallInitStates
+   {-# INLINE rule315 #-}
+   rule315 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
+     _lhsIallSynmap
+   {-# INLINE rule316 #-}
+   rule316 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
+     _lhsIallVisitKinds
+   {-# INLINE rule317 #-}
+   rule317 = \ ((_lhsIallstates) :: Set StateIdentifier) ->
+     _lhsIallstates
+   {-# INLINE rule318 #-}
+   rule318 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
+     _lhsIavisitdefs
+   {-# INLINE rule319 #-}
+   rule319 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
+     _lhsIavisituses
+   {-# INLINE rule320 #-}
+   rule320 = \ ((_lhsIclassCtxs) :: ClassContext) ->
+     _lhsIclassCtxs
+   {-# INLINE rule321 #-}
+   rule321 = \ ((_lhsIimportBlocks) :: [String]) ->
+     _lhsIimportBlocks
+   {-# INLINE rule322 #-}
+   rule322 = \ ((_lhsIinhmap) :: Attributes) ->
+     _lhsIinhmap
+   {-# INLINE rule323 #-}
+   rule323 = \ ((_lhsIinitial) :: StateIdentifier) ->
+     _lhsIinitial
+   {-# INLINE rule324 #-}
+   rule324 = \ ((_lhsIlocalAttrTypes) :: Map ConstructorIdent (Map Identifier Type)) ->
+     _lhsIlocalAttrTypes
+   {-# INLINE rule325 #-}
+   rule325 = \ ((_lhsImainFile) :: String) ->
+     _lhsImainFile
+   {-# INLINE rule326 #-}
+   rule326 = \ ((_lhsImainName) :: String) ->
+     _lhsImainName
+   {-# INLINE rule327 #-}
+   rule327 = \ ((_lhsImoduleHeader) :: String -> String -> String -> Bool -> String) ->
+     _lhsImoduleHeader
+   {-# INLINE rule328 #-}
+   rule328 = \ ((_lhsInextVisits) :: Map StateIdentifier StateCtx) ->
+     _lhsInextVisits
+   {-# INLINE rule329 #-}
+   rule329 = \ ((_lhsInt) :: NontermIdent) ->
+     _lhsInt
+   {-# INLINE rule330 #-}
+   rule330 = \ ((_lhsIntType) :: Type) ->
+     _lhsIntType
+   {-# INLINE rule331 #-}
+   rule331 = \ ((_lhsIoptions) :: Options) ->
+     _lhsIoptions
+   {-# INLINE rule332 #-}
+   rule332 = \ ((_lhsIparams) :: [Identifier]) ->
+     _lhsIparams
+   {-# INLINE rule333 #-}
+   rule333 = \ ((_lhsIpragmaBlocks) :: String) ->
+     _lhsIpragmaBlocks
+   {-# INLINE rule334 #-}
+   rule334 = \ ((_lhsIprevVisits) :: Map StateIdentifier StateCtx) ->
+     _lhsIprevVisits
+   {-# INLINE rule335 #-}
+   rule335 = \ ((_lhsIrename) :: Bool) ->
+     _lhsIrename
+   {-# INLINE rule336 #-}
+   rule336 = \ ((_lhsIsynmap) :: Attributes) ->
+     _lhsIsynmap
+   {-# INLINE rule337 #-}
+   rule337 = \ ((_lhsItextBlocks) :: [String]) ->
      _lhsItextBlocks
 {-# NOINLINE sem_EProductions_Nil #-}
 sem_EProductions_Nil ::  T_EProductions 
@@ -2296,67 +2505,67 @@ sem_EProductions_Nil  = T_EProductions (return st17) where
    {-# NOINLINE st17 #-}
    st17 = let
       v16 :: T_EProductions_v16 
-      v16 = \ (T_EProductions_vIn16 _lhsIallFromToStates _lhsIallInhmap _lhsIallInitStates _lhsIallSynmap _lhsIallVisitKinds _lhsIallstates _lhsIavisitdefs _lhsIavisituses _lhsIimportBlocks _lhsIinhmap _lhsIinitial _lhsIlocalAttrTypes _lhsImainFile _lhsImainName _lhsImoduleHeader _lhsInextVisits _lhsInt _lhsIntType _lhsIoptions _lhsIparams _lhsIpragmaBlocks _lhsIprevVisits _lhsIrename _lhsIsynmap _lhsItextBlocks) -> ( let
+      v16 = \ (T_EProductions_vIn16 _lhsIallFromToStates _lhsIallInhmap _lhsIallInitStates _lhsIallSynmap _lhsIallVisitKinds _lhsIallstates _lhsIavisitdefs _lhsIavisituses _lhsIclassCtxs _lhsIimportBlocks _lhsIinhmap _lhsIinitial _lhsIlocalAttrTypes _lhsImainFile _lhsImainName _lhsImoduleHeader _lhsInextVisits _lhsInt _lhsIntType _lhsIoptions _lhsIparams _lhsIpragmaBlocks _lhsIprevVisits _lhsIrename _lhsIsynmap _lhsItextBlocks) -> ( let
          _lhsOallvisits :: [VisitStateState]
-         _lhsOallvisits = rule315  ()
+         _lhsOallvisits = rule338  ()
          _lhsOcount :: Int
-         _lhsOcount = rule316  ()
+         _lhsOcount = rule339  ()
          _lhsOdatatype :: [TH.Con]
-         _lhsOdatatype = rule317  ()
+         _lhsOdatatype = rule340  ()
          _lhsOerrors :: Seq Error
-         _lhsOerrors = rule318  ()
+         _lhsOerrors = rule341  ()
          _lhsOfromToStates :: Map VisitIdentifier (Int,Int)
-         _lhsOfromToStates = rule319  ()
+         _lhsOfromToStates = rule342  ()
          _lhsOsemFunBndDefs :: Seq (TH.Name, TH.Exp)
-         _lhsOsemFunBndDefs = rule320  ()
+         _lhsOsemFunBndDefs = rule343  ()
          _lhsOsemFunBndTps :: Seq (TH.VarBangType)
-         _lhsOsemFunBndTps = rule321  ()
+         _lhsOsemFunBndTps = rule344  ()
          _lhsOsem_nt :: [TH.Clause]
-         _lhsOsem_nt = rule322  ()
+         _lhsOsem_nt = rule345  ()
          _lhsOvisitKinds :: Map VisitIdentifier VisitKind
-         _lhsOvisitKinds = rule323  ()
+         _lhsOvisitKinds = rule346  ()
          _lhsOvisitdefs :: Map VisitIdentifier (Set Identifier)
-         _lhsOvisitdefs = rule324  ()
+         _lhsOvisitdefs = rule347  ()
          _lhsOvisituses :: Map VisitIdentifier (Set Identifier)
-         _lhsOvisituses = rule325  ()
+         _lhsOvisituses = rule348  ()
          __result_ = T_EProductions_vOut16 _lhsOallvisits _lhsOcount _lhsOdatatype _lhsOerrors _lhsOfromToStates _lhsOsemFunBndDefs _lhsOsemFunBndTps _lhsOsem_nt _lhsOvisitKinds _lhsOvisitdefs _lhsOvisituses
          in __result_ )
      in C_EProductions_s17 v16
-   {-# INLINE rule315 #-}
-   {-# LINE 392 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule315 = \  (_ :: ()) ->
-                           {-# LINE 392 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# INLINE rule338 #-}
+   {-# LINE 411 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule338 = \  (_ :: ()) ->
+                           {-# LINE 411 "src-ag/ExecutionPlan2TH.ag" #-}
                            error "Every nonterminal should have at least 1 production"
-                           {-# LINE 2331 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule316 #-}
-   rule316 = \  (_ :: ()) ->
+                           {-# LINE 2540 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule339 #-}
+   rule339 = \  (_ :: ()) ->
      0
-   {-# INLINE rule317 #-}
-   rule317 = \  (_ :: ()) ->
+   {-# INLINE rule340 #-}
+   rule340 = \  (_ :: ()) ->
      []
-   {-# INLINE rule318 #-}
-   rule318 = \  (_ :: ()) ->
+   {-# INLINE rule341 #-}
+   rule341 = \  (_ :: ()) ->
      Seq.empty
-   {-# INLINE rule319 #-}
-   rule319 = \  (_ :: ()) ->
+   {-# INLINE rule342 #-}
+   rule342 = \  (_ :: ()) ->
      mempty
-   {-# INLINE rule320 #-}
-   rule320 = \  (_ :: ()) ->
+   {-# INLINE rule343 #-}
+   rule343 = \  (_ :: ()) ->
      Seq.empty
-   {-# INLINE rule321 #-}
-   rule321 = \  (_ :: ()) ->
+   {-# INLINE rule344 #-}
+   rule344 = \  (_ :: ()) ->
      Seq.empty
-   {-# INLINE rule322 #-}
-   rule322 = \  (_ :: ()) ->
+   {-# INLINE rule345 #-}
+   rule345 = \  (_ :: ()) ->
      []
-   {-# INLINE rule323 #-}
-   rule323 = \  (_ :: ()) ->
+   {-# INLINE rule346 #-}
+   rule346 = \  (_ :: ()) ->
      mempty
-   {-# INLINE rule324 #-}
-   rule324 = \  (_ :: ()) ->
+   {-# INLINE rule347 #-}
+   rule347 = \  (_ :: ()) ->
      Map.empty
-   {-# INLINE rule325 #-}
-   rule325 = \  (_ :: ()) ->
+   {-# INLINE rule348 #-}
+   rule348 = \  (_ :: ()) ->
      Map.empty
 
 -- ERule -------------------------------------------------------
@@ -2400,100 +2609,100 @@ sem_ERule_ERule arg_name_ arg_pattern_ arg_rhs_ _ _ _ _ arg_mbError_ = T_ERule (
          _rhsX29 = Control.Monad.Identity.runIdentity (attach_T_Expression (arg_rhs_))
          (T_Pattern_vOut40 _patternIattrs _patternIcopy _patternIisUnderscore) = inv_Pattern_s41 _patternX41 (T_Pattern_vIn40 _patternOallInhmap _patternOallSynmap _patternOanyLazyKind _patternOinhmap _patternOlocalAttrTypes _patternOoptions _patternOsynmap)
          (T_Expression_vOut28 _rhsIattrs _rhsIpos _rhsItks) = inv_Expression_s29 _rhsX29 (T_Expression_vIn28 _rhsOoptions)
-         _used = rule326 _lhsIusageInfo arg_name_
-         _kinds = rule327 _lhsIruleKinds arg_name_
-         _anyLazyKind = rule328 _kinds
-         _addbang = rule329 _lhsIoptions
-         _addbang1 = rule330 _addbang _anyLazyKind
+         _used = rule349 _lhsIusageInfo arg_name_
+         _kinds = rule350 _lhsIruleKinds arg_name_
+         _anyLazyKind = rule351 _kinds
+         _addbang = rule352 _lhsIoptions
+         _addbang1 = rule353 _addbang _anyLazyKind
          _lhsOerrors :: Seq Error
-         _lhsOerrors = rule331 _used arg_mbError_
+         _lhsOerrors = rule354 _used arg_mbError_
          _lhsOruledefs :: Map Identifier (Set String)
-         _lhsOruledefs = rule332  ()
+         _lhsOruledefs = rule355  ()
          _lhsOruleuses :: Map Identifier (Map String (Maybe NonLocalAttr))
-         _lhsOruleuses = rule333  ()
+         _lhsOruleuses = rule356  ()
          _lhsOusedArgs :: Set String
-         _lhsOusedArgs = rule334  ()
-         _patternOallInhmap = rule335 _lhsIallInhmap
-         _patternOallSynmap = rule336 _lhsIallSynmap
-         _patternOanyLazyKind = rule337 _anyLazyKind
-         _patternOinhmap = rule338 _lhsIinhmap
-         _patternOlocalAttrTypes = rule339 _lhsIlocalAttrTypes
-         _patternOoptions = rule340 _lhsIoptions
-         _patternOsynmap = rule341 _lhsIsynmap
-         _rhsOoptions = rule342 _lhsIoptions
+         _lhsOusedArgs = rule357  ()
+         _patternOallInhmap = rule358 _lhsIallInhmap
+         _patternOallSynmap = rule359 _lhsIallSynmap
+         _patternOanyLazyKind = rule360 _anyLazyKind
+         _patternOinhmap = rule361 _lhsIinhmap
+         _patternOlocalAttrTypes = rule362 _lhsIlocalAttrTypes
+         _patternOoptions = rule363 _lhsIoptions
+         _patternOsynmap = rule364 _lhsIsynmap
+         _rhsOoptions = rule365 _lhsIoptions
          __result_ = T_ERule_vOut19 _lhsOerrors _lhsOruledefs _lhsOruleuses _lhsOusedArgs
          in __result_ )
      in C_ERule_s20 v19
-   {-# INLINE rule326 #-}
-   {-# LINE 1334 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule326 = \ ((_lhsIusageInfo) :: Map Identifier Int) name_ ->
-                                                 {-# LINE 1334 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# INLINE rule349 #-}
+   {-# LINE 1370 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule349 = \ ((_lhsIusageInfo) :: Map Identifier Int) name_ ->
+                                                 {-# LINE 1370 "src-ag/ExecutionPlan2TH.ag" #-}
                                                  Map.findWithDefault 0 name_ _lhsIusageInfo
-                                                 {-# LINE 2433 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule327 #-}
-   {-# LINE 1350 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule327 = \ ((_lhsIruleKinds) :: Map Identifier (Set VisitKind)) name_ ->
-                {-# LINE 1350 "src-ag/ExecutionPlan2TH.ag" #-}
+                                                 {-# LINE 2642 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule350 #-}
+   {-# LINE 1386 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule350 = \ ((_lhsIruleKinds) :: Map Identifier (Set VisitKind)) name_ ->
+                {-# LINE 1386 "src-ag/ExecutionPlan2TH.ag" #-}
                 Map.findWithDefault Set.empty name_ _lhsIruleKinds
-                {-# LINE 2439 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule328 #-}
-   {-# LINE 1351 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule328 = \ _kinds ->
-                      {-# LINE 1351 "src-ag/ExecutionPlan2TH.ag" #-}
+                {-# LINE 2648 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule351 #-}
+   {-# LINE 1387 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule351 = \ _kinds ->
+                      {-# LINE 1387 "src-ag/ExecutionPlan2TH.ag" #-}
                       Set.fold (\k r -> isLazyKind k || r) False _kinds
-                      {-# LINE 2445 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule329 #-}
-   {-# LINE 1600 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule329 = \ ((_lhsIoptions) :: Options) ->
-                                                    {-# LINE 1600 "src-ag/ExecutionPlan2TH.ag" #-}
+                      {-# LINE 2654 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule352 #-}
+   {-# LINE 1636 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule352 = \ ((_lhsIoptions) :: Options) ->
+                                                    {-# LINE 1636 "src-ag/ExecutionPlan2TH.ag" #-}
                                                     \x -> if bangpats _lhsIoptions then TH.BangP x else x
-                                                    {-# LINE 2451 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule330 #-}
-   {-# LINE 1611 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule330 = \ _addbang _anyLazyKind ->
-                                                     {-# LINE 1611 "src-ag/ExecutionPlan2TH.ag" #-}
+                                                    {-# LINE 2660 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule353 #-}
+   {-# LINE 1650 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule353 = \ _addbang _anyLazyKind ->
+                                                     {-# LINE 1650 "src-ag/ExecutionPlan2TH.ag" #-}
                                                      if _anyLazyKind     then id else _addbang
-                                                     {-# LINE 2457 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule331 #-}
-   {-# LINE 1717 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule331 = \ _used mbError_ ->
-                 {-# LINE 1717 "src-ag/ExecutionPlan2TH.ag" #-}
+                                                     {-# LINE 2666 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule354 #-}
+   {-# LINE 1756 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule354 = \ _used mbError_ ->
+                 {-# LINE 1756 "src-ag/ExecutionPlan2TH.ag" #-}
                  case mbError_ of
                    Just e | _used     > 0 -> Seq.singleton e
                    _                      -> Seq.empty
-                 {-# LINE 2465 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule332 #-}
-   rule332 = \  (_ :: ()) ->
+                 {-# LINE 2674 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule355 #-}
+   rule355 = \  (_ :: ()) ->
      Map.empty
-   {-# INLINE rule333 #-}
-   rule333 = \  (_ :: ()) ->
+   {-# INLINE rule356 #-}
+   rule356 = \  (_ :: ()) ->
      Map.empty
-   {-# INLINE rule334 #-}
-   rule334 = \  (_ :: ()) ->
+   {-# INLINE rule357 #-}
+   rule357 = \  (_ :: ()) ->
      Set.empty
-   {-# INLINE rule335 #-}
-   rule335 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
+   {-# INLINE rule358 #-}
+   rule358 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
      _lhsIallInhmap
-   {-# INLINE rule336 #-}
-   rule336 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
+   {-# INLINE rule359 #-}
+   rule359 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
      _lhsIallSynmap
-   {-# INLINE rule337 #-}
-   rule337 = \ _anyLazyKind ->
+   {-# INLINE rule360 #-}
+   rule360 = \ _anyLazyKind ->
      _anyLazyKind
-   {-# INLINE rule338 #-}
-   rule338 = \ ((_lhsIinhmap) :: Attributes) ->
+   {-# INLINE rule361 #-}
+   rule361 = \ ((_lhsIinhmap) :: Attributes) ->
      _lhsIinhmap
-   {-# INLINE rule339 #-}
-   rule339 = \ ((_lhsIlocalAttrTypes) :: Map Identifier Type) ->
+   {-# INLINE rule362 #-}
+   rule362 = \ ((_lhsIlocalAttrTypes) :: Map Identifier Type) ->
      _lhsIlocalAttrTypes
-   {-# INLINE rule340 #-}
-   rule340 = \ ((_lhsIoptions) :: Options) ->
+   {-# INLINE rule363 #-}
+   rule363 = \ ((_lhsIoptions) :: Options) ->
      _lhsIoptions
-   {-# INLINE rule341 #-}
-   rule341 = \ ((_lhsIsynmap) :: Attributes) ->
+   {-# INLINE rule364 #-}
+   rule364 = \ ((_lhsIsynmap) :: Attributes) ->
      _lhsIsynmap
-   {-# INLINE rule342 #-}
-   rule342 = \ ((_lhsIoptions) :: Options) ->
+   {-# INLINE rule365 #-}
+   rule365 = \ ((_lhsIoptions) :: Options) ->
      _lhsIoptions
 
 -- ERules ------------------------------------------------------
@@ -2538,171 +2747,171 @@ sem_ERules_Cons arg_hd_ arg_tl_ = T_ERules (return st23) where
          (T_ERule_vOut19 _hdIerrors _hdIruledefs _hdIruleuses _hdIusedArgs) = inv_ERule_s20 _hdX20 (T_ERule_vIn19 _hdOallInhmap _hdOallSynmap _hdOchildTypes _hdOcon _hdOimportBlocks _hdOinhmap _hdOlazyIntras _hdOlocalAttrTypes _hdOmainFile _hdOmainName _hdOmoduleHeader _hdOnt _hdOoptions _hdOpragmaBlocks _hdOruleKinds _hdOsynmap _hdOtextBlocks _hdOusageInfo)
          (T_ERules_vOut22 _tlIerrors _tlIruledefs _tlIruleuses _tlIusedArgs) = inv_ERules_s23 _tlX23 (T_ERules_vIn22 _tlOallInhmap _tlOallSynmap _tlOchildTypes _tlOcon _tlOimportBlocks _tlOinhmap _tlOlazyIntras _tlOlocalAttrTypes _tlOmainFile _tlOmainName _tlOmoduleHeader _tlOnt _tlOoptions _tlOpragmaBlocks _tlOruleKinds _tlOsynmap _tlOtextBlocks _tlOusageInfo)
          _lhsOerrors :: Seq Error
-         _lhsOerrors = rule343 _hdIerrors _tlIerrors
+         _lhsOerrors = rule366 _hdIerrors _tlIerrors
          _lhsOruledefs :: Map Identifier (Set String)
-         _lhsOruledefs = rule344 _hdIruledefs _tlIruledefs
+         _lhsOruledefs = rule367 _hdIruledefs _tlIruledefs
          _lhsOruleuses :: Map Identifier (Map String (Maybe NonLocalAttr))
-         _lhsOruleuses = rule345 _hdIruleuses _tlIruleuses
+         _lhsOruleuses = rule368 _hdIruleuses _tlIruleuses
          _lhsOusedArgs :: Set String
-         _lhsOusedArgs = rule346 _hdIusedArgs _tlIusedArgs
-         _hdOallInhmap = rule347 _lhsIallInhmap
-         _hdOallSynmap = rule348 _lhsIallSynmap
-         _hdOchildTypes = rule349 _lhsIchildTypes
-         _hdOcon = rule350 _lhsIcon
-         _hdOimportBlocks = rule351 _lhsIimportBlocks
-         _hdOinhmap = rule352 _lhsIinhmap
-         _hdOlazyIntras = rule353 _lhsIlazyIntras
-         _hdOlocalAttrTypes = rule354 _lhsIlocalAttrTypes
-         _hdOmainFile = rule355 _lhsImainFile
-         _hdOmainName = rule356 _lhsImainName
-         _hdOmoduleHeader = rule357 _lhsImoduleHeader
-         _hdOnt = rule358 _lhsInt
-         _hdOoptions = rule359 _lhsIoptions
-         _hdOpragmaBlocks = rule360 _lhsIpragmaBlocks
-         _hdOruleKinds = rule361 _lhsIruleKinds
-         _hdOsynmap = rule362 _lhsIsynmap
-         _hdOtextBlocks = rule363 _lhsItextBlocks
-         _hdOusageInfo = rule364 _lhsIusageInfo
-         _tlOallInhmap = rule365 _lhsIallInhmap
-         _tlOallSynmap = rule366 _lhsIallSynmap
-         _tlOchildTypes = rule367 _lhsIchildTypes
-         _tlOcon = rule368 _lhsIcon
-         _tlOimportBlocks = rule369 _lhsIimportBlocks
-         _tlOinhmap = rule370 _lhsIinhmap
-         _tlOlazyIntras = rule371 _lhsIlazyIntras
-         _tlOlocalAttrTypes = rule372 _lhsIlocalAttrTypes
-         _tlOmainFile = rule373 _lhsImainFile
-         _tlOmainName = rule374 _lhsImainName
-         _tlOmoduleHeader = rule375 _lhsImoduleHeader
-         _tlOnt = rule376 _lhsInt
-         _tlOoptions = rule377 _lhsIoptions
-         _tlOpragmaBlocks = rule378 _lhsIpragmaBlocks
-         _tlOruleKinds = rule379 _lhsIruleKinds
-         _tlOsynmap = rule380 _lhsIsynmap
-         _tlOtextBlocks = rule381 _lhsItextBlocks
-         _tlOusageInfo = rule382 _lhsIusageInfo
+         _lhsOusedArgs = rule369 _hdIusedArgs _tlIusedArgs
+         _hdOallInhmap = rule370 _lhsIallInhmap
+         _hdOallSynmap = rule371 _lhsIallSynmap
+         _hdOchildTypes = rule372 _lhsIchildTypes
+         _hdOcon = rule373 _lhsIcon
+         _hdOimportBlocks = rule374 _lhsIimportBlocks
+         _hdOinhmap = rule375 _lhsIinhmap
+         _hdOlazyIntras = rule376 _lhsIlazyIntras
+         _hdOlocalAttrTypes = rule377 _lhsIlocalAttrTypes
+         _hdOmainFile = rule378 _lhsImainFile
+         _hdOmainName = rule379 _lhsImainName
+         _hdOmoduleHeader = rule380 _lhsImoduleHeader
+         _hdOnt = rule381 _lhsInt
+         _hdOoptions = rule382 _lhsIoptions
+         _hdOpragmaBlocks = rule383 _lhsIpragmaBlocks
+         _hdOruleKinds = rule384 _lhsIruleKinds
+         _hdOsynmap = rule385 _lhsIsynmap
+         _hdOtextBlocks = rule386 _lhsItextBlocks
+         _hdOusageInfo = rule387 _lhsIusageInfo
+         _tlOallInhmap = rule388 _lhsIallInhmap
+         _tlOallSynmap = rule389 _lhsIallSynmap
+         _tlOchildTypes = rule390 _lhsIchildTypes
+         _tlOcon = rule391 _lhsIcon
+         _tlOimportBlocks = rule392 _lhsIimportBlocks
+         _tlOinhmap = rule393 _lhsIinhmap
+         _tlOlazyIntras = rule394 _lhsIlazyIntras
+         _tlOlocalAttrTypes = rule395 _lhsIlocalAttrTypes
+         _tlOmainFile = rule396 _lhsImainFile
+         _tlOmainName = rule397 _lhsImainName
+         _tlOmoduleHeader = rule398 _lhsImoduleHeader
+         _tlOnt = rule399 _lhsInt
+         _tlOoptions = rule400 _lhsIoptions
+         _tlOpragmaBlocks = rule401 _lhsIpragmaBlocks
+         _tlOruleKinds = rule402 _lhsIruleKinds
+         _tlOsynmap = rule403 _lhsIsynmap
+         _tlOtextBlocks = rule404 _lhsItextBlocks
+         _tlOusageInfo = rule405 _lhsIusageInfo
          __result_ = T_ERules_vOut22 _lhsOerrors _lhsOruledefs _lhsOruleuses _lhsOusedArgs
          in __result_ )
      in C_ERules_s23 v22
-   {-# INLINE rule343 #-}
-   rule343 = \ ((_hdIerrors) :: Seq Error) ((_tlIerrors) :: Seq Error) ->
-     _hdIerrors Seq.>< _tlIerrors
-   {-# INLINE rule344 #-}
-   rule344 = \ ((_hdIruledefs) :: Map Identifier (Set String)) ((_tlIruledefs) :: Map Identifier (Set String)) ->
-     _hdIruledefs `uwSetUnion` _tlIruledefs
-   {-# INLINE rule345 #-}
-   rule345 = \ ((_hdIruleuses) :: Map Identifier (Map String (Maybe NonLocalAttr))) ((_tlIruleuses) :: Map Identifier (Map String (Maybe NonLocalAttr))) ->
-     _hdIruleuses `uwMapUnion` _tlIruleuses
-   {-# INLINE rule346 #-}
-   rule346 = \ ((_hdIusedArgs) :: Set String) ((_tlIusedArgs) :: Set String) ->
-     _hdIusedArgs `Set.union` _tlIusedArgs
-   {-# INLINE rule347 #-}
-   rule347 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
-     _lhsIallInhmap
-   {-# INLINE rule348 #-}
-   rule348 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
-     _lhsIallSynmap
-   {-# INLINE rule349 #-}
-   rule349 = \ ((_lhsIchildTypes) :: Map Identifier Type) ->
-     _lhsIchildTypes
-   {-# INLINE rule350 #-}
-   rule350 = \ ((_lhsIcon) :: ConstructorIdent) ->
-     _lhsIcon
-   {-# INLINE rule351 #-}
-   rule351 = \ ((_lhsIimportBlocks) :: [String]) ->
-     _lhsIimportBlocks
-   {-# INLINE rule352 #-}
-   rule352 = \ ((_lhsIinhmap) :: Attributes) ->
-     _lhsIinhmap
-   {-# INLINE rule353 #-}
-   rule353 = \ ((_lhsIlazyIntras) :: Set String) ->
-     _lhsIlazyIntras
-   {-# INLINE rule354 #-}
-   rule354 = \ ((_lhsIlocalAttrTypes) :: Map Identifier Type) ->
-     _lhsIlocalAttrTypes
-   {-# INLINE rule355 #-}
-   rule355 = \ ((_lhsImainFile) :: String) ->
-     _lhsImainFile
-   {-# INLINE rule356 #-}
-   rule356 = \ ((_lhsImainName) :: String) ->
-     _lhsImainName
-   {-# INLINE rule357 #-}
-   rule357 = \ ((_lhsImoduleHeader) :: String -> String -> String -> Bool -> String) ->
-     _lhsImoduleHeader
-   {-# INLINE rule358 #-}
-   rule358 = \ ((_lhsInt) :: NontermIdent) ->
-     _lhsInt
-   {-# INLINE rule359 #-}
-   rule359 = \ ((_lhsIoptions) :: Options) ->
-     _lhsIoptions
-   {-# INLINE rule360 #-}
-   rule360 = \ ((_lhsIpragmaBlocks) :: String) ->
-     _lhsIpragmaBlocks
-   {-# INLINE rule361 #-}
-   rule361 = \ ((_lhsIruleKinds) :: Map Identifier (Set VisitKind)) ->
-     _lhsIruleKinds
-   {-# INLINE rule362 #-}
-   rule362 = \ ((_lhsIsynmap) :: Attributes) ->
-     _lhsIsynmap
-   {-# INLINE rule363 #-}
-   rule363 = \ ((_lhsItextBlocks) :: [String]) ->
-     _lhsItextBlocks
-   {-# INLINE rule364 #-}
-   rule364 = \ ((_lhsIusageInfo) :: Map Identifier Int) ->
-     _lhsIusageInfo
-   {-# INLINE rule365 #-}
-   rule365 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
-     _lhsIallInhmap
    {-# INLINE rule366 #-}
-   rule366 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
-     _lhsIallSynmap
+   rule366 = \ ((_hdIerrors) :: Seq Error) ((_tlIerrors) :: Seq Error) ->
+     _hdIerrors Seq.>< _tlIerrors
    {-# INLINE rule367 #-}
-   rule367 = \ ((_lhsIchildTypes) :: Map Identifier Type) ->
-     _lhsIchildTypes
+   rule367 = \ ((_hdIruledefs) :: Map Identifier (Set String)) ((_tlIruledefs) :: Map Identifier (Set String)) ->
+     _hdIruledefs `uwSetUnion` _tlIruledefs
    {-# INLINE rule368 #-}
-   rule368 = \ ((_lhsIcon) :: ConstructorIdent) ->
-     _lhsIcon
+   rule368 = \ ((_hdIruleuses) :: Map Identifier (Map String (Maybe NonLocalAttr))) ((_tlIruleuses) :: Map Identifier (Map String (Maybe NonLocalAttr))) ->
+     _hdIruleuses `uwMapUnion` _tlIruleuses
    {-# INLINE rule369 #-}
-   rule369 = \ ((_lhsIimportBlocks) :: [String]) ->
-     _lhsIimportBlocks
+   rule369 = \ ((_hdIusedArgs) :: Set String) ((_tlIusedArgs) :: Set String) ->
+     _hdIusedArgs `Set.union` _tlIusedArgs
    {-# INLINE rule370 #-}
-   rule370 = \ ((_lhsIinhmap) :: Attributes) ->
-     _lhsIinhmap
+   rule370 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
+     _lhsIallInhmap
    {-# INLINE rule371 #-}
-   rule371 = \ ((_lhsIlazyIntras) :: Set String) ->
-     _lhsIlazyIntras
+   rule371 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
+     _lhsIallSynmap
    {-# INLINE rule372 #-}
-   rule372 = \ ((_lhsIlocalAttrTypes) :: Map Identifier Type) ->
-     _lhsIlocalAttrTypes
+   rule372 = \ ((_lhsIchildTypes) :: Map Identifier Type) ->
+     _lhsIchildTypes
    {-# INLINE rule373 #-}
-   rule373 = \ ((_lhsImainFile) :: String) ->
-     _lhsImainFile
+   rule373 = \ ((_lhsIcon) :: ConstructorIdent) ->
+     _lhsIcon
    {-# INLINE rule374 #-}
-   rule374 = \ ((_lhsImainName) :: String) ->
-     _lhsImainName
+   rule374 = \ ((_lhsIimportBlocks) :: [String]) ->
+     _lhsIimportBlocks
    {-# INLINE rule375 #-}
-   rule375 = \ ((_lhsImoduleHeader) :: String -> String -> String -> Bool -> String) ->
-     _lhsImoduleHeader
+   rule375 = \ ((_lhsIinhmap) :: Attributes) ->
+     _lhsIinhmap
    {-# INLINE rule376 #-}
-   rule376 = \ ((_lhsInt) :: NontermIdent) ->
-     _lhsInt
+   rule376 = \ ((_lhsIlazyIntras) :: Set String) ->
+     _lhsIlazyIntras
    {-# INLINE rule377 #-}
-   rule377 = \ ((_lhsIoptions) :: Options) ->
-     _lhsIoptions
+   rule377 = \ ((_lhsIlocalAttrTypes) :: Map Identifier Type) ->
+     _lhsIlocalAttrTypes
    {-# INLINE rule378 #-}
-   rule378 = \ ((_lhsIpragmaBlocks) :: String) ->
-     _lhsIpragmaBlocks
+   rule378 = \ ((_lhsImainFile) :: String) ->
+     _lhsImainFile
    {-# INLINE rule379 #-}
-   rule379 = \ ((_lhsIruleKinds) :: Map Identifier (Set VisitKind)) ->
-     _lhsIruleKinds
+   rule379 = \ ((_lhsImainName) :: String) ->
+     _lhsImainName
    {-# INLINE rule380 #-}
-   rule380 = \ ((_lhsIsynmap) :: Attributes) ->
-     _lhsIsynmap
+   rule380 = \ ((_lhsImoduleHeader) :: String -> String -> String -> Bool -> String) ->
+     _lhsImoduleHeader
    {-# INLINE rule381 #-}
-   rule381 = \ ((_lhsItextBlocks) :: [String]) ->
-     _lhsItextBlocks
+   rule381 = \ ((_lhsInt) :: NontermIdent) ->
+     _lhsInt
    {-# INLINE rule382 #-}
-   rule382 = \ ((_lhsIusageInfo) :: Map Identifier Int) ->
+   rule382 = \ ((_lhsIoptions) :: Options) ->
+     _lhsIoptions
+   {-# INLINE rule383 #-}
+   rule383 = \ ((_lhsIpragmaBlocks) :: String) ->
+     _lhsIpragmaBlocks
+   {-# INLINE rule384 #-}
+   rule384 = \ ((_lhsIruleKinds) :: Map Identifier (Set VisitKind)) ->
+     _lhsIruleKinds
+   {-# INLINE rule385 #-}
+   rule385 = \ ((_lhsIsynmap) :: Attributes) ->
+     _lhsIsynmap
+   {-# INLINE rule386 #-}
+   rule386 = \ ((_lhsItextBlocks) :: [String]) ->
+     _lhsItextBlocks
+   {-# INLINE rule387 #-}
+   rule387 = \ ((_lhsIusageInfo) :: Map Identifier Int) ->
+     _lhsIusageInfo
+   {-# INLINE rule388 #-}
+   rule388 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
+     _lhsIallInhmap
+   {-# INLINE rule389 #-}
+   rule389 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
+     _lhsIallSynmap
+   {-# INLINE rule390 #-}
+   rule390 = \ ((_lhsIchildTypes) :: Map Identifier Type) ->
+     _lhsIchildTypes
+   {-# INLINE rule391 #-}
+   rule391 = \ ((_lhsIcon) :: ConstructorIdent) ->
+     _lhsIcon
+   {-# INLINE rule392 #-}
+   rule392 = \ ((_lhsIimportBlocks) :: [String]) ->
+     _lhsIimportBlocks
+   {-# INLINE rule393 #-}
+   rule393 = \ ((_lhsIinhmap) :: Attributes) ->
+     _lhsIinhmap
+   {-# INLINE rule394 #-}
+   rule394 = \ ((_lhsIlazyIntras) :: Set String) ->
+     _lhsIlazyIntras
+   {-# INLINE rule395 #-}
+   rule395 = \ ((_lhsIlocalAttrTypes) :: Map Identifier Type) ->
+     _lhsIlocalAttrTypes
+   {-# INLINE rule396 #-}
+   rule396 = \ ((_lhsImainFile) :: String) ->
+     _lhsImainFile
+   {-# INLINE rule397 #-}
+   rule397 = \ ((_lhsImainName) :: String) ->
+     _lhsImainName
+   {-# INLINE rule398 #-}
+   rule398 = \ ((_lhsImoduleHeader) :: String -> String -> String -> Bool -> String) ->
+     _lhsImoduleHeader
+   {-# INLINE rule399 #-}
+   rule399 = \ ((_lhsInt) :: NontermIdent) ->
+     _lhsInt
+   {-# INLINE rule400 #-}
+   rule400 = \ ((_lhsIoptions) :: Options) ->
+     _lhsIoptions
+   {-# INLINE rule401 #-}
+   rule401 = \ ((_lhsIpragmaBlocks) :: String) ->
+     _lhsIpragmaBlocks
+   {-# INLINE rule402 #-}
+   rule402 = \ ((_lhsIruleKinds) :: Map Identifier (Set VisitKind)) ->
+     _lhsIruleKinds
+   {-# INLINE rule403 #-}
+   rule403 = \ ((_lhsIsynmap) :: Attributes) ->
+     _lhsIsynmap
+   {-# INLINE rule404 #-}
+   rule404 = \ ((_lhsItextBlocks) :: [String]) ->
+     _lhsItextBlocks
+   {-# INLINE rule405 #-}
+   rule405 = \ ((_lhsIusageInfo) :: Map Identifier Int) ->
      _lhsIusageInfo
 {-# NOINLINE sem_ERules_Nil #-}
 sem_ERules_Nil ::  T_ERules 
@@ -2712,27 +2921,27 @@ sem_ERules_Nil  = T_ERules (return st23) where
       v22 :: T_ERules_v22 
       v22 = \ (T_ERules_vIn22 _lhsIallInhmap _lhsIallSynmap _lhsIchildTypes _lhsIcon _lhsIimportBlocks _lhsIinhmap _lhsIlazyIntras _lhsIlocalAttrTypes _lhsImainFile _lhsImainName _lhsImoduleHeader _lhsInt _lhsIoptions _lhsIpragmaBlocks _lhsIruleKinds _lhsIsynmap _lhsItextBlocks _lhsIusageInfo) -> ( let
          _lhsOerrors :: Seq Error
-         _lhsOerrors = rule383  ()
+         _lhsOerrors = rule406  ()
          _lhsOruledefs :: Map Identifier (Set String)
-         _lhsOruledefs = rule384  ()
+         _lhsOruledefs = rule407  ()
          _lhsOruleuses :: Map Identifier (Map String (Maybe NonLocalAttr))
-         _lhsOruleuses = rule385  ()
+         _lhsOruleuses = rule408  ()
          _lhsOusedArgs :: Set String
-         _lhsOusedArgs = rule386  ()
+         _lhsOusedArgs = rule409  ()
          __result_ = T_ERules_vOut22 _lhsOerrors _lhsOruledefs _lhsOruleuses _lhsOusedArgs
          in __result_ )
      in C_ERules_s23 v22
-   {-# INLINE rule383 #-}
-   rule383 = \  (_ :: ()) ->
+   {-# INLINE rule406 #-}
+   rule406 = \  (_ :: ()) ->
      Seq.empty
-   {-# INLINE rule384 #-}
-   rule384 = \  (_ :: ()) ->
+   {-# INLINE rule407 #-}
+   rule407 = \  (_ :: ()) ->
      Map.empty
-   {-# INLINE rule385 #-}
-   rule385 = \  (_ :: ()) ->
+   {-# INLINE rule408 #-}
+   rule408 = \  (_ :: ()) ->
      Map.empty
-   {-# INLINE rule386 #-}
-   rule386 = \  (_ :: ()) ->
+   {-# INLINE rule409 #-}
+   rule409 = \  (_ :: ()) ->
      Set.empty
 
 -- ExecutionPlan -----------------------------------------------
@@ -2775,84 +2984,84 @@ sem_ExecutionPlan_ExecutionPlan arg_nonts_ arg_typeSyns_ arg_wrappers_ arg_deriv
          _nontsX11 = Control.Monad.Identity.runIdentity (attach_T_ENonterminals (arg_nonts_))
          (T_ENonterminals_vOut10 _nontsIerrors _nontsIfromToStates _nontsIinitStates _nontsIoutput _nontsIsemFunBndDefs _nontsIsemFunBndTps _nontsIvisitKinds _nontsIvisitdefs _nontsIvisituses) = inv_ENonterminals_s11 _nontsX11 (T_ENonterminals_vIn10 _nontsOallFromToStates _nontsOallInitStates _nontsOallVisitKinds _nontsOavisitdefs _nontsOavisituses _nontsOderivings _nontsOimportBlocks _nontsOinhmap _nontsOlocalAttrTypes _nontsOmainFile _nontsOmainName _nontsOmoduleHeader _nontsOoptions _nontsOpragmaBlocks _nontsOsynmap _nontsOtextBlocks _nontsOtypeSyns _nontsOwrappers)
          _lhsOoutput :: [TH.Dec]
-         _lhsOoutput = rule387 _commonExtra _nontsIoutput _wrappersExtra
-         _nontsOwrappers = rule388 arg_wrappers_
-         _nontsOtypeSyns = rule389 arg_typeSyns_
-         _nontsOderivings = rule390 arg_derivings_
-         _wrappersExtra = rule391 _lateSemBndDef _lhsIoptions
-         _commonExtra = rule392 _lateSemBndTp _lhsIoptions
-         _lateSemBndTp = rule393 _lhsImainName _nontsIsemFunBndTps
-         _lateSemBndDef = rule394 _lhsImainName _lhsIoptions _nontsIsemFunBndDefs arg_wrappers_
-         _nontsOallFromToStates = rule395 _nontsIfromToStates
-         _nontsOallVisitKinds = rule396 _nontsIvisitKinds
-         _nontsOallInitStates = rule397 _nontsIinitStates
+         _lhsOoutput = rule410 _commonExtra _nontsIoutput _wrappersExtra
+         _nontsOwrappers = rule411 arg_wrappers_
+         _nontsOtypeSyns = rule412 arg_typeSyns_
+         _nontsOderivings = rule413 arg_derivings_
+         _wrappersExtra = rule414 _lateSemBndDef _lhsIoptions
+         _commonExtra = rule415 _lateSemBndTp _lhsIoptions
+         _lateSemBndTp = rule416 _lhsImainName _nontsIsemFunBndTps
+         _lateSemBndDef = rule417 _lhsImainName _lhsIoptions _nontsIsemFunBndDefs arg_wrappers_
+         _nontsOallFromToStates = rule418 _nontsIfromToStates
+         _nontsOallVisitKinds = rule419 _nontsIvisitKinds
+         _nontsOallInitStates = rule420 _nontsIinitStates
          _lhsOerrors :: Seq Error
-         _lhsOerrors = rule398 _nontsIerrors
-         _nontsOavisitdefs = rule399  ()
-         _nontsOavisituses = rule400  ()
-         _nontsOimportBlocks = rule401 _lhsIimportBlocks
-         _nontsOinhmap = rule402 _lhsIinhmap
-         _nontsOlocalAttrTypes = rule403 _lhsIlocalAttrTypes
-         _nontsOmainFile = rule404 _lhsImainFile
-         _nontsOmainName = rule405 _lhsImainName
-         _nontsOmoduleHeader = rule406 _lhsImoduleHeader
-         _nontsOoptions = rule407 _lhsIoptions
-         _nontsOpragmaBlocks = rule408 _lhsIpragmaBlocks
-         _nontsOsynmap = rule409 _lhsIsynmap
-         _nontsOtextBlocks = rule410 _lhsItextBlocks
+         _lhsOerrors = rule421 _nontsIerrors
+         _nontsOavisitdefs = rule422  ()
+         _nontsOavisituses = rule423  ()
+         _nontsOimportBlocks = rule424 _lhsIimportBlocks
+         _nontsOinhmap = rule425 _lhsIinhmap
+         _nontsOlocalAttrTypes = rule426 _lhsIlocalAttrTypes
+         _nontsOmainFile = rule427 _lhsImainFile
+         _nontsOmainName = rule428 _lhsImainName
+         _nontsOmoduleHeader = rule429 _lhsImoduleHeader
+         _nontsOoptions = rule430 _lhsIoptions
+         _nontsOpragmaBlocks = rule431 _lhsIpragmaBlocks
+         _nontsOsynmap = rule432 _lhsIsynmap
+         _nontsOtextBlocks = rule433 _lhsItextBlocks
          __result_ = T_ExecutionPlan_vOut25 _lhsOerrors _lhsOoutput
          in __result_ )
      in C_ExecutionPlan_s26 v25
-   {-# INLINE rule387 #-}
-   {-# LINE 96 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule387 = \ _commonExtra ((_nontsIoutput) :: [TH.Dec]) _wrappersExtra ->
-                                 {-# LINE 96 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# INLINE rule410 #-}
+   {-# LINE 103 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule410 = \ _commonExtra ((_nontsIoutput) :: [TH.Dec]) _wrappersExtra ->
+                                 {-# LINE 103 "src-ag/ExecutionPlan2TH.ag" #-}
                                  _nontsIoutput ++ _commonExtra     ++ _wrappersExtra
-                                 {-# LINE 2812 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule388 #-}
-   {-# LINE 102 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule388 = \ wrappers_ ->
-                                     {-# LINE 102 "src-ag/ExecutionPlan2TH.ag" #-}
+                                 {-# LINE 3021 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule411 #-}
+   {-# LINE 109 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule411 = \ wrappers_ ->
+                                     {-# LINE 109 "src-ag/ExecutionPlan2TH.ag" #-}
                                      wrappers_
-                                     {-# LINE 2818 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule389 #-}
-   {-# LINE 136 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule389 = \ typeSyns_ ->
-                                     {-# LINE 136 "src-ag/ExecutionPlan2TH.ag" #-}
+                                     {-# LINE 3027 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule412 #-}
+   {-# LINE 143 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule412 = \ typeSyns_ ->
+                                     {-# LINE 143 "src-ag/ExecutionPlan2TH.ag" #-}
                                      typeSyns_
-                                     {-# LINE 2824 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule390 #-}
-   {-# LINE 137 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule390 = \ derivings_ ->
-                                      {-# LINE 137 "src-ag/ExecutionPlan2TH.ag" #-}
+                                     {-# LINE 3033 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule413 #-}
+   {-# LINE 144 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule413 = \ derivings_ ->
+                                      {-# LINE 144 "src-ag/ExecutionPlan2TH.ag" #-}
                                       derivings_
-                                      {-# LINE 2830 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule391 #-}
-   {-# LINE 590 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule391 = \ _lateSemBndDef ((_lhsIoptions) :: Options) ->
-                        {-# LINE 590 "src-ag/ExecutionPlan2TH.ag" #-}
+                                      {-# LINE 3039 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule414 #-}
+   {-# LINE 625 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule414 = \ _lateSemBndDef ((_lhsIoptions) :: Options) ->
+                        {-# LINE 625 "src-ag/ExecutionPlan2TH.ag" #-}
                         if lateHigherOrderBinding _lhsIoptions
                         then _lateSemBndDef
                         else []
-                        {-# LINE 2838 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule392 #-}
-   {-# LINE 593 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule392 = \ _lateSemBndTp ((_lhsIoptions) :: Options) ->
-                        {-# LINE 593 "src-ag/ExecutionPlan2TH.ag" #-}
+                        {-# LINE 3047 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule415 #-}
+   {-# LINE 628 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule415 = \ _lateSemBndTp ((_lhsIoptions) :: Options) ->
+                        {-# LINE 628 "src-ag/ExecutionPlan2TH.ag" #-}
                         if lateHigherOrderBinding _lhsIoptions
                         then _lateSemBndTp
                         else []
-                        {-# LINE 2846 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule393 #-}
-   {-# LINE 596 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule393 = \ ((_lhsImainName) :: String) ((_nontsIsemFunBndTps) :: Seq (TH.VarBangType)) ->
-                       {-# LINE 596 "src-ag/ExecutionPlan2TH.ag" #-}
+                        {-# LINE 3055 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule416 #-}
+   {-# LINE 631 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule416 = \ ((_lhsImainName) :: String) ((_nontsIsemFunBndTps) :: Seq (TH.VarBangType)) ->
+                       {-# LINE 631 "src-ag/ExecutionPlan2TH.ag" #-}
                        [TH.DataD [] (TH.mkName (lateBindingTypeNm _lhsImainName)) [] Nothing [TH.RecC (TH.mkName (lateBindingTypeNm _lhsImainName)) (toList _nontsIsemFunBndTps)] []]
-                       {-# LINE 2852 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule394 #-}
-   {-# LINE 598 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule394 = \ ((_lhsImainName) :: String) ((_lhsIoptions) :: Options) ((_nontsIsemFunBndDefs) :: Seq (TH.Name, TH.Exp)) wrappers_ ->
-        {-# LINE 598 "src-ag/ExecutionPlan2TH.ag" #-}
+                       {-# LINE 3061 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule417 #-}
+   {-# LINE 633 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule417 = \ ((_lhsImainName) :: String) ((_lhsIoptions) :: Options) ((_nontsIsemFunBndDefs) :: Seq (TH.Name, TH.Exp)) wrappers_ ->
+        {-# LINE 633 "src-ag/ExecutionPlan2TH.ag" #-}
         ( if noInlinePragmas _lhsIoptions
           then empty
           else if helpInlining _lhsIoptions && Set.size wrappers_ == 1
@@ -2866,63 +3075,63 @@ sem_ExecutionPlan_ExecutionPlan arg_nonts_ arg_typeSyns_ arg_wrappers_ arg_deriv
                                              (toList _nontsIsemFunBndDefs)))
                      []
            ]
-        {-# LINE 2870 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule395 #-}
-   {-# LINE 1639 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule395 = \ ((_nontsIfromToStates) :: Map VisitIdentifier (Int,Int)) ->
-                            {-# LINE 1639 "src-ag/ExecutionPlan2TH.ag" #-}
+        {-# LINE 3079 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule418 #-}
+   {-# LINE 1678 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule418 = \ ((_nontsIfromToStates) :: Map VisitIdentifier (Int,Int)) ->
+                            {-# LINE 1678 "src-ag/ExecutionPlan2TH.ag" #-}
                             _nontsIfromToStates
-                            {-# LINE 2876 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule396 #-}
-   {-# LINE 1683 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule396 = \ ((_nontsIvisitKinds) :: Map VisitIdentifier VisitKind) ->
-                          {-# LINE 1683 "src-ag/ExecutionPlan2TH.ag" #-}
+                            {-# LINE 3085 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule419 #-}
+   {-# LINE 1722 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule419 = \ ((_nontsIvisitKinds) :: Map VisitIdentifier VisitKind) ->
+                          {-# LINE 1722 "src-ag/ExecutionPlan2TH.ag" #-}
                           _nontsIvisitKinds
-                          {-# LINE 2882 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule397 #-}
-   {-# LINE 1697 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule397 = \ ((_nontsIinitStates) :: Map NontermIdent Int) ->
-                          {-# LINE 1697 "src-ag/ExecutionPlan2TH.ag" #-}
+                          {-# LINE 3091 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule420 #-}
+   {-# LINE 1736 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule420 = \ ((_nontsIinitStates) :: Map NontermIdent Int) ->
+                          {-# LINE 1736 "src-ag/ExecutionPlan2TH.ag" #-}
                           _nontsIinitStates
-                          {-# LINE 2888 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule398 #-}
-   rule398 = \ ((_nontsIerrors) :: Seq Error) ->
+                          {-# LINE 3097 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule421 #-}
+   rule421 = \ ((_nontsIerrors) :: Seq Error) ->
      _nontsIerrors
-   {-# INLINE rule399 #-}
-   rule399 = \  (_ :: ()) ->
+   {-# INLINE rule422 #-}
+   rule422 = \  (_ :: ()) ->
      error "missing rule: ExecutionPlan.ExecutionPlan.nonts.avisitdefs"
-   {-# INLINE rule400 #-}
-   rule400 = \  (_ :: ()) ->
+   {-# INLINE rule423 #-}
+   rule423 = \  (_ :: ()) ->
      error "missing rule: ExecutionPlan.ExecutionPlan.nonts.avisituses"
-   {-# INLINE rule401 #-}
-   rule401 = \ ((_lhsIimportBlocks) :: [String]) ->
+   {-# INLINE rule424 #-}
+   rule424 = \ ((_lhsIimportBlocks) :: [String]) ->
      _lhsIimportBlocks
-   {-# INLINE rule402 #-}
-   rule402 = \ ((_lhsIinhmap) :: Map NontermIdent Attributes) ->
+   {-# INLINE rule425 #-}
+   rule425 = \ ((_lhsIinhmap) :: Map NontermIdent Attributes) ->
      _lhsIinhmap
-   {-# INLINE rule403 #-}
-   rule403 = \ ((_lhsIlocalAttrTypes) :: Map NontermIdent (Map ConstructorIdent (Map Identifier Type))) ->
+   {-# INLINE rule426 #-}
+   rule426 = \ ((_lhsIlocalAttrTypes) :: Map NontermIdent (Map ConstructorIdent (Map Identifier Type))) ->
      _lhsIlocalAttrTypes
-   {-# INLINE rule404 #-}
-   rule404 = \ ((_lhsImainFile) :: String) ->
+   {-# INLINE rule427 #-}
+   rule427 = \ ((_lhsImainFile) :: String) ->
      _lhsImainFile
-   {-# INLINE rule405 #-}
-   rule405 = \ ((_lhsImainName) :: String) ->
+   {-# INLINE rule428 #-}
+   rule428 = \ ((_lhsImainName) :: String) ->
      _lhsImainName
-   {-# INLINE rule406 #-}
-   rule406 = \ ((_lhsImoduleHeader) :: String -> String -> String -> Bool -> String) ->
+   {-# INLINE rule429 #-}
+   rule429 = \ ((_lhsImoduleHeader) :: String -> String -> String -> Bool -> String) ->
      _lhsImoduleHeader
-   {-# INLINE rule407 #-}
-   rule407 = \ ((_lhsIoptions) :: Options) ->
+   {-# INLINE rule430 #-}
+   rule430 = \ ((_lhsIoptions) :: Options) ->
      _lhsIoptions
-   {-# INLINE rule408 #-}
-   rule408 = \ ((_lhsIpragmaBlocks) :: String) ->
+   {-# INLINE rule431 #-}
+   rule431 = \ ((_lhsIpragmaBlocks) :: String) ->
      _lhsIpragmaBlocks
-   {-# INLINE rule409 #-}
-   rule409 = \ ((_lhsIsynmap) :: Map NontermIdent Attributes) ->
+   {-# INLINE rule432 #-}
+   rule432 = \ ((_lhsIsynmap) :: Map NontermIdent Attributes) ->
      _lhsIsynmap
-   {-# INLINE rule410 #-}
-   rule410 = \ ((_lhsItextBlocks) :: [String]) ->
+   {-# INLINE rule433 #-}
+   rule433 = \ ((_lhsItextBlocks) :: [String]) ->
      _lhsItextBlocks
 
 -- Expression --------------------------------------------------
@@ -2963,22 +3172,22 @@ sem_Expression_Expression arg_pos_ arg_tks_ = T_Expression (return st29) where
       v28 :: T_Expression_v28 
       v28 = \ (T_Expression_vIn28 _lhsIoptions) -> ( let
          _lhsOattrs :: Map String (Maybe NonLocalAttr)
-         _lhsOattrs = rule411  ()
+         _lhsOattrs = rule434  ()
          _lhsOpos :: Pos
-         _lhsOpos = rule412 arg_pos_
+         _lhsOpos = rule435 arg_pos_
          _lhsOtks :: [HsToken]
-         _lhsOtks = rule413 arg_tks_
+         _lhsOtks = rule436 arg_tks_
          __result_ = T_Expression_vOut28 _lhsOattrs _lhsOpos _lhsOtks
          in __result_ )
      in C_Expression_s29 v28
-   {-# INLINE rule411 #-}
-   rule411 = \  (_ :: ()) ->
+   {-# INLINE rule434 #-}
+   rule434 = \  (_ :: ()) ->
      Map.empty
-   {-# INLINE rule412 #-}
-   rule412 = \ pos_ ->
+   {-# INLINE rule435 #-}
+   rule435 = \ pos_ ->
      pos_
-   {-# INLINE rule413 #-}
-   rule413 = \ tks_ ->
+   {-# INLINE rule436 #-}
+   rule436 = \ tks_ ->
      tks_
 
 -- HsToken -----------------------------------------------------
@@ -3023,25 +3232,25 @@ sem_HsToken_AGLocal arg_var_ arg_pos_ _ = T_HsToken (return st32) where
    st32 = let
       v31 :: T_HsToken_v31 
       v31 = \ (T_HsToken_vIn31 _lhsIoptions) -> ( let
-         _tok = rule414 arg_pos_ arg_var_
+         _tok = rule437 arg_pos_ arg_var_
          _lhsOattrs :: Map String (Maybe NonLocalAttr)
-         _lhsOattrs = rule415  ()
+         _lhsOattrs = rule438  ()
          _lhsOtok :: (Pos,String)
-         _lhsOtok = rule416 _tok
+         _lhsOtok = rule439 _tok
          __result_ = T_HsToken_vOut31 _lhsOattrs _lhsOtok
          in __result_ )
      in C_HsToken_s32 v31
-   {-# INLINE rule414 #-}
-   {-# LINE 1467 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule414 = \ pos_ var_ ->
-                          {-# LINE 1467 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# INLINE rule437 #-}
+   {-# LINE 1503 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule437 = \ pos_ var_ ->
+                          {-# LINE 1503 "src-ag/ExecutionPlan2TH.ag" #-}
                           (pos_,fieldname var_)
-                          {-# LINE 3040 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule415 #-}
-   rule415 = \  (_ :: ()) ->
+                          {-# LINE 3249 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule438 #-}
+   rule438 = \  (_ :: ()) ->
      Map.empty
-   {-# INLINE rule416 #-}
-   rule416 = \ _tok ->
+   {-# INLINE rule439 #-}
+   rule439 = \ _tok ->
      _tok
 {-# NOINLINE sem_HsToken_AGField #-}
 sem_HsToken_AGField :: (Identifier) -> (Identifier) -> (Pos) -> (Maybe String) -> T_HsToken 
@@ -3050,30 +3259,30 @@ sem_HsToken_AGField arg_field_ arg_attr_ arg_pos_ arg_rdesc_ = T_HsToken (return
    st32 = let
       v31 :: T_HsToken_v31 
       v31 = \ (T_HsToken_vIn31 _lhsIoptions) -> ( let
-         _addTrace = rule417 arg_attr_ arg_field_ arg_rdesc_
+         _addTrace = rule440 arg_attr_ arg_field_ arg_rdesc_
          _lhsOtok :: (Pos,String)
-         _lhsOtok = rule418 _addTrace _lhsIoptions arg_attr_ arg_field_ arg_pos_
+         _lhsOtok = rule441 _addTrace _lhsIoptions arg_attr_ arg_field_ arg_pos_
          _lhsOattrs :: Map String (Maybe NonLocalAttr)
-         _lhsOattrs = rule419  ()
+         _lhsOattrs = rule442  ()
          __result_ = T_HsToken_vOut31 _lhsOattrs _lhsOtok
          in __result_ )
      in C_HsToken_s32 v31
-   {-# INLINE rule417 #-}
-   {-# LINE 1471 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule417 = \ attr_ field_ rdesc_ ->
-                        {-# LINE 1471 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# INLINE rule440 #-}
+   {-# LINE 1507 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule440 = \ attr_ field_ rdesc_ ->
+                        {-# LINE 1507 "src-ag/ExecutionPlan2TH.ag" #-}
                         case rdesc_ of
                           Just d  -> \x -> "(trace " ++ show (d ++ " -> " ++ show field_ ++ "." ++ show attr_) ++ " (" ++ x ++ "))"
                           Nothing -> id
-                        {-# LINE 3069 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule418 #-}
-   {-# LINE 1474 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule418 = \ _addTrace ((_lhsIoptions) :: Options) attr_ field_ pos_ ->
-                   {-# LINE 1474 "src-ag/ExecutionPlan2TH.ag" #-}
+                        {-# LINE 3278 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule441 #-}
+   {-# LINE 1510 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule441 = \ _addTrace ((_lhsIoptions) :: Options) attr_ field_ pos_ ->
+                   {-# LINE 1510 "src-ag/ExecutionPlan2TH.ag" #-}
                    (pos_, _addTrace     $ attrname _lhsIoptions True field_ attr_)
-                   {-# LINE 3075 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule419 #-}
-   rule419 = \  (_ :: ()) ->
+                   {-# LINE 3284 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule442 #-}
+   rule442 = \  (_ :: ()) ->
      Map.empty
 {-# NOINLINE sem_HsToken_HsToken #-}
 sem_HsToken_HsToken :: (String) -> (Pos) -> T_HsToken 
@@ -3083,20 +3292,20 @@ sem_HsToken_HsToken arg_value_ arg_pos_ = T_HsToken (return st32) where
       v31 :: T_HsToken_v31 
       v31 = \ (T_HsToken_vIn31 _lhsIoptions) -> ( let
          _lhsOtok :: (Pos,String)
-         _lhsOtok = rule420 arg_pos_ arg_value_
+         _lhsOtok = rule443 arg_pos_ arg_value_
          _lhsOattrs :: Map String (Maybe NonLocalAttr)
-         _lhsOattrs = rule421  ()
+         _lhsOattrs = rule444  ()
          __result_ = T_HsToken_vOut31 _lhsOattrs _lhsOtok
          in __result_ )
      in C_HsToken_s32 v31
-   {-# INLINE rule420 #-}
-   {-# LINE 1476 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule420 = \ pos_ value_ ->
-                         {-# LINE 1476 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# INLINE rule443 #-}
+   {-# LINE 1512 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule443 = \ pos_ value_ ->
+                         {-# LINE 1512 "src-ag/ExecutionPlan2TH.ag" #-}
                          (pos_, value_)
-                         {-# LINE 3098 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule421 #-}
-   rule421 = \  (_ :: ()) ->
+                         {-# LINE 3307 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule444 #-}
+   rule444 = \  (_ :: ()) ->
      Map.empty
 {-# NOINLINE sem_HsToken_CharToken #-}
 sem_HsToken_CharToken :: (String) -> (Pos) -> T_HsToken 
@@ -3106,23 +3315,23 @@ sem_HsToken_CharToken arg_value_ arg_pos_ = T_HsToken (return st32) where
       v31 :: T_HsToken_v31 
       v31 = \ (T_HsToken_vIn31 _lhsIoptions) -> ( let
          _lhsOtok :: (Pos,String)
-         _lhsOtok = rule422 arg_pos_ arg_value_
+         _lhsOtok = rule445 arg_pos_ arg_value_
          _lhsOattrs :: Map String (Maybe NonLocalAttr)
-         _lhsOattrs = rule423  ()
+         _lhsOattrs = rule446  ()
          __result_ = T_HsToken_vOut31 _lhsOattrs _lhsOtok
          in __result_ )
      in C_HsToken_s32 v31
-   {-# INLINE rule422 #-}
-   {-# LINE 1478 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule422 = \ pos_ value_ ->
-                           {-# LINE 1478 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# INLINE rule445 #-}
+   {-# LINE 1514 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule445 = \ pos_ value_ ->
+                           {-# LINE 1514 "src-ag/ExecutionPlan2TH.ag" #-}
                            (pos_, if null value_
                                      then ""
                                      else showCharShort (head value_)
                            )
-                           {-# LINE 3124 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule423 #-}
-   rule423 = \  (_ :: ()) ->
+                           {-# LINE 3333 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule446 #-}
+   rule446 = \  (_ :: ()) ->
      Map.empty
 {-# NOINLINE sem_HsToken_StrToken #-}
 sem_HsToken_StrToken :: (String) -> (Pos) -> T_HsToken 
@@ -3132,20 +3341,20 @@ sem_HsToken_StrToken arg_value_ arg_pos_ = T_HsToken (return st32) where
       v31 :: T_HsToken_v31 
       v31 = \ (T_HsToken_vIn31 _lhsIoptions) -> ( let
          _lhsOtok :: (Pos,String)
-         _lhsOtok = rule424 arg_pos_ arg_value_
+         _lhsOtok = rule447 arg_pos_ arg_value_
          _lhsOattrs :: Map String (Maybe NonLocalAttr)
-         _lhsOattrs = rule425  ()
+         _lhsOattrs = rule448  ()
          __result_ = T_HsToken_vOut31 _lhsOattrs _lhsOtok
          in __result_ )
      in C_HsToken_s32 v31
-   {-# INLINE rule424 #-}
-   {-# LINE 1483 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule424 = \ pos_ value_ ->
-                           {-# LINE 1483 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# INLINE rule447 #-}
+   {-# LINE 1519 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule447 = \ pos_ value_ ->
+                           {-# LINE 1519 "src-ag/ExecutionPlan2TH.ag" #-}
                            (pos_, showStrShort value_)
-                           {-# LINE 3147 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule425 #-}
-   rule425 = \  (_ :: ()) ->
+                           {-# LINE 3356 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule448 #-}
+   rule448 = \  (_ :: ()) ->
      Map.empty
 {-# NOINLINE sem_HsToken_Err #-}
 sem_HsToken_Err :: (String) -> (Pos) -> T_HsToken 
@@ -3155,20 +3364,20 @@ sem_HsToken_Err _ arg_pos_ = T_HsToken (return st32) where
       v31 :: T_HsToken_v31 
       v31 = \ (T_HsToken_vIn31 _lhsIoptions) -> ( let
          _lhsOtok :: (Pos,String)
-         _lhsOtok = rule426 arg_pos_
+         _lhsOtok = rule449 arg_pos_
          _lhsOattrs :: Map String (Maybe NonLocalAttr)
-         _lhsOattrs = rule427  ()
+         _lhsOattrs = rule450  ()
          __result_ = T_HsToken_vOut31 _lhsOattrs _lhsOtok
          in __result_ )
      in C_HsToken_s32 v31
-   {-# INLINE rule426 #-}
-   {-# LINE 1484 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule426 = \ pos_ ->
-                           {-# LINE 1484 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# INLINE rule449 #-}
+   {-# LINE 1520 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule449 = \ pos_ ->
+                           {-# LINE 1520 "src-ag/ExecutionPlan2TH.ag" #-}
                            (pos_, "")
-                           {-# LINE 3170 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule427 #-}
-   rule427 = \  (_ :: ()) ->
+                           {-# LINE 3379 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule450 #-}
+   rule450 = \  (_ :: ()) ->
      Map.empty
 
 -- HsTokens ----------------------------------------------------
@@ -3213,23 +3422,23 @@ sem_HsTokens_Cons arg_hd_ arg_tl_ = T_HsTokens (return st35) where
          (T_HsToken_vOut31 _hdIattrs _hdItok) = inv_HsToken_s32 _hdX32 (T_HsToken_vIn31 _hdOoptions)
          (T_HsTokens_vOut34 _tlItks) = inv_HsTokens_s35 _tlX35 (T_HsTokens_vIn34 _tlOoptions)
          _lhsOtks :: [(Pos,String)]
-         _lhsOtks = rule428 _hdItok _tlItks
-         _hdOoptions = rule429 _lhsIoptions
-         _tlOoptions = rule430 _lhsIoptions
+         _lhsOtks = rule451 _hdItok _tlItks
+         _hdOoptions = rule452 _lhsIoptions
+         _tlOoptions = rule453 _lhsIoptions
          __result_ = T_HsTokens_vOut34 _lhsOtks
          in __result_ )
      in C_HsTokens_s35 v34
-   {-# INLINE rule428 #-}
-   {-# LINE 1463 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule428 = \ ((_hdItok) :: (Pos,String)) ((_tlItks) :: [(Pos,String)]) ->
-                     {-# LINE 1463 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# INLINE rule451 #-}
+   {-# LINE 1499 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule451 = \ ((_hdItok) :: (Pos,String)) ((_tlItks) :: [(Pos,String)]) ->
+                     {-# LINE 1499 "src-ag/ExecutionPlan2TH.ag" #-}
                      _hdItok : _tlItks
-                     {-# LINE 3228 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule429 #-}
-   rule429 = \ ((_lhsIoptions) :: Options) ->
+                     {-# LINE 3437 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule452 #-}
+   rule452 = \ ((_lhsIoptions) :: Options) ->
      _lhsIoptions
-   {-# INLINE rule430 #-}
-   rule430 = \ ((_lhsIoptions) :: Options) ->
+   {-# INLINE rule453 #-}
+   rule453 = \ ((_lhsIoptions) :: Options) ->
      _lhsIoptions
 {-# NOINLINE sem_HsTokens_Nil #-}
 sem_HsTokens_Nil ::  T_HsTokens 
@@ -3239,16 +3448,16 @@ sem_HsTokens_Nil  = T_HsTokens (return st35) where
       v34 :: T_HsTokens_v34 
       v34 = \ (T_HsTokens_vIn34 _lhsIoptions) -> ( let
          _lhsOtks :: [(Pos,String)]
-         _lhsOtks = rule431  ()
+         _lhsOtks = rule454  ()
          __result_ = T_HsTokens_vOut34 _lhsOtks
          in __result_ )
      in C_HsTokens_s35 v34
-   {-# INLINE rule431 #-}
-   {-# LINE 1464 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule431 = \  (_ :: ()) ->
-                     {-# LINE 1464 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# INLINE rule454 #-}
+   {-# LINE 1500 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule454 = \  (_ :: ()) ->
+                     {-# LINE 1500 "src-ag/ExecutionPlan2TH.ag" #-}
                      []
-                     {-# LINE 3252 "src-generated/ExecutionPlan2TH.hs" #-}
+                     {-# LINE 3461 "src-generated/ExecutionPlan2TH.hs" #-}
 
 -- HsTokensRoot ------------------------------------------------
 -- wrapper
@@ -3289,12 +3498,12 @@ sem_HsTokensRoot_HsTokensRoot arg_tokens_ = T_HsTokensRoot (return st38) where
       v37 = \ (T_HsTokensRoot_vIn37 _lhsIoptions) -> ( let
          _tokensX35 = Control.Monad.Identity.runIdentity (attach_T_HsTokens (arg_tokens_))
          (T_HsTokens_vOut34 _tokensItks) = inv_HsTokens_s35 _tokensX35 (T_HsTokens_vIn34 _tokensOoptions)
-         _tokensOoptions = rule432 _lhsIoptions
+         _tokensOoptions = rule455 _lhsIoptions
          __result_ = T_HsTokensRoot_vOut37 
          in __result_ )
      in C_HsTokensRoot_s38 v37
-   {-# INLINE rule432 #-}
-   rule432 = \ ((_lhsIoptions) :: Options) ->
+   {-# INLINE rule455 #-}
+   rule455 = \ ((_lhsIoptions) :: Options) ->
      _lhsIoptions
 
 -- Pattern -----------------------------------------------------
@@ -3340,69 +3549,69 @@ sem_Pattern_Constr arg_name_ arg_pats_ = T_Pattern (return st41) where
       v40 = \ (T_Pattern_vIn40 _lhsIallInhmap _lhsIallSynmap _lhsIanyLazyKind _lhsIinhmap _lhsIlocalAttrTypes _lhsIoptions _lhsIsynmap) -> ( let
          _patsX44 = Control.Monad.Identity.runIdentity (attach_T_Patterns (arg_pats_))
          (T_Patterns_vOut43 _patsIattrs _patsIcopy) = inv_Patterns_s44 _patsX44 (T_Patterns_vIn43 _patsOallInhmap _patsOallSynmap _patsOanyLazyKind _patsOinhmap _patsOlocalAttrTypes _patsOoptions _patsOsynmap)
-         _addbang = rule433 _lhsIoptions
-         _addbang1 = rule434 _addbang _lhsIanyLazyKind
+         _addbang = rule456 _lhsIoptions
+         _addbang1 = rule457 _addbang _lhsIanyLazyKind
          _lhsOattrs :: Set String
-         _lhsOattrs = rule435 _patsIattrs
-         _copy = rule436 _patsIcopy arg_name_
+         _lhsOattrs = rule458 _patsIattrs
+         _copy = rule459 _patsIcopy arg_name_
          _lhsOcopy :: Pattern
-         _lhsOcopy = rule437 _copy
+         _lhsOcopy = rule460 _copy
          _lhsOisUnderscore :: Bool
-         _lhsOisUnderscore = rule438  ()
-         _patsOallInhmap = rule439 _lhsIallInhmap
-         _patsOallSynmap = rule440 _lhsIallSynmap
-         _patsOanyLazyKind = rule441 _lhsIanyLazyKind
-         _patsOinhmap = rule442 _lhsIinhmap
-         _patsOlocalAttrTypes = rule443 _lhsIlocalAttrTypes
-         _patsOoptions = rule444 _lhsIoptions
-         _patsOsynmap = rule445 _lhsIsynmap
+         _lhsOisUnderscore = rule461  ()
+         _patsOallInhmap = rule462 _lhsIallInhmap
+         _patsOallSynmap = rule463 _lhsIallSynmap
+         _patsOanyLazyKind = rule464 _lhsIanyLazyKind
+         _patsOinhmap = rule465 _lhsIinhmap
+         _patsOlocalAttrTypes = rule466 _lhsIlocalAttrTypes
+         _patsOoptions = rule467 _lhsIoptions
+         _patsOsynmap = rule468 _lhsIsynmap
          __result_ = T_Pattern_vOut40 _lhsOattrs _lhsOcopy _lhsOisUnderscore
          in __result_ )
      in C_Pattern_s41 v40
-   {-# INLINE rule433 #-}
-   {-# LINE 1607 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule433 = \ ((_lhsIoptions) :: Options) ->
-                                                     {-# LINE 1607 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# INLINE rule456 #-}
+   {-# LINE 1646 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule456 = \ ((_lhsIoptions) :: Options) ->
+                                                     {-# LINE 1646 "src-ag/ExecutionPlan2TH.ag" #-}
                                                      \x -> if bangpats _lhsIoptions then TH.BangP x else x
-                                                     {-# LINE 3368 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule434 #-}
-   {-# LINE 1612 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule434 = \ _addbang ((_lhsIanyLazyKind) :: Bool) ->
-                                                     {-# LINE 1612 "src-ag/ExecutionPlan2TH.ag" #-}
+                                                     {-# LINE 3577 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule457 #-}
+   {-# LINE 1651 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule457 = \ _addbang ((_lhsIanyLazyKind) :: Bool) ->
+                                                     {-# LINE 1651 "src-ag/ExecutionPlan2TH.ag" #-}
                                                      if _lhsIanyLazyKind then id else _addbang
-                                                     {-# LINE 3374 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule435 #-}
-   rule435 = \ ((_patsIattrs) :: Set String) ->
+                                                     {-# LINE 3583 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule458 #-}
+   rule458 = \ ((_patsIattrs) :: Set String) ->
      _patsIattrs
-   {-# INLINE rule436 #-}
-   rule436 = \ ((_patsIcopy) :: Patterns) name_ ->
+   {-# INLINE rule459 #-}
+   rule459 = \ ((_patsIcopy) :: Patterns) name_ ->
      Constr name_ _patsIcopy
-   {-# INLINE rule437 #-}
-   rule437 = \ _copy ->
+   {-# INLINE rule460 #-}
+   rule460 = \ _copy ->
      _copy
-   {-# INLINE rule438 #-}
-   rule438 = \  (_ :: ()) ->
+   {-# INLINE rule461 #-}
+   rule461 = \  (_ :: ()) ->
      error "missing rule: Pattern.Constr.lhs.isUnderscore"
-   {-# INLINE rule439 #-}
-   rule439 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
+   {-# INLINE rule462 #-}
+   rule462 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
      _lhsIallInhmap
-   {-# INLINE rule440 #-}
-   rule440 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
+   {-# INLINE rule463 #-}
+   rule463 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
      _lhsIallSynmap
-   {-# INLINE rule441 #-}
-   rule441 = \ ((_lhsIanyLazyKind) :: Bool) ->
+   {-# INLINE rule464 #-}
+   rule464 = \ ((_lhsIanyLazyKind) :: Bool) ->
      _lhsIanyLazyKind
-   {-# INLINE rule442 #-}
-   rule442 = \ ((_lhsIinhmap) :: Attributes) ->
+   {-# INLINE rule465 #-}
+   rule465 = \ ((_lhsIinhmap) :: Attributes) ->
      _lhsIinhmap
-   {-# INLINE rule443 #-}
-   rule443 = \ ((_lhsIlocalAttrTypes) :: Map Identifier Type) ->
+   {-# INLINE rule466 #-}
+   rule466 = \ ((_lhsIlocalAttrTypes) :: Map Identifier Type) ->
      _lhsIlocalAttrTypes
-   {-# INLINE rule444 #-}
-   rule444 = \ ((_lhsIoptions) :: Options) ->
+   {-# INLINE rule467 #-}
+   rule467 = \ ((_lhsIoptions) :: Options) ->
      _lhsIoptions
-   {-# INLINE rule445 #-}
-   rule445 = \ ((_lhsIsynmap) :: Attributes) ->
+   {-# INLINE rule468 #-}
+   rule468 = \ ((_lhsIsynmap) :: Attributes) ->
      _lhsIsynmap
 {-# NOINLINE sem_Pattern_Product #-}
 sem_Pattern_Product :: (Pos) -> T_Patterns  -> T_Pattern 
@@ -3413,69 +3622,69 @@ sem_Pattern_Product arg_pos_ arg_pats_ = T_Pattern (return st41) where
       v40 = \ (T_Pattern_vIn40 _lhsIallInhmap _lhsIallSynmap _lhsIanyLazyKind _lhsIinhmap _lhsIlocalAttrTypes _lhsIoptions _lhsIsynmap) -> ( let
          _patsX44 = Control.Monad.Identity.runIdentity (attach_T_Patterns (arg_pats_))
          (T_Patterns_vOut43 _patsIattrs _patsIcopy) = inv_Patterns_s44 _patsX44 (T_Patterns_vIn43 _patsOallInhmap _patsOallSynmap _patsOanyLazyKind _patsOinhmap _patsOlocalAttrTypes _patsOoptions _patsOsynmap)
-         _addbang = rule446 _lhsIoptions
-         _addbang1 = rule447 _addbang _lhsIanyLazyKind
+         _addbang = rule469 _lhsIoptions
+         _addbang1 = rule470 _addbang _lhsIanyLazyKind
          _lhsOattrs :: Set String
-         _lhsOattrs = rule448 _patsIattrs
-         _copy = rule449 _patsIcopy arg_pos_
+         _lhsOattrs = rule471 _patsIattrs
+         _copy = rule472 _patsIcopy arg_pos_
          _lhsOcopy :: Pattern
-         _lhsOcopy = rule450 _copy
+         _lhsOcopy = rule473 _copy
          _lhsOisUnderscore :: Bool
-         _lhsOisUnderscore = rule451  ()
-         _patsOallInhmap = rule452 _lhsIallInhmap
-         _patsOallSynmap = rule453 _lhsIallSynmap
-         _patsOanyLazyKind = rule454 _lhsIanyLazyKind
-         _patsOinhmap = rule455 _lhsIinhmap
-         _patsOlocalAttrTypes = rule456 _lhsIlocalAttrTypes
-         _patsOoptions = rule457 _lhsIoptions
-         _patsOsynmap = rule458 _lhsIsynmap
+         _lhsOisUnderscore = rule474  ()
+         _patsOallInhmap = rule475 _lhsIallInhmap
+         _patsOallSynmap = rule476 _lhsIallSynmap
+         _patsOanyLazyKind = rule477 _lhsIanyLazyKind
+         _patsOinhmap = rule478 _lhsIinhmap
+         _patsOlocalAttrTypes = rule479 _lhsIlocalAttrTypes
+         _patsOoptions = rule480 _lhsIoptions
+         _patsOsynmap = rule481 _lhsIsynmap
          __result_ = T_Pattern_vOut40 _lhsOattrs _lhsOcopy _lhsOisUnderscore
          in __result_ )
      in C_Pattern_s41 v40
-   {-# INLINE rule446 #-}
-   {-# LINE 1607 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule446 = \ ((_lhsIoptions) :: Options) ->
-                                                     {-# LINE 1607 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# INLINE rule469 #-}
+   {-# LINE 1646 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule469 = \ ((_lhsIoptions) :: Options) ->
+                                                     {-# LINE 1646 "src-ag/ExecutionPlan2TH.ag" #-}
                                                      \x -> if bangpats _lhsIoptions then TH.BangP x else x
-                                                     {-# LINE 3441 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule447 #-}
-   {-# LINE 1612 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule447 = \ _addbang ((_lhsIanyLazyKind) :: Bool) ->
-                                                     {-# LINE 1612 "src-ag/ExecutionPlan2TH.ag" #-}
+                                                     {-# LINE 3650 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule470 #-}
+   {-# LINE 1651 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule470 = \ _addbang ((_lhsIanyLazyKind) :: Bool) ->
+                                                     {-# LINE 1651 "src-ag/ExecutionPlan2TH.ag" #-}
                                                      if _lhsIanyLazyKind then id else _addbang
-                                                     {-# LINE 3447 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule448 #-}
-   rule448 = \ ((_patsIattrs) :: Set String) ->
+                                                     {-# LINE 3656 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule471 #-}
+   rule471 = \ ((_patsIattrs) :: Set String) ->
      _patsIattrs
-   {-# INLINE rule449 #-}
-   rule449 = \ ((_patsIcopy) :: Patterns) pos_ ->
+   {-# INLINE rule472 #-}
+   rule472 = \ ((_patsIcopy) :: Patterns) pos_ ->
      Product pos_ _patsIcopy
-   {-# INLINE rule450 #-}
-   rule450 = \ _copy ->
+   {-# INLINE rule473 #-}
+   rule473 = \ _copy ->
      _copy
-   {-# INLINE rule451 #-}
-   rule451 = \  (_ :: ()) ->
+   {-# INLINE rule474 #-}
+   rule474 = \  (_ :: ()) ->
      error "missing rule: Pattern.Product.lhs.isUnderscore"
-   {-# INLINE rule452 #-}
-   rule452 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
+   {-# INLINE rule475 #-}
+   rule475 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
      _lhsIallInhmap
-   {-# INLINE rule453 #-}
-   rule453 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
+   {-# INLINE rule476 #-}
+   rule476 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
      _lhsIallSynmap
-   {-# INLINE rule454 #-}
-   rule454 = \ ((_lhsIanyLazyKind) :: Bool) ->
+   {-# INLINE rule477 #-}
+   rule477 = \ ((_lhsIanyLazyKind) :: Bool) ->
      _lhsIanyLazyKind
-   {-# INLINE rule455 #-}
-   rule455 = \ ((_lhsIinhmap) :: Attributes) ->
+   {-# INLINE rule478 #-}
+   rule478 = \ ((_lhsIinhmap) :: Attributes) ->
      _lhsIinhmap
-   {-# INLINE rule456 #-}
-   rule456 = \ ((_lhsIlocalAttrTypes) :: Map Identifier Type) ->
+   {-# INLINE rule479 #-}
+   rule479 = \ ((_lhsIlocalAttrTypes) :: Map Identifier Type) ->
      _lhsIlocalAttrTypes
-   {-# INLINE rule457 #-}
-   rule457 = \ ((_lhsIoptions) :: Options) ->
+   {-# INLINE rule480 #-}
+   rule480 = \ ((_lhsIoptions) :: Options) ->
      _lhsIoptions
-   {-# INLINE rule458 #-}
-   rule458 = \ ((_lhsIsynmap) :: Attributes) ->
+   {-# INLINE rule481 #-}
+   rule481 = \ ((_lhsIsynmap) :: Attributes) ->
      _lhsIsynmap
 {-# NOINLINE sem_Pattern_Alias #-}
 sem_Pattern_Alias :: (Identifier) -> (Identifier) -> T_Pattern  -> T_Pattern 
@@ -3486,69 +3695,69 @@ sem_Pattern_Alias arg_field_ arg_attr_ arg_pat_ = T_Pattern (return st41) where
       v40 = \ (T_Pattern_vIn40 _lhsIallInhmap _lhsIallSynmap _lhsIanyLazyKind _lhsIinhmap _lhsIlocalAttrTypes _lhsIoptions _lhsIsynmap) -> ( let
          _patX41 = Control.Monad.Identity.runIdentity (attach_T_Pattern (arg_pat_))
          (T_Pattern_vOut40 _patIattrs _patIcopy _patIisUnderscore) = inv_Pattern_s41 _patX41 (T_Pattern_vIn40 _patOallInhmap _patOallSynmap _patOanyLazyKind _patOinhmap _patOlocalAttrTypes _patOoptions _patOsynmap)
-         _addbang = rule459 _lhsIoptions
-         _addbang1 = rule460 _addbang _lhsIanyLazyKind
+         _addbang = rule482 _lhsIoptions
+         _addbang1 = rule483 _addbang _lhsIanyLazyKind
          _lhsOattrs :: Set String
-         _lhsOattrs = rule461 _patIattrs
-         _copy = rule462 _patIcopy arg_attr_ arg_field_
+         _lhsOattrs = rule484 _patIattrs
+         _copy = rule485 _patIcopy arg_attr_ arg_field_
          _lhsOcopy :: Pattern
-         _lhsOcopy = rule463 _copy
+         _lhsOcopy = rule486 _copy
          _lhsOisUnderscore :: Bool
-         _lhsOisUnderscore = rule464 _patIisUnderscore
-         _patOallInhmap = rule465 _lhsIallInhmap
-         _patOallSynmap = rule466 _lhsIallSynmap
-         _patOanyLazyKind = rule467 _lhsIanyLazyKind
-         _patOinhmap = rule468 _lhsIinhmap
-         _patOlocalAttrTypes = rule469 _lhsIlocalAttrTypes
-         _patOoptions = rule470 _lhsIoptions
-         _patOsynmap = rule471 _lhsIsynmap
+         _lhsOisUnderscore = rule487 _patIisUnderscore
+         _patOallInhmap = rule488 _lhsIallInhmap
+         _patOallSynmap = rule489 _lhsIallSynmap
+         _patOanyLazyKind = rule490 _lhsIanyLazyKind
+         _patOinhmap = rule491 _lhsIinhmap
+         _patOlocalAttrTypes = rule492 _lhsIlocalAttrTypes
+         _patOoptions = rule493 _lhsIoptions
+         _patOsynmap = rule494 _lhsIsynmap
          __result_ = T_Pattern_vOut40 _lhsOattrs _lhsOcopy _lhsOisUnderscore
          in __result_ )
      in C_Pattern_s41 v40
-   {-# INLINE rule459 #-}
-   {-# LINE 1607 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule459 = \ ((_lhsIoptions) :: Options) ->
-                                                     {-# LINE 1607 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# INLINE rule482 #-}
+   {-# LINE 1646 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule482 = \ ((_lhsIoptions) :: Options) ->
+                                                     {-# LINE 1646 "src-ag/ExecutionPlan2TH.ag" #-}
                                                      \x -> if bangpats _lhsIoptions then TH.BangP x else x
-                                                     {-# LINE 3514 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule460 #-}
-   {-# LINE 1612 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule460 = \ _addbang ((_lhsIanyLazyKind) :: Bool) ->
-                                                     {-# LINE 1612 "src-ag/ExecutionPlan2TH.ag" #-}
+                                                     {-# LINE 3723 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule483 #-}
+   {-# LINE 1651 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule483 = \ _addbang ((_lhsIanyLazyKind) :: Bool) ->
+                                                     {-# LINE 1651 "src-ag/ExecutionPlan2TH.ag" #-}
                                                      if _lhsIanyLazyKind then id else _addbang
-                                                     {-# LINE 3520 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule461 #-}
-   rule461 = \ ((_patIattrs) :: Set String) ->
+                                                     {-# LINE 3729 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule484 #-}
+   rule484 = \ ((_patIattrs) :: Set String) ->
      _patIattrs
-   {-# INLINE rule462 #-}
-   rule462 = \ ((_patIcopy) :: Pattern) attr_ field_ ->
+   {-# INLINE rule485 #-}
+   rule485 = \ ((_patIcopy) :: Pattern) attr_ field_ ->
      Alias field_ attr_ _patIcopy
-   {-# INLINE rule463 #-}
-   rule463 = \ _copy ->
+   {-# INLINE rule486 #-}
+   rule486 = \ _copy ->
      _copy
-   {-# INLINE rule464 #-}
-   rule464 = \ ((_patIisUnderscore) :: Bool) ->
+   {-# INLINE rule487 #-}
+   rule487 = \ ((_patIisUnderscore) :: Bool) ->
      _patIisUnderscore
-   {-# INLINE rule465 #-}
-   rule465 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
+   {-# INLINE rule488 #-}
+   rule488 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
      _lhsIallInhmap
-   {-# INLINE rule466 #-}
-   rule466 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
+   {-# INLINE rule489 #-}
+   rule489 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
      _lhsIallSynmap
-   {-# INLINE rule467 #-}
-   rule467 = \ ((_lhsIanyLazyKind) :: Bool) ->
+   {-# INLINE rule490 #-}
+   rule490 = \ ((_lhsIanyLazyKind) :: Bool) ->
      _lhsIanyLazyKind
-   {-# INLINE rule468 #-}
-   rule468 = \ ((_lhsIinhmap) :: Attributes) ->
+   {-# INLINE rule491 #-}
+   rule491 = \ ((_lhsIinhmap) :: Attributes) ->
      _lhsIinhmap
-   {-# INLINE rule469 #-}
-   rule469 = \ ((_lhsIlocalAttrTypes) :: Map Identifier Type) ->
+   {-# INLINE rule492 #-}
+   rule492 = \ ((_lhsIlocalAttrTypes) :: Map Identifier Type) ->
      _lhsIlocalAttrTypes
-   {-# INLINE rule470 #-}
-   rule470 = \ ((_lhsIoptions) :: Options) ->
+   {-# INLINE rule493 #-}
+   rule493 = \ ((_lhsIoptions) :: Options) ->
      _lhsIoptions
-   {-# INLINE rule471 #-}
-   rule471 = \ ((_lhsIsynmap) :: Attributes) ->
+   {-# INLINE rule494 #-}
+   rule494 = \ ((_lhsIsynmap) :: Attributes) ->
      _lhsIsynmap
 {-# NOINLINE sem_Pattern_Irrefutable #-}
 sem_Pattern_Irrefutable :: T_Pattern  -> T_Pattern 
@@ -3560,54 +3769,54 @@ sem_Pattern_Irrefutable arg_pat_ = T_Pattern (return st41) where
          _patX41 = Control.Monad.Identity.runIdentity (attach_T_Pattern (arg_pat_))
          (T_Pattern_vOut40 _patIattrs _patIcopy _patIisUnderscore) = inv_Pattern_s41 _patX41 (T_Pattern_vIn40 _patOallInhmap _patOallSynmap _patOanyLazyKind _patOinhmap _patOlocalAttrTypes _patOoptions _patOsynmap)
          _lhsOattrs :: Set String
-         _lhsOattrs = rule472 _patIattrs
-         _copy = rule473 _patIcopy
+         _lhsOattrs = rule495 _patIattrs
+         _copy = rule496 _patIcopy
          _lhsOcopy :: Pattern
-         _lhsOcopy = rule474 _copy
+         _lhsOcopy = rule497 _copy
          _lhsOisUnderscore :: Bool
-         _lhsOisUnderscore = rule475 _patIisUnderscore
-         _patOallInhmap = rule476 _lhsIallInhmap
-         _patOallSynmap = rule477 _lhsIallSynmap
-         _patOanyLazyKind = rule478 _lhsIanyLazyKind
-         _patOinhmap = rule479 _lhsIinhmap
-         _patOlocalAttrTypes = rule480 _lhsIlocalAttrTypes
-         _patOoptions = rule481 _lhsIoptions
-         _patOsynmap = rule482 _lhsIsynmap
+         _lhsOisUnderscore = rule498 _patIisUnderscore
+         _patOallInhmap = rule499 _lhsIallInhmap
+         _patOallSynmap = rule500 _lhsIallSynmap
+         _patOanyLazyKind = rule501 _lhsIanyLazyKind
+         _patOinhmap = rule502 _lhsIinhmap
+         _patOlocalAttrTypes = rule503 _lhsIlocalAttrTypes
+         _patOoptions = rule504 _lhsIoptions
+         _patOsynmap = rule505 _lhsIsynmap
          __result_ = T_Pattern_vOut40 _lhsOattrs _lhsOcopy _lhsOisUnderscore
          in __result_ )
      in C_Pattern_s41 v40
-   {-# INLINE rule472 #-}
-   rule472 = \ ((_patIattrs) :: Set String) ->
+   {-# INLINE rule495 #-}
+   rule495 = \ ((_patIattrs) :: Set String) ->
      _patIattrs
-   {-# INLINE rule473 #-}
-   rule473 = \ ((_patIcopy) :: Pattern) ->
+   {-# INLINE rule496 #-}
+   rule496 = \ ((_patIcopy) :: Pattern) ->
      Irrefutable _patIcopy
-   {-# INLINE rule474 #-}
-   rule474 = \ _copy ->
+   {-# INLINE rule497 #-}
+   rule497 = \ _copy ->
      _copy
-   {-# INLINE rule475 #-}
-   rule475 = \ ((_patIisUnderscore) :: Bool) ->
+   {-# INLINE rule498 #-}
+   rule498 = \ ((_patIisUnderscore) :: Bool) ->
      _patIisUnderscore
-   {-# INLINE rule476 #-}
-   rule476 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
+   {-# INLINE rule499 #-}
+   rule499 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
      _lhsIallInhmap
-   {-# INLINE rule477 #-}
-   rule477 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
+   {-# INLINE rule500 #-}
+   rule500 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
      _lhsIallSynmap
-   {-# INLINE rule478 #-}
-   rule478 = \ ((_lhsIanyLazyKind) :: Bool) ->
+   {-# INLINE rule501 #-}
+   rule501 = \ ((_lhsIanyLazyKind) :: Bool) ->
      _lhsIanyLazyKind
-   {-# INLINE rule479 #-}
-   rule479 = \ ((_lhsIinhmap) :: Attributes) ->
+   {-# INLINE rule502 #-}
+   rule502 = \ ((_lhsIinhmap) :: Attributes) ->
      _lhsIinhmap
-   {-# INLINE rule480 #-}
-   rule480 = \ ((_lhsIlocalAttrTypes) :: Map Identifier Type) ->
+   {-# INLINE rule503 #-}
+   rule503 = \ ((_lhsIlocalAttrTypes) :: Map Identifier Type) ->
      _lhsIlocalAttrTypes
-   {-# INLINE rule481 #-}
-   rule481 = \ ((_lhsIoptions) :: Options) ->
+   {-# INLINE rule504 #-}
+   rule504 = \ ((_lhsIoptions) :: Options) ->
      _lhsIoptions
-   {-# INLINE rule482 #-}
-   rule482 = \ ((_lhsIsynmap) :: Attributes) ->
+   {-# INLINE rule505 #-}
+   rule505 = \ ((_lhsIsynmap) :: Attributes) ->
      _lhsIsynmap
 {-# NOINLINE sem_Pattern_Underscore #-}
 sem_Pattern_Underscore :: (Pos) -> T_Pattern 
@@ -3617,26 +3826,26 @@ sem_Pattern_Underscore arg_pos_ = T_Pattern (return st41) where
       v40 :: T_Pattern_v40 
       v40 = \ (T_Pattern_vIn40 _lhsIallInhmap _lhsIallSynmap _lhsIanyLazyKind _lhsIinhmap _lhsIlocalAttrTypes _lhsIoptions _lhsIsynmap) -> ( let
          _lhsOattrs :: Set String
-         _lhsOattrs = rule483  ()
-         _copy = rule484 arg_pos_
+         _lhsOattrs = rule506  ()
+         _copy = rule507 arg_pos_
          _lhsOcopy :: Pattern
-         _lhsOcopy = rule485 _copy
+         _lhsOcopy = rule508 _copy
          _lhsOisUnderscore :: Bool
-         _lhsOisUnderscore = rule486  ()
+         _lhsOisUnderscore = rule509  ()
          __result_ = T_Pattern_vOut40 _lhsOattrs _lhsOcopy _lhsOisUnderscore
          in __result_ )
      in C_Pattern_s41 v40
-   {-# INLINE rule483 #-}
-   rule483 = \  (_ :: ()) ->
+   {-# INLINE rule506 #-}
+   rule506 = \  (_ :: ()) ->
      Set.empty
-   {-# INLINE rule484 #-}
-   rule484 = \ pos_ ->
+   {-# INLINE rule507 #-}
+   rule507 = \ pos_ ->
      Underscore pos_
-   {-# INLINE rule485 #-}
-   rule485 = \ _copy ->
+   {-# INLINE rule508 #-}
+   rule508 = \ _copy ->
      _copy
-   {-# INLINE rule486 #-}
-   rule486 = \  (_ :: ()) ->
+   {-# INLINE rule509 #-}
+   rule509 = \  (_ :: ()) ->
      error "missing rule: Pattern.Underscore.lhs.isUnderscore"
 
 -- Patterns ----------------------------------------------------
@@ -3681,77 +3890,77 @@ sem_Patterns_Cons arg_hd_ arg_tl_ = T_Patterns (return st44) where
          (T_Pattern_vOut40 _hdIattrs _hdIcopy _hdIisUnderscore) = inv_Pattern_s41 _hdX41 (T_Pattern_vIn40 _hdOallInhmap _hdOallSynmap _hdOanyLazyKind _hdOinhmap _hdOlocalAttrTypes _hdOoptions _hdOsynmap)
          (T_Patterns_vOut43 _tlIattrs _tlIcopy) = inv_Patterns_s44 _tlX44 (T_Patterns_vIn43 _tlOallInhmap _tlOallSynmap _tlOanyLazyKind _tlOinhmap _tlOlocalAttrTypes _tlOoptions _tlOsynmap)
          _lhsOattrs :: Set String
-         _lhsOattrs = rule487 _hdIattrs _tlIattrs
-         _copy = rule488 _hdIcopy _tlIcopy
+         _lhsOattrs = rule510 _hdIattrs _tlIattrs
+         _copy = rule511 _hdIcopy _tlIcopy
          _lhsOcopy :: Patterns
-         _lhsOcopy = rule489 _copy
-         _hdOallInhmap = rule490 _lhsIallInhmap
-         _hdOallSynmap = rule491 _lhsIallSynmap
-         _hdOanyLazyKind = rule492 _lhsIanyLazyKind
-         _hdOinhmap = rule493 _lhsIinhmap
-         _hdOlocalAttrTypes = rule494 _lhsIlocalAttrTypes
-         _hdOoptions = rule495 _lhsIoptions
-         _hdOsynmap = rule496 _lhsIsynmap
-         _tlOallInhmap = rule497 _lhsIallInhmap
-         _tlOallSynmap = rule498 _lhsIallSynmap
-         _tlOanyLazyKind = rule499 _lhsIanyLazyKind
-         _tlOinhmap = rule500 _lhsIinhmap
-         _tlOlocalAttrTypes = rule501 _lhsIlocalAttrTypes
-         _tlOoptions = rule502 _lhsIoptions
-         _tlOsynmap = rule503 _lhsIsynmap
+         _lhsOcopy = rule512 _copy
+         _hdOallInhmap = rule513 _lhsIallInhmap
+         _hdOallSynmap = rule514 _lhsIallSynmap
+         _hdOanyLazyKind = rule515 _lhsIanyLazyKind
+         _hdOinhmap = rule516 _lhsIinhmap
+         _hdOlocalAttrTypes = rule517 _lhsIlocalAttrTypes
+         _hdOoptions = rule518 _lhsIoptions
+         _hdOsynmap = rule519 _lhsIsynmap
+         _tlOallInhmap = rule520 _lhsIallInhmap
+         _tlOallSynmap = rule521 _lhsIallSynmap
+         _tlOanyLazyKind = rule522 _lhsIanyLazyKind
+         _tlOinhmap = rule523 _lhsIinhmap
+         _tlOlocalAttrTypes = rule524 _lhsIlocalAttrTypes
+         _tlOoptions = rule525 _lhsIoptions
+         _tlOsynmap = rule526 _lhsIsynmap
          __result_ = T_Patterns_vOut43 _lhsOattrs _lhsOcopy
          in __result_ )
      in C_Patterns_s44 v43
-   {-# INLINE rule487 #-}
-   rule487 = \ ((_hdIattrs) :: Set String) ((_tlIattrs) :: Set String) ->
+   {-# INLINE rule510 #-}
+   rule510 = \ ((_hdIattrs) :: Set String) ((_tlIattrs) :: Set String) ->
      _hdIattrs `Set.union` _tlIattrs
-   {-# INLINE rule488 #-}
-   rule488 = \ ((_hdIcopy) :: Pattern) ((_tlIcopy) :: Patterns) ->
+   {-# INLINE rule511 #-}
+   rule511 = \ ((_hdIcopy) :: Pattern) ((_tlIcopy) :: Patterns) ->
      (:) _hdIcopy _tlIcopy
-   {-# INLINE rule489 #-}
-   rule489 = \ _copy ->
+   {-# INLINE rule512 #-}
+   rule512 = \ _copy ->
      _copy
-   {-# INLINE rule490 #-}
-   rule490 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
+   {-# INLINE rule513 #-}
+   rule513 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
      _lhsIallInhmap
-   {-# INLINE rule491 #-}
-   rule491 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
+   {-# INLINE rule514 #-}
+   rule514 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
      _lhsIallSynmap
-   {-# INLINE rule492 #-}
-   rule492 = \ ((_lhsIanyLazyKind) :: Bool) ->
+   {-# INLINE rule515 #-}
+   rule515 = \ ((_lhsIanyLazyKind) :: Bool) ->
      _lhsIanyLazyKind
-   {-# INLINE rule493 #-}
-   rule493 = \ ((_lhsIinhmap) :: Attributes) ->
+   {-# INLINE rule516 #-}
+   rule516 = \ ((_lhsIinhmap) :: Attributes) ->
      _lhsIinhmap
-   {-# INLINE rule494 #-}
-   rule494 = \ ((_lhsIlocalAttrTypes) :: Map Identifier Type) ->
+   {-# INLINE rule517 #-}
+   rule517 = \ ((_lhsIlocalAttrTypes) :: Map Identifier Type) ->
      _lhsIlocalAttrTypes
-   {-# INLINE rule495 #-}
-   rule495 = \ ((_lhsIoptions) :: Options) ->
+   {-# INLINE rule518 #-}
+   rule518 = \ ((_lhsIoptions) :: Options) ->
      _lhsIoptions
-   {-# INLINE rule496 #-}
-   rule496 = \ ((_lhsIsynmap) :: Attributes) ->
+   {-# INLINE rule519 #-}
+   rule519 = \ ((_lhsIsynmap) :: Attributes) ->
      _lhsIsynmap
-   {-# INLINE rule497 #-}
-   rule497 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
+   {-# INLINE rule520 #-}
+   rule520 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
      _lhsIallInhmap
-   {-# INLINE rule498 #-}
-   rule498 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
+   {-# INLINE rule521 #-}
+   rule521 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
      _lhsIallSynmap
-   {-# INLINE rule499 #-}
-   rule499 = \ ((_lhsIanyLazyKind) :: Bool) ->
+   {-# INLINE rule522 #-}
+   rule522 = \ ((_lhsIanyLazyKind) :: Bool) ->
      _lhsIanyLazyKind
-   {-# INLINE rule500 #-}
-   rule500 = \ ((_lhsIinhmap) :: Attributes) ->
+   {-# INLINE rule523 #-}
+   rule523 = \ ((_lhsIinhmap) :: Attributes) ->
      _lhsIinhmap
-   {-# INLINE rule501 #-}
-   rule501 = \ ((_lhsIlocalAttrTypes) :: Map Identifier Type) ->
+   {-# INLINE rule524 #-}
+   rule524 = \ ((_lhsIlocalAttrTypes) :: Map Identifier Type) ->
      _lhsIlocalAttrTypes
-   {-# INLINE rule502 #-}
-   rule502 = \ ((_lhsIoptions) :: Options) ->
+   {-# INLINE rule525 #-}
+   rule525 = \ ((_lhsIoptions) :: Options) ->
      _lhsIoptions
-   {-# INLINE rule503 #-}
-   rule503 = \ ((_lhsIsynmap) :: Attributes) ->
+   {-# INLINE rule526 #-}
+   rule526 = \ ((_lhsIsynmap) :: Attributes) ->
      _lhsIsynmap
 {-# NOINLINE sem_Patterns_Nil #-}
 sem_Patterns_Nil ::  T_Patterns 
@@ -3761,21 +3970,21 @@ sem_Patterns_Nil  = T_Patterns (return st44) where
       v43 :: T_Patterns_v43 
       v43 = \ (T_Patterns_vIn43 _lhsIallInhmap _lhsIallSynmap _lhsIanyLazyKind _lhsIinhmap _lhsIlocalAttrTypes _lhsIoptions _lhsIsynmap) -> ( let
          _lhsOattrs :: Set String
-         _lhsOattrs = rule504  ()
-         _copy = rule505  ()
+         _lhsOattrs = rule527  ()
+         _copy = rule528  ()
          _lhsOcopy :: Patterns
-         _lhsOcopy = rule506 _copy
+         _lhsOcopy = rule529 _copy
          __result_ = T_Patterns_vOut43 _lhsOattrs _lhsOcopy
          in __result_ )
      in C_Patterns_s44 v43
-   {-# INLINE rule504 #-}
-   rule504 = \  (_ :: ()) ->
+   {-# INLINE rule527 #-}
+   rule527 = \  (_ :: ()) ->
      Set.empty
-   {-# INLINE rule505 #-}
-   rule505 = \  (_ :: ()) ->
+   {-# INLINE rule528 #-}
+   rule528 = \  (_ :: ()) ->
      []
-   {-# INLINE rule506 #-}
-   rule506 = \ _copy ->
+   {-# INLINE rule529 #-}
+   rule529 = \ _copy ->
      _copy
 
 -- Visit -------------------------------------------------------
@@ -3818,162 +4027,162 @@ sem_Visit_Visit arg_ident_ arg_from_ arg_to_ arg_inh_ _ arg_steps_ arg_kind_ = T
          _stepsX53 = Control.Monad.Identity.runIdentity (attach_T_VisitSteps (arg_steps_))
          (T_VisitSteps_vOut52 _stepsIdefs _stepsIerrors _stepsIindex _stepsIisLast _stepsIlazyIntras _stepsIprevMaxSimRefs _stepsIruleKinds _stepsIruleUsage _stepsIsize _stepsIusedArgs _stepsIuses _stepsIvisitKinds) = inv_VisitSteps_s53 _stepsX53 (T_VisitSteps_vIn52 _stepsOallFromToStates _stepsOallInitStates _stepsOallVisitKinds _stepsOavisitdefs _stepsOavisituses _stepsOchildTypes _stepsOfmtMode _stepsOindex _stepsOkind _stepsOoptions _stepsOprevMaxSimRefs _stepsOruledefs _stepsOruleuses)
          _lhsOallvisits ::  VisitStateState 
-         _lhsOallvisits = rule507 arg_from_ arg_ident_ arg_to_
-         _stepsOfmtMode = rule508 arg_kind_
-         _inhVarNms = rule509 _lhsIoptions arg_inh_
-         _lazyIntrasInh = rule510 _inhVarNms _stepsIdefs arg_kind_
+         _lhsOallvisits = rule530 arg_from_ arg_ident_ arg_to_
+         _stepsOfmtMode = rule531 arg_kind_
+         _inhVarNms = rule532 _lhsIoptions arg_inh_
+         _lazyIntrasInh = rule533 _inhVarNms _stepsIdefs arg_kind_
          _lhsOlazyIntras :: Set String
-         _lhsOlazyIntras = rule511 _lazyIntrasInh _stepsIlazyIntras
-         _addbang = rule512 _lhsIoptions
-         _addbang1 = rule513 _addbang arg_kind_
+         _lhsOlazyIntras = rule534 _lazyIntrasInh _stepsIlazyIntras
+         _addbang = rule535 _lhsIoptions
+         _addbang1 = rule536 _addbang arg_kind_
          _lhsOfromToStates :: Map VisitIdentifier (Int,Int)
-         _lhsOfromToStates = rule514 arg_from_ arg_ident_ arg_to_
+         _lhsOfromToStates = rule537 arg_from_ arg_ident_ arg_to_
          _lhsOvisitKinds :: Map VisitIdentifier VisitKind
-         _lhsOvisitKinds = rule515 arg_ident_ arg_kind_
+         _lhsOvisitKinds = rule538 arg_ident_ arg_kind_
          _lhsOerrors :: Seq Error
-         _lhsOerrors = rule516 _stepsIerrors
+         _lhsOerrors = rule539 _stepsIerrors
          _lhsOintramap :: Map StateIdentifier (Map String (Maybe NonLocalAttr))
-         _lhsOintramap = rule517  ()
+         _lhsOintramap = rule540  ()
          _lhsOruleKinds :: Map Identifier (Set VisitKind)
-         _lhsOruleKinds = rule518 _stepsIruleKinds
+         _lhsOruleKinds = rule541 _stepsIruleKinds
          _lhsOruleUsage :: Map Identifier Int
-         _lhsOruleUsage = rule519 _stepsIruleUsage
+         _lhsOruleUsage = rule542 _stepsIruleUsage
          _lhsOusedArgs :: Set String
-         _lhsOusedArgs = rule520 _stepsIusedArgs
+         _lhsOusedArgs = rule543 _stepsIusedArgs
          _lhsOvisitdefs :: Map VisitIdentifier (Set Identifier)
-         _lhsOvisitdefs = rule521  ()
+         _lhsOvisitdefs = rule544  ()
          _lhsOvisituses :: Map VisitIdentifier (Set Identifier)
-         _lhsOvisituses = rule522  ()
-         _stepsOallFromToStates = rule523 _lhsIallFromToStates
-         _stepsOallInitStates = rule524 _lhsIallInitStates
-         _stepsOallVisitKinds = rule525 _lhsIallVisitKinds
-         _stepsOavisitdefs = rule526 _lhsIavisitdefs
-         _stepsOavisituses = rule527 _lhsIavisituses
-         _stepsOchildTypes = rule528 _lhsIchildTypes
-         _stepsOindex = rule529  ()
-         _stepsOkind = rule530 arg_kind_
-         _stepsOoptions = rule531 _lhsIoptions
-         _stepsOprevMaxSimRefs = rule532  ()
-         _stepsOruledefs = rule533 _lhsIruledefs
-         _stepsOruleuses = rule534 _lhsIruleuses
+         _lhsOvisituses = rule545  ()
+         _stepsOallFromToStates = rule546 _lhsIallFromToStates
+         _stepsOallInitStates = rule547 _lhsIallInitStates
+         _stepsOallVisitKinds = rule548 _lhsIallVisitKinds
+         _stepsOavisitdefs = rule549 _lhsIavisitdefs
+         _stepsOavisituses = rule550 _lhsIavisituses
+         _stepsOchildTypes = rule551 _lhsIchildTypes
+         _stepsOindex = rule552  ()
+         _stepsOkind = rule553 arg_kind_
+         _stepsOoptions = rule554 _lhsIoptions
+         _stepsOprevMaxSimRefs = rule555  ()
+         _stepsOruledefs = rule556 _lhsIruledefs
+         _stepsOruleuses = rule557 _lhsIruleuses
          __result_ = T_Visit_vOut46 _lhsOallvisits _lhsOerrors _lhsOfromToStates _lhsOintramap _lhsOlazyIntras _lhsOruleKinds _lhsOruleUsage _lhsOusedArgs _lhsOvisitKinds _lhsOvisitdefs _lhsOvisituses
          in __result_ )
      in C_Visit_s47 v46
-   {-# INLINE rule507 #-}
-   {-# LINE 388 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule507 = \ from_ ident_ to_ ->
-                            {-# LINE 388 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# INLINE rule530 #-}
+   {-# LINE 407 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule530 = \ from_ ident_ to_ ->
+                            {-# LINE 407 "src-ag/ExecutionPlan2TH.ag" #-}
                             (ident_, from_, to_)
-                            {-# LINE 3868 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule508 #-}
-   {-# LINE 891 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule508 = \ kind_ ->
-                    {-# LINE 891 "src-ag/ExecutionPlan2TH.ag" #-}
+                            {-# LINE 4077 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule531 #-}
+   {-# LINE 927 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule531 = \ kind_ ->
+                    {-# LINE 927 "src-ag/ExecutionPlan2TH.ag" #-}
                     case kind_ of
                       VisitPure False -> FormatLetDecl
                       VisitPure True  -> FormatLetLine
                       VisitMonadic    -> FormatDo
-                    {-# LINE 3877 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule509 #-}
-   {-# LINE 1386 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule509 = \ ((_lhsIoptions) :: Options) inh_ ->
-                            {-# LINE 1386 "src-ag/ExecutionPlan2TH.ag" #-}
+                    {-# LINE 4086 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule532 #-}
+   {-# LINE 1422 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule532 = \ ((_lhsIoptions) :: Options) inh_ ->
+                            {-# LINE 1422 "src-ag/ExecutionPlan2TH.ag" #-}
                             Set.map (lhsname _lhsIoptions True) inh_
-                            {-# LINE 3883 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule510 #-}
-   {-# LINE 1445 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule510 = \ _inhVarNms ((_stepsIdefs) :: Set String) kind_ ->
-                        {-# LINE 1445 "src-ag/ExecutionPlan2TH.ag" #-}
+                            {-# LINE 4092 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule533 #-}
+   {-# LINE 1481 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule533 = \ _inhVarNms ((_stepsIdefs) :: Set String) kind_ ->
+                        {-# LINE 1481 "src-ag/ExecutionPlan2TH.ag" #-}
                         case kind_ of
                           VisitPure False -> _inhVarNms     `Set.union` _stepsIdefs
                           _               -> Set.empty
-                        {-# LINE 3891 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule511 #-}
-   {-# LINE 1448 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule511 = \ _lazyIntrasInh ((_stepsIlazyIntras) :: Set String) ->
-                     {-# LINE 1448 "src-ag/ExecutionPlan2TH.ag" #-}
-                     _lazyIntrasInh     `Set.union` _stepsIlazyIntras
-                     {-# LINE 3897 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule512 #-}
-   {-# LINE 1601 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule512 = \ ((_lhsIoptions) :: Options) ->
-                                                    {-# LINE 1601 "src-ag/ExecutionPlan2TH.ag" #-}
-                                                    \x -> if bangpats _lhsIoptions then TH.BangP x else x
-                                                    {-# LINE 3903 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule513 #-}
-   {-# LINE 1609 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule513 = \ _addbang kind_ ->
-                                                     {-# LINE 1609 "src-ag/ExecutionPlan2TH.ag" #-}
-                                                     if isLazyKind kind_ then id else _addbang
-                                                     {-# LINE 3909 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule514 #-}
-   {-# LINE 1636 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule514 = \ from_ ident_ to_ ->
-                       {-# LINE 1636 "src-ag/ExecutionPlan2TH.ag" #-}
-                       Map.singleton ident_ (from_, to_)
-                       {-# LINE 3915 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule515 #-}
-   {-# LINE 1680 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule515 = \ ident_ kind_ ->
-                     {-# LINE 1680 "src-ag/ExecutionPlan2TH.ag" #-}
-                     Map.singleton ident_ kind_
-                     {-# LINE 3921 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule516 #-}
-   rule516 = \ ((_stepsIerrors) :: Seq Error) ->
-     _stepsIerrors
-   {-# INLINE rule517 #-}
-   rule517 = \  (_ :: ()) ->
-     Map.empty
-   {-# INLINE rule518 #-}
-   rule518 = \ ((_stepsIruleKinds) :: Map Identifier (Set VisitKind)) ->
-     _stepsIruleKinds
-   {-# INLINE rule519 #-}
-   rule519 = \ ((_stepsIruleUsage) :: Map Identifier Int) ->
-     _stepsIruleUsage
-   {-# INLINE rule520 #-}
-   rule520 = \ ((_stepsIusedArgs) :: Set String) ->
-     _stepsIusedArgs
-   {-# INLINE rule521 #-}
-   rule521 = \  (_ :: ()) ->
-     Map.empty
-   {-# INLINE rule522 #-}
-   rule522 = \  (_ :: ()) ->
-     Map.empty
-   {-# INLINE rule523 #-}
-   rule523 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
-     _lhsIallFromToStates
-   {-# INLINE rule524 #-}
-   rule524 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
-     _lhsIallInitStates
-   {-# INLINE rule525 #-}
-   rule525 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
-     _lhsIallVisitKinds
-   {-# INLINE rule526 #-}
-   rule526 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
-     _lhsIavisitdefs
-   {-# INLINE rule527 #-}
-   rule527 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
-     _lhsIavisituses
-   {-# INLINE rule528 #-}
-   rule528 = \ ((_lhsIchildTypes) :: Map Identifier Type) ->
-     _lhsIchildTypes
-   {-# INLINE rule529 #-}
-   rule529 = \  (_ :: ()) ->
-     error "missing rule: Visit.Visit.steps.index"
-   {-# INLINE rule530 #-}
-   rule530 = \ kind_ ->
-     kind_
-   {-# INLINE rule531 #-}
-   rule531 = \ ((_lhsIoptions) :: Options) ->
-     _lhsIoptions
-   {-# INLINE rule532 #-}
-   rule532 = \  (_ :: ()) ->
-     error "missing rule: Visit.Visit.steps.prevMaxSimRefs"
-   {-# INLINE rule533 #-}
-   rule533 = \ ((_lhsIruledefs) :: Map Identifier (Set String)) ->
-     _lhsIruledefs
+                        {-# LINE 4100 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule534 #-}
-   rule534 = \ ((_lhsIruleuses) :: Map Identifier (Map String (Maybe NonLocalAttr))) ->
+   {-# LINE 1484 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule534 = \ _lazyIntrasInh ((_stepsIlazyIntras) :: Set String) ->
+                     {-# LINE 1484 "src-ag/ExecutionPlan2TH.ag" #-}
+                     _lazyIntrasInh     `Set.union` _stepsIlazyIntras
+                     {-# LINE 4106 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule535 #-}
+   {-# LINE 1637 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule535 = \ ((_lhsIoptions) :: Options) ->
+                                                    {-# LINE 1637 "src-ag/ExecutionPlan2TH.ag" #-}
+                                                    \x -> if bangpats _lhsIoptions then TH.BangP x else x
+                                                    {-# LINE 4112 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule536 #-}
+   {-# LINE 1648 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule536 = \ _addbang kind_ ->
+                                                     {-# LINE 1648 "src-ag/ExecutionPlan2TH.ag" #-}
+                                                     if isLazyKind kind_ then id else _addbang
+                                                     {-# LINE 4118 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule537 #-}
+   {-# LINE 1675 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule537 = \ from_ ident_ to_ ->
+                       {-# LINE 1675 "src-ag/ExecutionPlan2TH.ag" #-}
+                       Map.singleton ident_ (from_, to_)
+                       {-# LINE 4124 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule538 #-}
+   {-# LINE 1719 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule538 = \ ident_ kind_ ->
+                     {-# LINE 1719 "src-ag/ExecutionPlan2TH.ag" #-}
+                     Map.singleton ident_ kind_
+                     {-# LINE 4130 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule539 #-}
+   rule539 = \ ((_stepsIerrors) :: Seq Error) ->
+     _stepsIerrors
+   {-# INLINE rule540 #-}
+   rule540 = \  (_ :: ()) ->
+     Map.empty
+   {-# INLINE rule541 #-}
+   rule541 = \ ((_stepsIruleKinds) :: Map Identifier (Set VisitKind)) ->
+     _stepsIruleKinds
+   {-# INLINE rule542 #-}
+   rule542 = \ ((_stepsIruleUsage) :: Map Identifier Int) ->
+     _stepsIruleUsage
+   {-# INLINE rule543 #-}
+   rule543 = \ ((_stepsIusedArgs) :: Set String) ->
+     _stepsIusedArgs
+   {-# INLINE rule544 #-}
+   rule544 = \  (_ :: ()) ->
+     Map.empty
+   {-# INLINE rule545 #-}
+   rule545 = \  (_ :: ()) ->
+     Map.empty
+   {-# INLINE rule546 #-}
+   rule546 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
+     _lhsIallFromToStates
+   {-# INLINE rule547 #-}
+   rule547 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
+     _lhsIallInitStates
+   {-# INLINE rule548 #-}
+   rule548 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
+     _lhsIallVisitKinds
+   {-# INLINE rule549 #-}
+   rule549 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
+     _lhsIavisitdefs
+   {-# INLINE rule550 #-}
+   rule550 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
+     _lhsIavisituses
+   {-# INLINE rule551 #-}
+   rule551 = \ ((_lhsIchildTypes) :: Map Identifier Type) ->
+     _lhsIchildTypes
+   {-# INLINE rule552 #-}
+   rule552 = \  (_ :: ()) ->
+     error "missing rule: Visit.Visit.steps.index"
+   {-# INLINE rule553 #-}
+   rule553 = \ kind_ ->
+     kind_
+   {-# INLINE rule554 #-}
+   rule554 = \ ((_lhsIoptions) :: Options) ->
+     _lhsIoptions
+   {-# INLINE rule555 #-}
+   rule555 = \  (_ :: ()) ->
+     error "missing rule: Visit.Visit.steps.prevMaxSimRefs"
+   {-# INLINE rule556 #-}
+   rule556 = \ ((_lhsIruledefs) :: Map Identifier (Set String)) ->
+     _lhsIruledefs
+   {-# INLINE rule557 #-}
+   rule557 = \ ((_lhsIruleuses) :: Map Identifier (Map String (Maybe NonLocalAttr))) ->
      _lhsIruleuses
 
 -- VisitStep ---------------------------------------------------
@@ -4018,65 +4227,65 @@ sem_VisitStep_Sem arg_name_ = T_VisitStep (return st50) where
       v49 :: T_VisitStep_v49 
       v49 = \ (T_VisitStep_vIn49 _lhsIallFromToStates _lhsIallInitStates _lhsIallVisitKinds _lhsIavisitdefs _lhsIavisituses _lhsIchildTypes _lhsIfmtMode _lhsIindex _lhsIisLast _lhsIkind _lhsIoptions _lhsIprevMaxSimRefs _lhsIruledefs _lhsIruleuses) -> ( let
          _lhsOruleUsage :: Map Identifier Int
-         _lhsOruleUsage = rule535 arg_name_
+         _lhsOruleUsage = rule558 arg_name_
          _lhsOdefs :: Set String
-         _lhsOdefs = rule536  ()
+         _lhsOdefs = rule559  ()
          _lhsOerrors :: Seq Error
-         _lhsOerrors = rule537  ()
+         _lhsOerrors = rule560  ()
          _lhsOlazyIntras :: Set String
-         _lhsOlazyIntras = rule538  ()
+         _lhsOlazyIntras = rule561  ()
          _lhsOruleKinds :: Map Identifier (Set VisitKind)
-         _lhsOruleKinds = rule539  ()
+         _lhsOruleKinds = rule562  ()
          _lhsOusedArgs :: Set String
-         _lhsOusedArgs = rule540  ()
+         _lhsOusedArgs = rule563  ()
          _lhsOuses :: Map String (Maybe NonLocalAttr)
-         _lhsOuses = rule541  ()
+         _lhsOuses = rule564  ()
          _lhsOvisitKinds :: Map VisitIdentifier VisitKind
-         _lhsOvisitKinds = rule542  ()
+         _lhsOvisitKinds = rule565  ()
          _lhsOindex :: Int
-         _lhsOindex = rule543 _lhsIindex
+         _lhsOindex = rule566 _lhsIindex
          _lhsOisLast :: Bool
-         _lhsOisLast = rule544 _lhsIisLast
+         _lhsOisLast = rule567 _lhsIisLast
          _lhsOprevMaxSimRefs :: Int
-         _lhsOprevMaxSimRefs = rule545 _lhsIprevMaxSimRefs
+         _lhsOprevMaxSimRefs = rule568 _lhsIprevMaxSimRefs
          __result_ = T_VisitStep_vOut49 _lhsOdefs _lhsOerrors _lhsOindex _lhsOisLast _lhsOlazyIntras _lhsOprevMaxSimRefs _lhsOruleKinds _lhsOruleUsage _lhsOusedArgs _lhsOuses _lhsOvisitKinds
          in __result_ )
      in C_VisitStep_s50 v49
-   {-# INLINE rule535 #-}
-   {-# LINE 1333 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule535 = \ name_ ->
-                                                 {-# LINE 1333 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# INLINE rule558 #-}
+   {-# LINE 1369 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule558 = \ name_ ->
+                                                 {-# LINE 1369 "src-ag/ExecutionPlan2TH.ag" #-}
                                                  Map.singleton name_ 1
-                                                 {-# LINE 4051 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule536 #-}
-   rule536 = \  (_ :: ()) ->
+                                                 {-# LINE 4260 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule559 #-}
+   rule559 = \  (_ :: ()) ->
      Set.empty
-   {-# INLINE rule537 #-}
-   rule537 = \  (_ :: ()) ->
+   {-# INLINE rule560 #-}
+   rule560 = \  (_ :: ()) ->
      Seq.empty
-   {-# INLINE rule538 #-}
-   rule538 = \  (_ :: ()) ->
+   {-# INLINE rule561 #-}
+   rule561 = \  (_ :: ()) ->
      Set.empty
-   {-# INLINE rule539 #-}
-   rule539 = \  (_ :: ()) ->
+   {-# INLINE rule562 #-}
+   rule562 = \  (_ :: ()) ->
      Map.empty
-   {-# INLINE rule540 #-}
-   rule540 = \  (_ :: ()) ->
+   {-# INLINE rule563 #-}
+   rule563 = \  (_ :: ()) ->
      Set.empty
-   {-# INLINE rule541 #-}
-   rule541 = \  (_ :: ()) ->
+   {-# INLINE rule564 #-}
+   rule564 = \  (_ :: ()) ->
      Map.empty
-   {-# INLINE rule542 #-}
-   rule542 = \  (_ :: ()) ->
+   {-# INLINE rule565 #-}
+   rule565 = \  (_ :: ()) ->
      mempty
-   {-# INLINE rule543 #-}
-   rule543 = \ ((_lhsIindex) :: Int) ->
+   {-# INLINE rule566 #-}
+   rule566 = \ ((_lhsIindex) :: Int) ->
      _lhsIindex
-   {-# INLINE rule544 #-}
-   rule544 = \ ((_lhsIisLast) :: Bool) ->
+   {-# INLINE rule567 #-}
+   rule567 = \ ((_lhsIisLast) :: Bool) ->
      _lhsIisLast
-   {-# INLINE rule545 #-}
-   rule545 = \ ((_lhsIprevMaxSimRefs) :: Int) ->
+   {-# INLINE rule568 #-}
+   rule568 = \ ((_lhsIprevMaxSimRefs) :: Int) ->
      _lhsIprevMaxSimRefs
 {-# NOINLINE sem_VisitStep_ChildVisit #-}
 sem_VisitStep_ChildVisit :: (Identifier) -> (NontermIdent) -> (VisitIdentifier) -> T_VisitStep 
@@ -4085,77 +4294,77 @@ sem_VisitStep_ChildVisit _ _ arg_visit_ = T_VisitStep (return st50) where
    st50 = let
       v49 :: T_VisitStep_v49 
       v49 = \ (T_VisitStep_vIn49 _lhsIallFromToStates _lhsIallInitStates _lhsIallVisitKinds _lhsIavisitdefs _lhsIavisituses _lhsIchildTypes _lhsIfmtMode _lhsIindex _lhsIisLast _lhsIkind _lhsIoptions _lhsIprevMaxSimRefs _lhsIruledefs _lhsIruleuses) -> ( let
-         _addbang = rule546 _lhsIoptions
-         (_from,_to) = rule547 _lhsIallFromToStates arg_visit_
+         _addbang = rule569 _lhsIoptions
+         (_from,_to) = rule570 _lhsIallFromToStates arg_visit_
          _lhsOdefs :: Set String
-         _lhsOdefs = rule548  ()
+         _lhsOdefs = rule571  ()
          _lhsOerrors :: Seq Error
-         _lhsOerrors = rule549  ()
+         _lhsOerrors = rule572  ()
          _lhsOlazyIntras :: Set String
-         _lhsOlazyIntras = rule550  ()
+         _lhsOlazyIntras = rule573  ()
          _lhsOruleKinds :: Map Identifier (Set VisitKind)
-         _lhsOruleKinds = rule551  ()
+         _lhsOruleKinds = rule574  ()
          _lhsOruleUsage :: Map Identifier Int
-         _lhsOruleUsage = rule552  ()
+         _lhsOruleUsage = rule575  ()
          _lhsOusedArgs :: Set String
-         _lhsOusedArgs = rule553  ()
+         _lhsOusedArgs = rule576  ()
          _lhsOuses :: Map String (Maybe NonLocalAttr)
-         _lhsOuses = rule554  ()
+         _lhsOuses = rule577  ()
          _lhsOvisitKinds :: Map VisitIdentifier VisitKind
-         _lhsOvisitKinds = rule555  ()
+         _lhsOvisitKinds = rule578  ()
          _lhsOindex :: Int
-         _lhsOindex = rule556 _lhsIindex
+         _lhsOindex = rule579 _lhsIindex
          _lhsOisLast :: Bool
-         _lhsOisLast = rule557 _lhsIisLast
+         _lhsOisLast = rule580 _lhsIisLast
          _lhsOprevMaxSimRefs :: Int
-         _lhsOprevMaxSimRefs = rule558 _lhsIprevMaxSimRefs
+         _lhsOprevMaxSimRefs = rule581 _lhsIprevMaxSimRefs
          __result_ = T_VisitStep_vOut49 _lhsOdefs _lhsOerrors _lhsOindex _lhsOisLast _lhsOlazyIntras _lhsOprevMaxSimRefs _lhsOruleKinds _lhsOruleUsage _lhsOusedArgs _lhsOuses _lhsOvisitKinds
          in __result_ )
      in C_VisitStep_s50 v49
-   {-# INLINE rule546 #-}
-   {-# LINE 1606 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule546 = \ ((_lhsIoptions) :: Options) ->
-                                                    {-# LINE 1606 "src-ag/ExecutionPlan2TH.ag" #-}
+   {-# INLINE rule569 #-}
+   {-# LINE 1645 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule569 = \ ((_lhsIoptions) :: Options) ->
+                                                    {-# LINE 1645 "src-ag/ExecutionPlan2TH.ag" #-}
                                                     \x -> if bangpats _lhsIoptions then TH.BangP x else x
-                                                    {-# LINE 4121 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule547 #-}
-   {-# LINE 1642 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule547 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) visit_ ->
-                         {-# LINE 1642 "src-ag/ExecutionPlan2TH.ag" #-}
+                                                    {-# LINE 4330 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule570 #-}
+   {-# LINE 1681 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule570 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) visit_ ->
+                         {-# LINE 1681 "src-ag/ExecutionPlan2TH.ag" #-}
                          Map.findWithDefault (error "visit not in allFromToStates") visit_ _lhsIallFromToStates
-                         {-# LINE 4127 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule548 #-}
-   rule548 = \  (_ :: ()) ->
+                         {-# LINE 4336 "src-generated/ExecutionPlan2TH.hs" #-}
+   {-# INLINE rule571 #-}
+   rule571 = \  (_ :: ()) ->
      Set.empty
-   {-# INLINE rule549 #-}
-   rule549 = \  (_ :: ()) ->
+   {-# INLINE rule572 #-}
+   rule572 = \  (_ :: ()) ->
      Seq.empty
-   {-# INLINE rule550 #-}
-   rule550 = \  (_ :: ()) ->
+   {-# INLINE rule573 #-}
+   rule573 = \  (_ :: ()) ->
      Set.empty
-   {-# INLINE rule551 #-}
-   rule551 = \  (_ :: ()) ->
+   {-# INLINE rule574 #-}
+   rule574 = \  (_ :: ()) ->
      Map.empty
-   {-# INLINE rule552 #-}
-   rule552 = \  (_ :: ()) ->
+   {-# INLINE rule575 #-}
+   rule575 = \  (_ :: ()) ->
      Map.empty
-   {-# INLINE rule553 #-}
-   rule553 = \  (_ :: ()) ->
+   {-# INLINE rule576 #-}
+   rule576 = \  (_ :: ()) ->
      Set.empty
-   {-# INLINE rule554 #-}
-   rule554 = \  (_ :: ()) ->
+   {-# INLINE rule577 #-}
+   rule577 = \  (_ :: ()) ->
      Map.empty
-   {-# INLINE rule555 #-}
-   rule555 = \  (_ :: ()) ->
+   {-# INLINE rule578 #-}
+   rule578 = \  (_ :: ()) ->
      mempty
-   {-# INLINE rule556 #-}
-   rule556 = \ ((_lhsIindex) :: Int) ->
+   {-# INLINE rule579 #-}
+   rule579 = \ ((_lhsIindex) :: Int) ->
      _lhsIindex
-   {-# INLINE rule557 #-}
-   rule557 = \ ((_lhsIisLast) :: Bool) ->
+   {-# INLINE rule580 #-}
+   rule580 = \ ((_lhsIisLast) :: Bool) ->
      _lhsIisLast
-   {-# INLINE rule558 #-}
-   rule558 = \ ((_lhsIprevMaxSimRefs) :: Int) ->
+   {-# INLINE rule581 #-}
+   rule581 = \ ((_lhsIprevMaxSimRefs) :: Int) ->
      _lhsIprevMaxSimRefs
 {-# NOINLINE sem_VisitStep_PureGroup #-}
 sem_VisitStep_PureGroup :: T_VisitSteps  -> (Bool) -> T_VisitStep 
@@ -4166,141 +4375,13 @@ sem_VisitStep_PureGroup arg_steps_ arg_ordered_ = T_VisitStep (return st50) wher
       v49 = \ (T_VisitStep_vIn49 _lhsIallFromToStates _lhsIallInitStates _lhsIallVisitKinds _lhsIavisitdefs _lhsIavisituses _lhsIchildTypes _lhsIfmtMode _lhsIindex _lhsIisLast _lhsIkind _lhsIoptions _lhsIprevMaxSimRefs _lhsIruledefs _lhsIruleuses) -> ( let
          _stepsX53 = Control.Monad.Identity.runIdentity (attach_T_VisitSteps (arg_steps_))
          (T_VisitSteps_vOut52 _stepsIdefs _stepsIerrors _stepsIindex _stepsIisLast _stepsIlazyIntras _stepsIprevMaxSimRefs _stepsIruleKinds _stepsIruleUsage _stepsIsize _stepsIusedArgs _stepsIuses _stepsIvisitKinds) = inv_VisitSteps_s53 _stepsX53 (T_VisitSteps_vIn52 _stepsOallFromToStates _stepsOallInitStates _stepsOallVisitKinds _stepsOavisitdefs _stepsOavisituses _stepsOchildTypes _stepsOfmtMode _stepsOindex _stepsOkind _stepsOoptions _stepsOprevMaxSimRefs _stepsOruledefs _stepsOruleuses)
-         _stepsOfmtMode = rule559 _lhsIfmtMode
+         _stepsOfmtMode = rule582 _lhsIfmtMode
          _lhsOlazyIntras :: Set String
-         _lhsOlazyIntras = rule560 _stepsIdefs _stepsIlazyIntras arg_ordered_
+         _lhsOlazyIntras = rule583 _stepsIdefs _stepsIlazyIntras arg_ordered_
          _lhsOdefs :: Set String
-         _lhsOdefs = rule561 _stepsIdefs
+         _lhsOdefs = rule584 _stepsIdefs
          _lhsOerrors :: Seq Error
-         _lhsOerrors = rule562 _stepsIerrors
-         _lhsOruleKinds :: Map Identifier (Set VisitKind)
-         _lhsOruleKinds = rule563 _stepsIruleKinds
-         _lhsOruleUsage :: Map Identifier Int
-         _lhsOruleUsage = rule564 _stepsIruleUsage
-         _lhsOusedArgs :: Set String
-         _lhsOusedArgs = rule565 _stepsIusedArgs
-         _lhsOuses :: Map String (Maybe NonLocalAttr)
-         _lhsOuses = rule566 _stepsIuses
-         _lhsOvisitKinds :: Map VisitIdentifier VisitKind
-         _lhsOvisitKinds = rule567 _stepsIvisitKinds
-         _lhsOindex :: Int
-         _lhsOindex = rule568 _stepsIindex
-         _lhsOisLast :: Bool
-         _lhsOisLast = rule569 _stepsIisLast
-         _lhsOprevMaxSimRefs :: Int
-         _lhsOprevMaxSimRefs = rule570 _stepsIprevMaxSimRefs
-         _stepsOallFromToStates = rule571 _lhsIallFromToStates
-         _stepsOallInitStates = rule572 _lhsIallInitStates
-         _stepsOallVisitKinds = rule573 _lhsIallVisitKinds
-         _stepsOavisitdefs = rule574 _lhsIavisitdefs
-         _stepsOavisituses = rule575 _lhsIavisituses
-         _stepsOchildTypes = rule576 _lhsIchildTypes
-         _stepsOindex = rule577 _lhsIindex
-         _stepsOkind = rule578 _lhsIkind
-         _stepsOoptions = rule579 _lhsIoptions
-         _stepsOprevMaxSimRefs = rule580 _lhsIprevMaxSimRefs
-         _stepsOruledefs = rule581 _lhsIruledefs
-         _stepsOruleuses = rule582 _lhsIruleuses
-         __result_ = T_VisitStep_vOut49 _lhsOdefs _lhsOerrors _lhsOindex _lhsOisLast _lhsOlazyIntras _lhsOprevMaxSimRefs _lhsOruleKinds _lhsOruleUsage _lhsOusedArgs _lhsOuses _lhsOvisitKinds
-         in __result_ )
-     in C_VisitStep_s50 v49
-   {-# INLINE rule559 #-}
-   {-# LINE 897 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule559 = \ ((_lhsIfmtMode) :: FormatMode) ->
-                    {-# LINE 897 "src-ag/ExecutionPlan2TH.ag" #-}
-                    case _lhsIfmtMode of
-                      FormatDo      -> FormatLetDecl
-                      mode          -> mode
-                    {-# LINE 4215 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule560 #-}
-   {-# LINE 1451 "src-ag/ExecutionPlan2TH.ag" #-}
-   rule560 = \ ((_stepsIdefs) :: Set String) ((_stepsIlazyIntras) :: Set String) ordered_ ->
-                     {-# LINE 1451 "src-ag/ExecutionPlan2TH.ag" #-}
-                     if ordered_
-                     then _stepsIlazyIntras
-                     else _stepsIdefs
-                     {-# LINE 4223 "src-generated/ExecutionPlan2TH.hs" #-}
-   {-# INLINE rule561 #-}
-   rule561 = \ ((_stepsIdefs) :: Set String) ->
-     _stepsIdefs
-   {-# INLINE rule562 #-}
-   rule562 = \ ((_stepsIerrors) :: Seq Error) ->
-     _stepsIerrors
-   {-# INLINE rule563 #-}
-   rule563 = \ ((_stepsIruleKinds) :: Map Identifier (Set VisitKind)) ->
-     _stepsIruleKinds
-   {-# INLINE rule564 #-}
-   rule564 = \ ((_stepsIruleUsage) :: Map Identifier Int) ->
-     _stepsIruleUsage
-   {-# INLINE rule565 #-}
-   rule565 = \ ((_stepsIusedArgs) :: Set String) ->
-     _stepsIusedArgs
-   {-# INLINE rule566 #-}
-   rule566 = \ ((_stepsIuses) :: Map String (Maybe NonLocalAttr)) ->
-     _stepsIuses
-   {-# INLINE rule567 #-}
-   rule567 = \ ((_stepsIvisitKinds) :: Map VisitIdentifier VisitKind) ->
-     _stepsIvisitKinds
-   {-# INLINE rule568 #-}
-   rule568 = \ ((_stepsIindex) :: Int) ->
-     _stepsIindex
-   {-# INLINE rule569 #-}
-   rule569 = \ ((_stepsIisLast) :: Bool) ->
-     _stepsIisLast
-   {-# INLINE rule570 #-}
-   rule570 = \ ((_stepsIprevMaxSimRefs) :: Int) ->
-     _stepsIprevMaxSimRefs
-   {-# INLINE rule571 #-}
-   rule571 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
-     _lhsIallFromToStates
-   {-# INLINE rule572 #-}
-   rule572 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
-     _lhsIallInitStates
-   {-# INLINE rule573 #-}
-   rule573 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
-     _lhsIallVisitKinds
-   {-# INLINE rule574 #-}
-   rule574 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
-     _lhsIavisitdefs
-   {-# INLINE rule575 #-}
-   rule575 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
-     _lhsIavisituses
-   {-# INLINE rule576 #-}
-   rule576 = \ ((_lhsIchildTypes) :: Map Identifier Type) ->
-     _lhsIchildTypes
-   {-# INLINE rule577 #-}
-   rule577 = \ ((_lhsIindex) :: Int) ->
-     _lhsIindex
-   {-# INLINE rule578 #-}
-   rule578 = \ ((_lhsIkind) :: VisitKind) ->
-     _lhsIkind
-   {-# INLINE rule579 #-}
-   rule579 = \ ((_lhsIoptions) :: Options) ->
-     _lhsIoptions
-   {-# INLINE rule580 #-}
-   rule580 = \ ((_lhsIprevMaxSimRefs) :: Int) ->
-     _lhsIprevMaxSimRefs
-   {-# INLINE rule581 #-}
-   rule581 = \ ((_lhsIruledefs) :: Map Identifier (Set String)) ->
-     _lhsIruledefs
-   {-# INLINE rule582 #-}
-   rule582 = \ ((_lhsIruleuses) :: Map Identifier (Map String (Maybe NonLocalAttr))) ->
-     _lhsIruleuses
-{-# NOINLINE sem_VisitStep_Sim #-}
-sem_VisitStep_Sim :: T_VisitSteps  -> T_VisitStep 
-sem_VisitStep_Sim arg_steps_ = T_VisitStep (return st50) where
-   {-# NOINLINE st50 #-}
-   st50 = let
-      v49 :: T_VisitStep_v49 
-      v49 = \ (T_VisitStep_vIn49 _lhsIallFromToStates _lhsIallInitStates _lhsIallVisitKinds _lhsIavisitdefs _lhsIavisituses _lhsIchildTypes _lhsIfmtMode _lhsIindex _lhsIisLast _lhsIkind _lhsIoptions _lhsIprevMaxSimRefs _lhsIruledefs _lhsIruleuses) -> ( let
-         _stepsX53 = Control.Monad.Identity.runIdentity (attach_T_VisitSteps (arg_steps_))
-         (T_VisitSteps_vOut52 _stepsIdefs _stepsIerrors _stepsIindex _stepsIisLast _stepsIlazyIntras _stepsIprevMaxSimRefs _stepsIruleKinds _stepsIruleUsage _stepsIsize _stepsIusedArgs _stepsIuses _stepsIvisitKinds) = inv_VisitSteps_s53 _stepsX53 (T_VisitSteps_vIn52 _stepsOallFromToStates _stepsOallInitStates _stepsOallVisitKinds _stepsOavisitdefs _stepsOavisituses _stepsOchildTypes _stepsOfmtMode _stepsOindex _stepsOkind _stepsOoptions _stepsOprevMaxSimRefs _stepsOruledefs _stepsOruleuses)
-         _lhsOdefs :: Set String
-         _lhsOdefs = rule583 _stepsIdefs
-         _lhsOerrors :: Seq Error
-         _lhsOerrors = rule584 _stepsIerrors
-         _lhsOlazyIntras :: Set String
-         _lhsOlazyIntras = rule585 _stepsIlazyIntras
+         _lhsOerrors = rule585 _stepsIerrors
          _lhsOruleKinds :: Map Identifier (Set VisitKind)
          _lhsOruleKinds = rule586 _stepsIruleKinds
          _lhsOruleUsage :: Map Identifier Int
@@ -4323,25 +4404,37 @@ sem_VisitStep_Sim arg_steps_ = T_VisitStep (return st50) where
          _stepsOavisitdefs = rule597 _lhsIavisitdefs
          _stepsOavisituses = rule598 _lhsIavisituses
          _stepsOchildTypes = rule599 _lhsIchildTypes
-         _stepsOfmtMode = rule600 _lhsIfmtMode
-         _stepsOindex = rule601 _lhsIindex
-         _stepsOkind = rule602 _lhsIkind
-         _stepsOoptions = rule603 _lhsIoptions
-         _stepsOprevMaxSimRefs = rule604 _lhsIprevMaxSimRefs
-         _stepsOruledefs = rule605 _lhsIruledefs
-         _stepsOruleuses = rule606 _lhsIruleuses
+         _stepsOindex = rule600 _lhsIindex
+         _stepsOkind = rule601 _lhsIkind
+         _stepsOoptions = rule602 _lhsIoptions
+         _stepsOprevMaxSimRefs = rule603 _lhsIprevMaxSimRefs
+         _stepsOruledefs = rule604 _lhsIruledefs
+         _stepsOruleuses = rule605 _lhsIruleuses
          __result_ = T_VisitStep_vOut49 _lhsOdefs _lhsOerrors _lhsOindex _lhsOisLast _lhsOlazyIntras _lhsOprevMaxSimRefs _lhsOruleKinds _lhsOruleUsage _lhsOusedArgs _lhsOuses _lhsOvisitKinds
          in __result_ )
      in C_VisitStep_s50 v49
+   {-# INLINE rule582 #-}
+   {-# LINE 933 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule582 = \ ((_lhsIfmtMode) :: FormatMode) ->
+                    {-# LINE 933 "src-ag/ExecutionPlan2TH.ag" #-}
+                    case _lhsIfmtMode of
+                      FormatDo      -> FormatLetDecl
+                      mode          -> mode
+                    {-# LINE 4424 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule583 #-}
-   rule583 = \ ((_stepsIdefs) :: Set String) ->
-     _stepsIdefs
+   {-# LINE 1487 "src-ag/ExecutionPlan2TH.ag" #-}
+   rule583 = \ ((_stepsIdefs) :: Set String) ((_stepsIlazyIntras) :: Set String) ordered_ ->
+                     {-# LINE 1487 "src-ag/ExecutionPlan2TH.ag" #-}
+                     if ordered_
+                     then _stepsIlazyIntras
+                     else _stepsIdefs
+                     {-# LINE 4432 "src-generated/ExecutionPlan2TH.hs" #-}
    {-# INLINE rule584 #-}
-   rule584 = \ ((_stepsIerrors) :: Seq Error) ->
-     _stepsIerrors
+   rule584 = \ ((_stepsIdefs) :: Set String) ->
+     _stepsIdefs
    {-# INLINE rule585 #-}
-   rule585 = \ ((_stepsIlazyIntras) :: Set String) ->
-     _stepsIlazyIntras
+   rule585 = \ ((_stepsIerrors) :: Seq Error) ->
+     _stepsIerrors
    {-# INLINE rule586 #-}
    rule586 = \ ((_stepsIruleKinds) :: Map Identifier (Set VisitKind)) ->
      _stepsIruleKinds
@@ -4385,25 +4478,141 @@ sem_VisitStep_Sim arg_steps_ = T_VisitStep (return st50) where
    rule599 = \ ((_lhsIchildTypes) :: Map Identifier Type) ->
      _lhsIchildTypes
    {-# INLINE rule600 #-}
-   rule600 = \ ((_lhsIfmtMode) :: FormatMode) ->
-     _lhsIfmtMode
-   {-# INLINE rule601 #-}
-   rule601 = \ ((_lhsIindex) :: Int) ->
+   rule600 = \ ((_lhsIindex) :: Int) ->
      _lhsIindex
-   {-# INLINE rule602 #-}
-   rule602 = \ ((_lhsIkind) :: VisitKind) ->
+   {-# INLINE rule601 #-}
+   rule601 = \ ((_lhsIkind) :: VisitKind) ->
      _lhsIkind
-   {-# INLINE rule603 #-}
-   rule603 = \ ((_lhsIoptions) :: Options) ->
+   {-# INLINE rule602 #-}
+   rule602 = \ ((_lhsIoptions) :: Options) ->
      _lhsIoptions
-   {-# INLINE rule604 #-}
-   rule604 = \ ((_lhsIprevMaxSimRefs) :: Int) ->
+   {-# INLINE rule603 #-}
+   rule603 = \ ((_lhsIprevMaxSimRefs) :: Int) ->
      _lhsIprevMaxSimRefs
-   {-# INLINE rule605 #-}
-   rule605 = \ ((_lhsIruledefs) :: Map Identifier (Set String)) ->
+   {-# INLINE rule604 #-}
+   rule604 = \ ((_lhsIruledefs) :: Map Identifier (Set String)) ->
      _lhsIruledefs
+   {-# INLINE rule605 #-}
+   rule605 = \ ((_lhsIruleuses) :: Map Identifier (Map String (Maybe NonLocalAttr))) ->
+     _lhsIruleuses
+{-# NOINLINE sem_VisitStep_Sim #-}
+sem_VisitStep_Sim :: T_VisitSteps  -> T_VisitStep 
+sem_VisitStep_Sim arg_steps_ = T_VisitStep (return st50) where
+   {-# NOINLINE st50 #-}
+   st50 = let
+      v49 :: T_VisitStep_v49 
+      v49 = \ (T_VisitStep_vIn49 _lhsIallFromToStates _lhsIallInitStates _lhsIallVisitKinds _lhsIavisitdefs _lhsIavisituses _lhsIchildTypes _lhsIfmtMode _lhsIindex _lhsIisLast _lhsIkind _lhsIoptions _lhsIprevMaxSimRefs _lhsIruledefs _lhsIruleuses) -> ( let
+         _stepsX53 = Control.Monad.Identity.runIdentity (attach_T_VisitSteps (arg_steps_))
+         (T_VisitSteps_vOut52 _stepsIdefs _stepsIerrors _stepsIindex _stepsIisLast _stepsIlazyIntras _stepsIprevMaxSimRefs _stepsIruleKinds _stepsIruleUsage _stepsIsize _stepsIusedArgs _stepsIuses _stepsIvisitKinds) = inv_VisitSteps_s53 _stepsX53 (T_VisitSteps_vIn52 _stepsOallFromToStates _stepsOallInitStates _stepsOallVisitKinds _stepsOavisitdefs _stepsOavisituses _stepsOchildTypes _stepsOfmtMode _stepsOindex _stepsOkind _stepsOoptions _stepsOprevMaxSimRefs _stepsOruledefs _stepsOruleuses)
+         _lhsOdefs :: Set String
+         _lhsOdefs = rule606 _stepsIdefs
+         _lhsOerrors :: Seq Error
+         _lhsOerrors = rule607 _stepsIerrors
+         _lhsOlazyIntras :: Set String
+         _lhsOlazyIntras = rule608 _stepsIlazyIntras
+         _lhsOruleKinds :: Map Identifier (Set VisitKind)
+         _lhsOruleKinds = rule609 _stepsIruleKinds
+         _lhsOruleUsage :: Map Identifier Int
+         _lhsOruleUsage = rule610 _stepsIruleUsage
+         _lhsOusedArgs :: Set String
+         _lhsOusedArgs = rule611 _stepsIusedArgs
+         _lhsOuses :: Map String (Maybe NonLocalAttr)
+         _lhsOuses = rule612 _stepsIuses
+         _lhsOvisitKinds :: Map VisitIdentifier VisitKind
+         _lhsOvisitKinds = rule613 _stepsIvisitKinds
+         _lhsOindex :: Int
+         _lhsOindex = rule614 _stepsIindex
+         _lhsOisLast :: Bool
+         _lhsOisLast = rule615 _stepsIisLast
+         _lhsOprevMaxSimRefs :: Int
+         _lhsOprevMaxSimRefs = rule616 _stepsIprevMaxSimRefs
+         _stepsOallFromToStates = rule617 _lhsIallFromToStates
+         _stepsOallInitStates = rule618 _lhsIallInitStates
+         _stepsOallVisitKinds = rule619 _lhsIallVisitKinds
+         _stepsOavisitdefs = rule620 _lhsIavisitdefs
+         _stepsOavisituses = rule621 _lhsIavisituses
+         _stepsOchildTypes = rule622 _lhsIchildTypes
+         _stepsOfmtMode = rule623 _lhsIfmtMode
+         _stepsOindex = rule624 _lhsIindex
+         _stepsOkind = rule625 _lhsIkind
+         _stepsOoptions = rule626 _lhsIoptions
+         _stepsOprevMaxSimRefs = rule627 _lhsIprevMaxSimRefs
+         _stepsOruledefs = rule628 _lhsIruledefs
+         _stepsOruleuses = rule629 _lhsIruleuses
+         __result_ = T_VisitStep_vOut49 _lhsOdefs _lhsOerrors _lhsOindex _lhsOisLast _lhsOlazyIntras _lhsOprevMaxSimRefs _lhsOruleKinds _lhsOruleUsage _lhsOusedArgs _lhsOuses _lhsOvisitKinds
+         in __result_ )
+     in C_VisitStep_s50 v49
    {-# INLINE rule606 #-}
-   rule606 = \ ((_lhsIruleuses) :: Map Identifier (Map String (Maybe NonLocalAttr))) ->
+   rule606 = \ ((_stepsIdefs) :: Set String) ->
+     _stepsIdefs
+   {-# INLINE rule607 #-}
+   rule607 = \ ((_stepsIerrors) :: Seq Error) ->
+     _stepsIerrors
+   {-# INLINE rule608 #-}
+   rule608 = \ ((_stepsIlazyIntras) :: Set String) ->
+     _stepsIlazyIntras
+   {-# INLINE rule609 #-}
+   rule609 = \ ((_stepsIruleKinds) :: Map Identifier (Set VisitKind)) ->
+     _stepsIruleKinds
+   {-# INLINE rule610 #-}
+   rule610 = \ ((_stepsIruleUsage) :: Map Identifier Int) ->
+     _stepsIruleUsage
+   {-# INLINE rule611 #-}
+   rule611 = \ ((_stepsIusedArgs) :: Set String) ->
+     _stepsIusedArgs
+   {-# INLINE rule612 #-}
+   rule612 = \ ((_stepsIuses) :: Map String (Maybe NonLocalAttr)) ->
+     _stepsIuses
+   {-# INLINE rule613 #-}
+   rule613 = \ ((_stepsIvisitKinds) :: Map VisitIdentifier VisitKind) ->
+     _stepsIvisitKinds
+   {-# INLINE rule614 #-}
+   rule614 = \ ((_stepsIindex) :: Int) ->
+     _stepsIindex
+   {-# INLINE rule615 #-}
+   rule615 = \ ((_stepsIisLast) :: Bool) ->
+     _stepsIisLast
+   {-# INLINE rule616 #-}
+   rule616 = \ ((_stepsIprevMaxSimRefs) :: Int) ->
+     _stepsIprevMaxSimRefs
+   {-# INLINE rule617 #-}
+   rule617 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
+     _lhsIallFromToStates
+   {-# INLINE rule618 #-}
+   rule618 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
+     _lhsIallInitStates
+   {-# INLINE rule619 #-}
+   rule619 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
+     _lhsIallVisitKinds
+   {-# INLINE rule620 #-}
+   rule620 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
+     _lhsIavisitdefs
+   {-# INLINE rule621 #-}
+   rule621 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
+     _lhsIavisituses
+   {-# INLINE rule622 #-}
+   rule622 = \ ((_lhsIchildTypes) :: Map Identifier Type) ->
+     _lhsIchildTypes
+   {-# INLINE rule623 #-}
+   rule623 = \ ((_lhsIfmtMode) :: FormatMode) ->
+     _lhsIfmtMode
+   {-# INLINE rule624 #-}
+   rule624 = \ ((_lhsIindex) :: Int) ->
+     _lhsIindex
+   {-# INLINE rule625 #-}
+   rule625 = \ ((_lhsIkind) :: VisitKind) ->
+     _lhsIkind
+   {-# INLINE rule626 #-}
+   rule626 = \ ((_lhsIoptions) :: Options) ->
+     _lhsIoptions
+   {-# INLINE rule627 #-}
+   rule627 = \ ((_lhsIprevMaxSimRefs) :: Int) ->
+     _lhsIprevMaxSimRefs
+   {-# INLINE rule628 #-}
+   rule628 = \ ((_lhsIruledefs) :: Map Identifier (Set String)) ->
+     _lhsIruledefs
+   {-# INLINE rule629 #-}
+   rule629 = \ ((_lhsIruleuses) :: Map Identifier (Map String (Maybe NonLocalAttr))) ->
      _lhsIruleuses
 {-# NOINLINE sem_VisitStep_ChildIntro #-}
 sem_VisitStep_ChildIntro :: (Identifier) -> T_VisitStep 
@@ -4413,62 +4622,62 @@ sem_VisitStep_ChildIntro _ = T_VisitStep (return st50) where
       v49 :: T_VisitStep_v49 
       v49 = \ (T_VisitStep_vIn49 _lhsIallFromToStates _lhsIallInitStates _lhsIallVisitKinds _lhsIavisitdefs _lhsIavisituses _lhsIchildTypes _lhsIfmtMode _lhsIindex _lhsIisLast _lhsIkind _lhsIoptions _lhsIprevMaxSimRefs _lhsIruledefs _lhsIruleuses) -> ( let
          _lhsOdefs :: Set String
-         _lhsOdefs = rule607  ()
+         _lhsOdefs = rule630  ()
          _lhsOerrors :: Seq Error
-         _lhsOerrors = rule608  ()
+         _lhsOerrors = rule631  ()
          _lhsOlazyIntras :: Set String
-         _lhsOlazyIntras = rule609  ()
+         _lhsOlazyIntras = rule632  ()
          _lhsOruleKinds :: Map Identifier (Set VisitKind)
-         _lhsOruleKinds = rule610  ()
+         _lhsOruleKinds = rule633  ()
          _lhsOruleUsage :: Map Identifier Int
-         _lhsOruleUsage = rule611  ()
+         _lhsOruleUsage = rule634  ()
          _lhsOusedArgs :: Set String
-         _lhsOusedArgs = rule612  ()
+         _lhsOusedArgs = rule635  ()
          _lhsOuses :: Map String (Maybe NonLocalAttr)
-         _lhsOuses = rule613  ()
+         _lhsOuses = rule636  ()
          _lhsOvisitKinds :: Map VisitIdentifier VisitKind
-         _lhsOvisitKinds = rule614  ()
+         _lhsOvisitKinds = rule637  ()
          _lhsOindex :: Int
-         _lhsOindex = rule615 _lhsIindex
+         _lhsOindex = rule638 _lhsIindex
          _lhsOisLast :: Bool
-         _lhsOisLast = rule616 _lhsIisLast
+         _lhsOisLast = rule639 _lhsIisLast
          _lhsOprevMaxSimRefs :: Int
-         _lhsOprevMaxSimRefs = rule617 _lhsIprevMaxSimRefs
+         _lhsOprevMaxSimRefs = rule640 _lhsIprevMaxSimRefs
          __result_ = T_VisitStep_vOut49 _lhsOdefs _lhsOerrors _lhsOindex _lhsOisLast _lhsOlazyIntras _lhsOprevMaxSimRefs _lhsOruleKinds _lhsOruleUsage _lhsOusedArgs _lhsOuses _lhsOvisitKinds
          in __result_ )
      in C_VisitStep_s50 v49
-   {-# INLINE rule607 #-}
-   rule607 = \  (_ :: ()) ->
+   {-# INLINE rule630 #-}
+   rule630 = \  (_ :: ()) ->
      Set.empty
-   {-# INLINE rule608 #-}
-   rule608 = \  (_ :: ()) ->
+   {-# INLINE rule631 #-}
+   rule631 = \  (_ :: ()) ->
      Seq.empty
-   {-# INLINE rule609 #-}
-   rule609 = \  (_ :: ()) ->
+   {-# INLINE rule632 #-}
+   rule632 = \  (_ :: ()) ->
      Set.empty
-   {-# INLINE rule610 #-}
-   rule610 = \  (_ :: ()) ->
+   {-# INLINE rule633 #-}
+   rule633 = \  (_ :: ()) ->
      Map.empty
-   {-# INLINE rule611 #-}
-   rule611 = \  (_ :: ()) ->
+   {-# INLINE rule634 #-}
+   rule634 = \  (_ :: ()) ->
      Map.empty
-   {-# INLINE rule612 #-}
-   rule612 = \  (_ :: ()) ->
+   {-# INLINE rule635 #-}
+   rule635 = \  (_ :: ()) ->
      Set.empty
-   {-# INLINE rule613 #-}
-   rule613 = \  (_ :: ()) ->
+   {-# INLINE rule636 #-}
+   rule636 = \  (_ :: ()) ->
      Map.empty
-   {-# INLINE rule614 #-}
-   rule614 = \  (_ :: ()) ->
+   {-# INLINE rule637 #-}
+   rule637 = \  (_ :: ()) ->
      mempty
-   {-# INLINE rule615 #-}
-   rule615 = \ ((_lhsIindex) :: Int) ->
+   {-# INLINE rule638 #-}
+   rule638 = \ ((_lhsIindex) :: Int) ->
      _lhsIindex
-   {-# INLINE rule616 #-}
-   rule616 = \ ((_lhsIisLast) :: Bool) ->
+   {-# INLINE rule639 #-}
+   rule639 = \ ((_lhsIisLast) :: Bool) ->
      _lhsIisLast
-   {-# INLINE rule617 #-}
-   rule617 = \ ((_lhsIprevMaxSimRefs) :: Int) ->
+   {-# INLINE rule640 #-}
+   rule640 = \ ((_lhsIprevMaxSimRefs) :: Int) ->
      _lhsIprevMaxSimRefs
 
 -- VisitSteps --------------------------------------------------
@@ -4513,175 +4722,175 @@ sem_VisitSteps_Cons arg_hd_ arg_tl_ = T_VisitSteps (return st53) where
          (T_VisitStep_vOut49 _hdIdefs _hdIerrors _hdIindex _hdIisLast _hdIlazyIntras _hdIprevMaxSimRefs _hdIruleKinds _hdIruleUsage _hdIusedArgs _hdIuses _hdIvisitKinds) = inv_VisitStep_s50 _hdX50 (T_VisitStep_vIn49 _hdOallFromToStates _hdOallInitStates _hdOallVisitKinds _hdOavisitdefs _hdOavisituses _hdOchildTypes _hdOfmtMode _hdOindex _hdOisLast _hdOkind _hdOoptions _hdOprevMaxSimRefs _hdOruledefs _hdOruleuses)
          (T_VisitSteps_vOut52 _tlIdefs _tlIerrors _tlIindex _tlIisLast _tlIlazyIntras _tlIprevMaxSimRefs _tlIruleKinds _tlIruleUsage _tlIsize _tlIusedArgs _tlIuses _tlIvisitKinds) = inv_VisitSteps_s53 _tlX53 (T_VisitSteps_vIn52 _tlOallFromToStates _tlOallInitStates _tlOallVisitKinds _tlOavisitdefs _tlOavisituses _tlOchildTypes _tlOfmtMode _tlOindex _tlOkind _tlOoptions _tlOprevMaxSimRefs _tlOruledefs _tlOruleuses)
          _lhsOdefs :: Set String
-         _lhsOdefs = rule618 _hdIdefs _tlIdefs
+         _lhsOdefs = rule641 _hdIdefs _tlIdefs
          _lhsOerrors :: Seq Error
-         _lhsOerrors = rule619 _hdIerrors _tlIerrors
+         _lhsOerrors = rule642 _hdIerrors _tlIerrors
          _lhsOlazyIntras :: Set String
-         _lhsOlazyIntras = rule620 _hdIlazyIntras _tlIlazyIntras
+         _lhsOlazyIntras = rule643 _hdIlazyIntras _tlIlazyIntras
          _lhsOruleKinds :: Map Identifier (Set VisitKind)
-         _lhsOruleKinds = rule621 _hdIruleKinds _tlIruleKinds
+         _lhsOruleKinds = rule644 _hdIruleKinds _tlIruleKinds
          _lhsOruleUsage :: Map Identifier Int
-         _lhsOruleUsage = rule622 _hdIruleUsage _tlIruleUsage
+         _lhsOruleUsage = rule645 _hdIruleUsage _tlIruleUsage
          _lhsOusedArgs :: Set String
-         _lhsOusedArgs = rule623 _hdIusedArgs _tlIusedArgs
+         _lhsOusedArgs = rule646 _hdIusedArgs _tlIusedArgs
          _lhsOuses :: Map String (Maybe NonLocalAttr)
-         _lhsOuses = rule624 _hdIuses _tlIuses
+         _lhsOuses = rule647 _hdIuses _tlIuses
          _lhsOvisitKinds :: Map VisitIdentifier VisitKind
-         _lhsOvisitKinds = rule625 _hdIvisitKinds _tlIvisitKinds
+         _lhsOvisitKinds = rule648 _hdIvisitKinds _tlIvisitKinds
          _lhsOindex :: Int
-         _lhsOindex = rule626 _tlIindex
+         _lhsOindex = rule649 _tlIindex
          _lhsOisLast :: Bool
-         _lhsOisLast = rule627 _tlIisLast
+         _lhsOisLast = rule650 _tlIisLast
          _lhsOprevMaxSimRefs :: Int
-         _lhsOprevMaxSimRefs = rule628 _tlIprevMaxSimRefs
+         _lhsOprevMaxSimRefs = rule651 _tlIprevMaxSimRefs
          _lhsOsize :: Int
-         _lhsOsize = rule629 _tlIsize
-         _hdOallFromToStates = rule630 _lhsIallFromToStates
-         _hdOallInitStates = rule631 _lhsIallInitStates
-         _hdOallVisitKinds = rule632 _lhsIallVisitKinds
-         _hdOavisitdefs = rule633 _lhsIavisitdefs
-         _hdOavisituses = rule634 _lhsIavisituses
-         _hdOchildTypes = rule635 _lhsIchildTypes
-         _hdOfmtMode = rule636 _lhsIfmtMode
-         _hdOindex = rule637 _lhsIindex
-         _hdOisLast = rule638  ()
-         _hdOkind = rule639 _lhsIkind
-         _hdOoptions = rule640 _lhsIoptions
-         _hdOprevMaxSimRefs = rule641 _lhsIprevMaxSimRefs
-         _hdOruledefs = rule642 _lhsIruledefs
-         _hdOruleuses = rule643 _lhsIruleuses
-         _tlOallFromToStates = rule644 _lhsIallFromToStates
-         _tlOallInitStates = rule645 _lhsIallInitStates
-         _tlOallVisitKinds = rule646 _lhsIallVisitKinds
-         _tlOavisitdefs = rule647 _lhsIavisitdefs
-         _tlOavisituses = rule648 _lhsIavisituses
-         _tlOchildTypes = rule649 _lhsIchildTypes
-         _tlOfmtMode = rule650 _lhsIfmtMode
-         _tlOindex = rule651 _hdIindex
-         _tlOkind = rule652 _lhsIkind
-         _tlOoptions = rule653 _lhsIoptions
-         _tlOprevMaxSimRefs = rule654 _hdIprevMaxSimRefs
-         _tlOruledefs = rule655 _lhsIruledefs
-         _tlOruleuses = rule656 _lhsIruleuses
+         _lhsOsize = rule652 _tlIsize
+         _hdOallFromToStates = rule653 _lhsIallFromToStates
+         _hdOallInitStates = rule654 _lhsIallInitStates
+         _hdOallVisitKinds = rule655 _lhsIallVisitKinds
+         _hdOavisitdefs = rule656 _lhsIavisitdefs
+         _hdOavisituses = rule657 _lhsIavisituses
+         _hdOchildTypes = rule658 _lhsIchildTypes
+         _hdOfmtMode = rule659 _lhsIfmtMode
+         _hdOindex = rule660 _lhsIindex
+         _hdOisLast = rule661  ()
+         _hdOkind = rule662 _lhsIkind
+         _hdOoptions = rule663 _lhsIoptions
+         _hdOprevMaxSimRefs = rule664 _lhsIprevMaxSimRefs
+         _hdOruledefs = rule665 _lhsIruledefs
+         _hdOruleuses = rule666 _lhsIruleuses
+         _tlOallFromToStates = rule667 _lhsIallFromToStates
+         _tlOallInitStates = rule668 _lhsIallInitStates
+         _tlOallVisitKinds = rule669 _lhsIallVisitKinds
+         _tlOavisitdefs = rule670 _lhsIavisitdefs
+         _tlOavisituses = rule671 _lhsIavisituses
+         _tlOchildTypes = rule672 _lhsIchildTypes
+         _tlOfmtMode = rule673 _lhsIfmtMode
+         _tlOindex = rule674 _hdIindex
+         _tlOkind = rule675 _lhsIkind
+         _tlOoptions = rule676 _lhsIoptions
+         _tlOprevMaxSimRefs = rule677 _hdIprevMaxSimRefs
+         _tlOruledefs = rule678 _lhsIruledefs
+         _tlOruleuses = rule679 _lhsIruleuses
          __result_ = T_VisitSteps_vOut52 _lhsOdefs _lhsOerrors _lhsOindex _lhsOisLast _lhsOlazyIntras _lhsOprevMaxSimRefs _lhsOruleKinds _lhsOruleUsage _lhsOsize _lhsOusedArgs _lhsOuses _lhsOvisitKinds
          in __result_ )
      in C_VisitSteps_s53 v52
-   {-# INLINE rule618 #-}
-   rule618 = \ ((_hdIdefs) :: Set String) ((_tlIdefs) :: Set String) ->
-     _hdIdefs `Set.union` _tlIdefs
-   {-# INLINE rule619 #-}
-   rule619 = \ ((_hdIerrors) :: Seq Error) ((_tlIerrors) :: Seq Error) ->
-     _hdIerrors Seq.>< _tlIerrors
-   {-# INLINE rule620 #-}
-   rule620 = \ ((_hdIlazyIntras) :: Set String) ((_tlIlazyIntras) :: Set String) ->
-     _hdIlazyIntras `Set.union` _tlIlazyIntras
-   {-# INLINE rule621 #-}
-   rule621 = \ ((_hdIruleKinds) :: Map Identifier (Set VisitKind)) ((_tlIruleKinds) :: Map Identifier (Set VisitKind)) ->
-     _hdIruleKinds `unionWithMappend` _tlIruleKinds
-   {-# INLINE rule622 #-}
-   rule622 = \ ((_hdIruleUsage) :: Map Identifier Int) ((_tlIruleUsage) :: Map Identifier Int) ->
-     _hdIruleUsage `unionWithSum` _tlIruleUsage
-   {-# INLINE rule623 #-}
-   rule623 = \ ((_hdIusedArgs) :: Set String) ((_tlIusedArgs) :: Set String) ->
-     _hdIusedArgs `Set.union` _tlIusedArgs
-   {-# INLINE rule624 #-}
-   rule624 = \ ((_hdIuses) :: Map String (Maybe NonLocalAttr)) ((_tlIuses) :: Map String (Maybe NonLocalAttr)) ->
-     _hdIuses `Map.union` _tlIuses
-   {-# INLINE rule625 #-}
-   rule625 = \ ((_hdIvisitKinds) :: Map VisitIdentifier VisitKind) ((_tlIvisitKinds) :: Map VisitIdentifier VisitKind) ->
-     _hdIvisitKinds `mappend` _tlIvisitKinds
-   {-# INLINE rule626 #-}
-   rule626 = \ ((_tlIindex) :: Int) ->
-     _tlIindex
-   {-# INLINE rule627 #-}
-   rule627 = \ ((_tlIisLast) :: Bool) ->
-     _tlIisLast
-   {-# INLINE rule628 #-}
-   rule628 = \ ((_tlIprevMaxSimRefs) :: Int) ->
-     _tlIprevMaxSimRefs
-   {-# INLINE rule629 #-}
-   rule629 = \ ((_tlIsize) :: Int) ->
-     _tlIsize
-   {-# INLINE rule630 #-}
-   rule630 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
-     _lhsIallFromToStates
-   {-# INLINE rule631 #-}
-   rule631 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
-     _lhsIallInitStates
-   {-# INLINE rule632 #-}
-   rule632 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
-     _lhsIallVisitKinds
-   {-# INLINE rule633 #-}
-   rule633 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
-     _lhsIavisitdefs
-   {-# INLINE rule634 #-}
-   rule634 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
-     _lhsIavisituses
-   {-# INLINE rule635 #-}
-   rule635 = \ ((_lhsIchildTypes) :: Map Identifier Type) ->
-     _lhsIchildTypes
-   {-# INLINE rule636 #-}
-   rule636 = \ ((_lhsIfmtMode) :: FormatMode) ->
-     _lhsIfmtMode
-   {-# INLINE rule637 #-}
-   rule637 = \ ((_lhsIindex) :: Int) ->
-     _lhsIindex
-   {-# INLINE rule638 #-}
-   rule638 = \  (_ :: ()) ->
-     error "missing rule: VisitSteps.Cons.hd.isLast"
-   {-# INLINE rule639 #-}
-   rule639 = \ ((_lhsIkind) :: VisitKind) ->
-     _lhsIkind
-   {-# INLINE rule640 #-}
-   rule640 = \ ((_lhsIoptions) :: Options) ->
-     _lhsIoptions
    {-# INLINE rule641 #-}
-   rule641 = \ ((_lhsIprevMaxSimRefs) :: Int) ->
-     _lhsIprevMaxSimRefs
+   rule641 = \ ((_hdIdefs) :: Set String) ((_tlIdefs) :: Set String) ->
+     _hdIdefs `Set.union` _tlIdefs
    {-# INLINE rule642 #-}
-   rule642 = \ ((_lhsIruledefs) :: Map Identifier (Set String)) ->
-     _lhsIruledefs
+   rule642 = \ ((_hdIerrors) :: Seq Error) ((_tlIerrors) :: Seq Error) ->
+     _hdIerrors Seq.>< _tlIerrors
    {-# INLINE rule643 #-}
-   rule643 = \ ((_lhsIruleuses) :: Map Identifier (Map String (Maybe NonLocalAttr))) ->
-     _lhsIruleuses
+   rule643 = \ ((_hdIlazyIntras) :: Set String) ((_tlIlazyIntras) :: Set String) ->
+     _hdIlazyIntras `Set.union` _tlIlazyIntras
    {-# INLINE rule644 #-}
-   rule644 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
-     _lhsIallFromToStates
+   rule644 = \ ((_hdIruleKinds) :: Map Identifier (Set VisitKind)) ((_tlIruleKinds) :: Map Identifier (Set VisitKind)) ->
+     _hdIruleKinds `unionWithMappend` _tlIruleKinds
    {-# INLINE rule645 #-}
-   rule645 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
-     _lhsIallInitStates
+   rule645 = \ ((_hdIruleUsage) :: Map Identifier Int) ((_tlIruleUsage) :: Map Identifier Int) ->
+     _hdIruleUsage `unionWithSum` _tlIruleUsage
    {-# INLINE rule646 #-}
-   rule646 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
-     _lhsIallVisitKinds
+   rule646 = \ ((_hdIusedArgs) :: Set String) ((_tlIusedArgs) :: Set String) ->
+     _hdIusedArgs `Set.union` _tlIusedArgs
    {-# INLINE rule647 #-}
-   rule647 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
-     _lhsIavisitdefs
+   rule647 = \ ((_hdIuses) :: Map String (Maybe NonLocalAttr)) ((_tlIuses) :: Map String (Maybe NonLocalAttr)) ->
+     _hdIuses `Map.union` _tlIuses
    {-# INLINE rule648 #-}
-   rule648 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
-     _lhsIavisituses
+   rule648 = \ ((_hdIvisitKinds) :: Map VisitIdentifier VisitKind) ((_tlIvisitKinds) :: Map VisitIdentifier VisitKind) ->
+     _hdIvisitKinds `mappend` _tlIvisitKinds
    {-# INLINE rule649 #-}
-   rule649 = \ ((_lhsIchildTypes) :: Map Identifier Type) ->
-     _lhsIchildTypes
+   rule649 = \ ((_tlIindex) :: Int) ->
+     _tlIindex
    {-# INLINE rule650 #-}
-   rule650 = \ ((_lhsIfmtMode) :: FormatMode) ->
-     _lhsIfmtMode
+   rule650 = \ ((_tlIisLast) :: Bool) ->
+     _tlIisLast
    {-# INLINE rule651 #-}
-   rule651 = \ ((_hdIindex) :: Int) ->
-     _hdIindex
+   rule651 = \ ((_tlIprevMaxSimRefs) :: Int) ->
+     _tlIprevMaxSimRefs
    {-# INLINE rule652 #-}
-   rule652 = \ ((_lhsIkind) :: VisitKind) ->
-     _lhsIkind
+   rule652 = \ ((_tlIsize) :: Int) ->
+     _tlIsize
    {-# INLINE rule653 #-}
-   rule653 = \ ((_lhsIoptions) :: Options) ->
-     _lhsIoptions
+   rule653 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
+     _lhsIallFromToStates
    {-# INLINE rule654 #-}
-   rule654 = \ ((_hdIprevMaxSimRefs) :: Int) ->
-     _hdIprevMaxSimRefs
+   rule654 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
+     _lhsIallInitStates
    {-# INLINE rule655 #-}
-   rule655 = \ ((_lhsIruledefs) :: Map Identifier (Set String)) ->
-     _lhsIruledefs
+   rule655 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
+     _lhsIallVisitKinds
    {-# INLINE rule656 #-}
-   rule656 = \ ((_lhsIruleuses) :: Map Identifier (Map String (Maybe NonLocalAttr))) ->
+   rule656 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
+     _lhsIavisitdefs
+   {-# INLINE rule657 #-}
+   rule657 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
+     _lhsIavisituses
+   {-# INLINE rule658 #-}
+   rule658 = \ ((_lhsIchildTypes) :: Map Identifier Type) ->
+     _lhsIchildTypes
+   {-# INLINE rule659 #-}
+   rule659 = \ ((_lhsIfmtMode) :: FormatMode) ->
+     _lhsIfmtMode
+   {-# INLINE rule660 #-}
+   rule660 = \ ((_lhsIindex) :: Int) ->
+     _lhsIindex
+   {-# INLINE rule661 #-}
+   rule661 = \  (_ :: ()) ->
+     error "missing rule: VisitSteps.Cons.hd.isLast"
+   {-# INLINE rule662 #-}
+   rule662 = \ ((_lhsIkind) :: VisitKind) ->
+     _lhsIkind
+   {-# INLINE rule663 #-}
+   rule663 = \ ((_lhsIoptions) :: Options) ->
+     _lhsIoptions
+   {-# INLINE rule664 #-}
+   rule664 = \ ((_lhsIprevMaxSimRefs) :: Int) ->
+     _lhsIprevMaxSimRefs
+   {-# INLINE rule665 #-}
+   rule665 = \ ((_lhsIruledefs) :: Map Identifier (Set String)) ->
+     _lhsIruledefs
+   {-# INLINE rule666 #-}
+   rule666 = \ ((_lhsIruleuses) :: Map Identifier (Map String (Maybe NonLocalAttr))) ->
+     _lhsIruleuses
+   {-# INLINE rule667 #-}
+   rule667 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
+     _lhsIallFromToStates
+   {-# INLINE rule668 #-}
+   rule668 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
+     _lhsIallInitStates
+   {-# INLINE rule669 #-}
+   rule669 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
+     _lhsIallVisitKinds
+   {-# INLINE rule670 #-}
+   rule670 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
+     _lhsIavisitdefs
+   {-# INLINE rule671 #-}
+   rule671 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
+     _lhsIavisituses
+   {-# INLINE rule672 #-}
+   rule672 = \ ((_lhsIchildTypes) :: Map Identifier Type) ->
+     _lhsIchildTypes
+   {-# INLINE rule673 #-}
+   rule673 = \ ((_lhsIfmtMode) :: FormatMode) ->
+     _lhsIfmtMode
+   {-# INLINE rule674 #-}
+   rule674 = \ ((_hdIindex) :: Int) ->
+     _hdIindex
+   {-# INLINE rule675 #-}
+   rule675 = \ ((_lhsIkind) :: VisitKind) ->
+     _lhsIkind
+   {-# INLINE rule676 #-}
+   rule676 = \ ((_lhsIoptions) :: Options) ->
+     _lhsIoptions
+   {-# INLINE rule677 #-}
+   rule677 = \ ((_hdIprevMaxSimRefs) :: Int) ->
+     _hdIprevMaxSimRefs
+   {-# INLINE rule678 #-}
+   rule678 = \ ((_lhsIruledefs) :: Map Identifier (Set String)) ->
+     _lhsIruledefs
+   {-# INLINE rule679 #-}
+   rule679 = \ ((_lhsIruleuses) :: Map Identifier (Map String (Maybe NonLocalAttr))) ->
      _lhsIruleuses
 {-# NOINLINE sem_VisitSteps_Nil #-}
 sem_VisitSteps_Nil ::  T_VisitSteps 
@@ -4691,67 +4900,67 @@ sem_VisitSteps_Nil  = T_VisitSteps (return st53) where
       v52 :: T_VisitSteps_v52 
       v52 = \ (T_VisitSteps_vIn52 _lhsIallFromToStates _lhsIallInitStates _lhsIallVisitKinds _lhsIavisitdefs _lhsIavisituses _lhsIchildTypes _lhsIfmtMode _lhsIindex _lhsIkind _lhsIoptions _lhsIprevMaxSimRefs _lhsIruledefs _lhsIruleuses) -> ( let
          _lhsOdefs :: Set String
-         _lhsOdefs = rule657  ()
+         _lhsOdefs = rule680  ()
          _lhsOerrors :: Seq Error
-         _lhsOerrors = rule658  ()
+         _lhsOerrors = rule681  ()
          _lhsOlazyIntras :: Set String
-         _lhsOlazyIntras = rule659  ()
+         _lhsOlazyIntras = rule682  ()
          _lhsOruleKinds :: Map Identifier (Set VisitKind)
-         _lhsOruleKinds = rule660  ()
+         _lhsOruleKinds = rule683  ()
          _lhsOruleUsage :: Map Identifier Int
-         _lhsOruleUsage = rule661  ()
+         _lhsOruleUsage = rule684  ()
          _lhsOusedArgs :: Set String
-         _lhsOusedArgs = rule662  ()
+         _lhsOusedArgs = rule685  ()
          _lhsOuses :: Map String (Maybe NonLocalAttr)
-         _lhsOuses = rule663  ()
+         _lhsOuses = rule686  ()
          _lhsOvisitKinds :: Map VisitIdentifier VisitKind
-         _lhsOvisitKinds = rule664  ()
+         _lhsOvisitKinds = rule687  ()
          _lhsOindex :: Int
-         _lhsOindex = rule665 _lhsIindex
+         _lhsOindex = rule688 _lhsIindex
          _lhsOisLast :: Bool
-         _lhsOisLast = rule666  ()
+         _lhsOisLast = rule689  ()
          _lhsOprevMaxSimRefs :: Int
-         _lhsOprevMaxSimRefs = rule667 _lhsIprevMaxSimRefs
+         _lhsOprevMaxSimRefs = rule690 _lhsIprevMaxSimRefs
          _lhsOsize :: Int
-         _lhsOsize = rule668  ()
+         _lhsOsize = rule691  ()
          __result_ = T_VisitSteps_vOut52 _lhsOdefs _lhsOerrors _lhsOindex _lhsOisLast _lhsOlazyIntras _lhsOprevMaxSimRefs _lhsOruleKinds _lhsOruleUsage _lhsOsize _lhsOusedArgs _lhsOuses _lhsOvisitKinds
          in __result_ )
      in C_VisitSteps_s53 v52
-   {-# INLINE rule657 #-}
-   rule657 = \  (_ :: ()) ->
+   {-# INLINE rule680 #-}
+   rule680 = \  (_ :: ()) ->
      Set.empty
-   {-# INLINE rule658 #-}
-   rule658 = \  (_ :: ()) ->
+   {-# INLINE rule681 #-}
+   rule681 = \  (_ :: ()) ->
      Seq.empty
-   {-# INLINE rule659 #-}
-   rule659 = \  (_ :: ()) ->
+   {-# INLINE rule682 #-}
+   rule682 = \  (_ :: ()) ->
      Set.empty
-   {-# INLINE rule660 #-}
-   rule660 = \  (_ :: ()) ->
+   {-# INLINE rule683 #-}
+   rule683 = \  (_ :: ()) ->
      Map.empty
-   {-# INLINE rule661 #-}
-   rule661 = \  (_ :: ()) ->
+   {-# INLINE rule684 #-}
+   rule684 = \  (_ :: ()) ->
      Map.empty
-   {-# INLINE rule662 #-}
-   rule662 = \  (_ :: ()) ->
+   {-# INLINE rule685 #-}
+   rule685 = \  (_ :: ()) ->
      Set.empty
-   {-# INLINE rule663 #-}
-   rule663 = \  (_ :: ()) ->
+   {-# INLINE rule686 #-}
+   rule686 = \  (_ :: ()) ->
      Map.empty
-   {-# INLINE rule664 #-}
-   rule664 = \  (_ :: ()) ->
+   {-# INLINE rule687 #-}
+   rule687 = \  (_ :: ()) ->
      mempty
-   {-# INLINE rule665 #-}
-   rule665 = \ ((_lhsIindex) :: Int) ->
+   {-# INLINE rule688 #-}
+   rule688 = \ ((_lhsIindex) :: Int) ->
      _lhsIindex
-   {-# INLINE rule666 #-}
-   rule666 = \  (_ :: ()) ->
+   {-# INLINE rule689 #-}
+   rule689 = \  (_ :: ()) ->
      error "missing rule: VisitSteps.Nil.lhs.isLast"
-   {-# INLINE rule667 #-}
-   rule667 = \ ((_lhsIprevMaxSimRefs) :: Int) ->
+   {-# INLINE rule690 #-}
+   rule690 = \ ((_lhsIprevMaxSimRefs) :: Int) ->
      _lhsIprevMaxSimRefs
-   {-# INLINE rule668 #-}
-   rule668 = \  (_ :: ()) ->
+   {-# INLINE rule691 #-}
+   rule691 = \  (_ :: ()) ->
      error "missing rule: VisitSteps.Nil.lhs.size"
 
 -- Visits ------------------------------------------------------
@@ -4796,222 +5005,222 @@ sem_Visits_Cons arg_hd_ arg_tl_ = T_Visits (return st56) where
          (T_Visit_vOut46 _hdIallvisits _hdIerrors _hdIfromToStates _hdIintramap _hdIlazyIntras _hdIruleKinds _hdIruleUsage _hdIusedArgs _hdIvisitKinds _hdIvisitdefs _hdIvisituses) = inv_Visit_s47 _hdX47 (T_Visit_vIn46 _hdOallFromToStates _hdOallInhmap _hdOallInitStates _hdOallSynmap _hdOallVisitKinds _hdOallintramap _hdOavisitdefs _hdOavisituses _hdOchildTypes _hdOcon _hdOinhmap _hdOnextVisits _hdOnt _hdOoptions _hdOparams _hdOprevVisits _hdOruledefs _hdOruleuses _hdOsynmap _hdOterminaldefs)
          (T_Visits_vOut55 _tlIallvisits _tlIerrors _tlIfromToStates _tlIintramap _tlIlazyIntras _tlIruleKinds _tlIruleUsage _tlIusedArgs _tlIvisitKinds _tlIvisitdefs _tlIvisituses) = inv_Visits_s56 _tlX56 (T_Visits_vIn55 _tlOallFromToStates _tlOallInhmap _tlOallInitStates _tlOallSynmap _tlOallVisitKinds _tlOallintramap _tlOavisitdefs _tlOavisituses _tlOchildTypes _tlOcon _tlOinhmap _tlOnextVisits _tlOnt _tlOoptions _tlOparams _tlOprevVisits _tlOruledefs _tlOruleuses _tlOsynmap _tlOterminaldefs)
          _lhsOallvisits :: [VisitStateState]
-         _lhsOallvisits = rule669 _hdIallvisits _tlIallvisits
+         _lhsOallvisits = rule692 _hdIallvisits _tlIallvisits
          _lhsOerrors :: Seq Error
-         _lhsOerrors = rule670 _hdIerrors _tlIerrors
+         _lhsOerrors = rule693 _hdIerrors _tlIerrors
          _lhsOfromToStates :: Map VisitIdentifier (Int,Int)
-         _lhsOfromToStates = rule671 _hdIfromToStates _tlIfromToStates
+         _lhsOfromToStates = rule694 _hdIfromToStates _tlIfromToStates
          _lhsOintramap :: Map StateIdentifier (Map String (Maybe NonLocalAttr))
-         _lhsOintramap = rule672 _hdIintramap _tlIintramap
+         _lhsOintramap = rule695 _hdIintramap _tlIintramap
          _lhsOlazyIntras :: Set String
-         _lhsOlazyIntras = rule673 _hdIlazyIntras _tlIlazyIntras
+         _lhsOlazyIntras = rule696 _hdIlazyIntras _tlIlazyIntras
          _lhsOruleKinds :: Map Identifier (Set VisitKind)
-         _lhsOruleKinds = rule674 _hdIruleKinds _tlIruleKinds
+         _lhsOruleKinds = rule697 _hdIruleKinds _tlIruleKinds
          _lhsOruleUsage :: Map Identifier Int
-         _lhsOruleUsage = rule675 _hdIruleUsage _tlIruleUsage
+         _lhsOruleUsage = rule698 _hdIruleUsage _tlIruleUsage
          _lhsOusedArgs :: Set String
-         _lhsOusedArgs = rule676 _hdIusedArgs _tlIusedArgs
+         _lhsOusedArgs = rule699 _hdIusedArgs _tlIusedArgs
          _lhsOvisitKinds :: Map VisitIdentifier VisitKind
-         _lhsOvisitKinds = rule677 _hdIvisitKinds _tlIvisitKinds
+         _lhsOvisitKinds = rule700 _hdIvisitKinds _tlIvisitKinds
          _lhsOvisitdefs :: Map VisitIdentifier (Set Identifier)
-         _lhsOvisitdefs = rule678 _hdIvisitdefs _tlIvisitdefs
+         _lhsOvisitdefs = rule701 _hdIvisitdefs _tlIvisitdefs
          _lhsOvisituses :: Map VisitIdentifier (Set Identifier)
-         _lhsOvisituses = rule679 _hdIvisituses _tlIvisituses
-         _hdOallFromToStates = rule680 _lhsIallFromToStates
-         _hdOallInhmap = rule681 _lhsIallInhmap
-         _hdOallInitStates = rule682 _lhsIallInitStates
-         _hdOallSynmap = rule683 _lhsIallSynmap
-         _hdOallVisitKinds = rule684 _lhsIallVisitKinds
-         _hdOallintramap = rule685 _lhsIallintramap
-         _hdOavisitdefs = rule686 _lhsIavisitdefs
-         _hdOavisituses = rule687 _lhsIavisituses
-         _hdOchildTypes = rule688 _lhsIchildTypes
-         _hdOcon = rule689 _lhsIcon
-         _hdOinhmap = rule690 _lhsIinhmap
-         _hdOnextVisits = rule691 _lhsInextVisits
-         _hdOnt = rule692 _lhsInt
-         _hdOoptions = rule693 _lhsIoptions
-         _hdOparams = rule694 _lhsIparams
-         _hdOprevVisits = rule695 _lhsIprevVisits
-         _hdOruledefs = rule696 _lhsIruledefs
-         _hdOruleuses = rule697 _lhsIruleuses
-         _hdOsynmap = rule698 _lhsIsynmap
-         _hdOterminaldefs = rule699 _lhsIterminaldefs
-         _tlOallFromToStates = rule700 _lhsIallFromToStates
-         _tlOallInhmap = rule701 _lhsIallInhmap
-         _tlOallInitStates = rule702 _lhsIallInitStates
-         _tlOallSynmap = rule703 _lhsIallSynmap
-         _tlOallVisitKinds = rule704 _lhsIallVisitKinds
-         _tlOallintramap = rule705 _lhsIallintramap
-         _tlOavisitdefs = rule706 _lhsIavisitdefs
-         _tlOavisituses = rule707 _lhsIavisituses
-         _tlOchildTypes = rule708 _lhsIchildTypes
-         _tlOcon = rule709 _lhsIcon
-         _tlOinhmap = rule710 _lhsIinhmap
-         _tlOnextVisits = rule711 _lhsInextVisits
-         _tlOnt = rule712 _lhsInt
-         _tlOoptions = rule713 _lhsIoptions
-         _tlOparams = rule714 _lhsIparams
-         _tlOprevVisits = rule715 _lhsIprevVisits
-         _tlOruledefs = rule716 _lhsIruledefs
-         _tlOruleuses = rule717 _lhsIruleuses
-         _tlOsynmap = rule718 _lhsIsynmap
-         _tlOterminaldefs = rule719 _lhsIterminaldefs
+         _lhsOvisituses = rule702 _hdIvisituses _tlIvisituses
+         _hdOallFromToStates = rule703 _lhsIallFromToStates
+         _hdOallInhmap = rule704 _lhsIallInhmap
+         _hdOallInitStates = rule705 _lhsIallInitStates
+         _hdOallSynmap = rule706 _lhsIallSynmap
+         _hdOallVisitKinds = rule707 _lhsIallVisitKinds
+         _hdOallintramap = rule708 _lhsIallintramap
+         _hdOavisitdefs = rule709 _lhsIavisitdefs
+         _hdOavisituses = rule710 _lhsIavisituses
+         _hdOchildTypes = rule711 _lhsIchildTypes
+         _hdOcon = rule712 _lhsIcon
+         _hdOinhmap = rule713 _lhsIinhmap
+         _hdOnextVisits = rule714 _lhsInextVisits
+         _hdOnt = rule715 _lhsInt
+         _hdOoptions = rule716 _lhsIoptions
+         _hdOparams = rule717 _lhsIparams
+         _hdOprevVisits = rule718 _lhsIprevVisits
+         _hdOruledefs = rule719 _lhsIruledefs
+         _hdOruleuses = rule720 _lhsIruleuses
+         _hdOsynmap = rule721 _lhsIsynmap
+         _hdOterminaldefs = rule722 _lhsIterminaldefs
+         _tlOallFromToStates = rule723 _lhsIallFromToStates
+         _tlOallInhmap = rule724 _lhsIallInhmap
+         _tlOallInitStates = rule725 _lhsIallInitStates
+         _tlOallSynmap = rule726 _lhsIallSynmap
+         _tlOallVisitKinds = rule727 _lhsIallVisitKinds
+         _tlOallintramap = rule728 _lhsIallintramap
+         _tlOavisitdefs = rule729 _lhsIavisitdefs
+         _tlOavisituses = rule730 _lhsIavisituses
+         _tlOchildTypes = rule731 _lhsIchildTypes
+         _tlOcon = rule732 _lhsIcon
+         _tlOinhmap = rule733 _lhsIinhmap
+         _tlOnextVisits = rule734 _lhsInextVisits
+         _tlOnt = rule735 _lhsInt
+         _tlOoptions = rule736 _lhsIoptions
+         _tlOparams = rule737 _lhsIparams
+         _tlOprevVisits = rule738 _lhsIprevVisits
+         _tlOruledefs = rule739 _lhsIruledefs
+         _tlOruleuses = rule740 _lhsIruleuses
+         _tlOsynmap = rule741 _lhsIsynmap
+         _tlOterminaldefs = rule742 _lhsIterminaldefs
          __result_ = T_Visits_vOut55 _lhsOallvisits _lhsOerrors _lhsOfromToStates _lhsOintramap _lhsOlazyIntras _lhsOruleKinds _lhsOruleUsage _lhsOusedArgs _lhsOvisitKinds _lhsOvisitdefs _lhsOvisituses
          in __result_ )
      in C_Visits_s56 v55
-   {-# INLINE rule669 #-}
-   rule669 = \ ((_hdIallvisits) ::  VisitStateState ) ((_tlIallvisits) :: [VisitStateState]) ->
-     _hdIallvisits : _tlIallvisits
-   {-# INLINE rule670 #-}
-   rule670 = \ ((_hdIerrors) :: Seq Error) ((_tlIerrors) :: Seq Error) ->
-     _hdIerrors Seq.>< _tlIerrors
-   {-# INLINE rule671 #-}
-   rule671 = \ ((_hdIfromToStates) :: Map VisitIdentifier (Int,Int)) ((_tlIfromToStates) :: Map VisitIdentifier (Int,Int)) ->
-     _hdIfromToStates `mappend` _tlIfromToStates
-   {-# INLINE rule672 #-}
-   rule672 = \ ((_hdIintramap) :: Map StateIdentifier (Map String (Maybe NonLocalAttr))) ((_tlIintramap) :: Map StateIdentifier (Map String (Maybe NonLocalAttr))) ->
-     _hdIintramap `uwMapUnion` _tlIintramap
-   {-# INLINE rule673 #-}
-   rule673 = \ ((_hdIlazyIntras) :: Set String) ((_tlIlazyIntras) :: Set String) ->
-     _hdIlazyIntras `Set.union` _tlIlazyIntras
-   {-# INLINE rule674 #-}
-   rule674 = \ ((_hdIruleKinds) :: Map Identifier (Set VisitKind)) ((_tlIruleKinds) :: Map Identifier (Set VisitKind)) ->
-     _hdIruleKinds `unionWithMappend` _tlIruleKinds
-   {-# INLINE rule675 #-}
-   rule675 = \ ((_hdIruleUsage) :: Map Identifier Int) ((_tlIruleUsage) :: Map Identifier Int) ->
-     _hdIruleUsage `unionWithSum` _tlIruleUsage
-   {-# INLINE rule676 #-}
-   rule676 = \ ((_hdIusedArgs) :: Set String) ((_tlIusedArgs) :: Set String) ->
-     _hdIusedArgs `Set.union` _tlIusedArgs
-   {-# INLINE rule677 #-}
-   rule677 = \ ((_hdIvisitKinds) :: Map VisitIdentifier VisitKind) ((_tlIvisitKinds) :: Map VisitIdentifier VisitKind) ->
-     _hdIvisitKinds `mappend` _tlIvisitKinds
-   {-# INLINE rule678 #-}
-   rule678 = \ ((_hdIvisitdefs) :: Map VisitIdentifier (Set Identifier)) ((_tlIvisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
-     _hdIvisitdefs `uwSetUnion` _tlIvisitdefs
-   {-# INLINE rule679 #-}
-   rule679 = \ ((_hdIvisituses) :: Map VisitIdentifier (Set Identifier)) ((_tlIvisituses) :: Map VisitIdentifier (Set Identifier)) ->
-     _hdIvisituses `uwSetUnion` _tlIvisituses
-   {-# INLINE rule680 #-}
-   rule680 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
-     _lhsIallFromToStates
-   {-# INLINE rule681 #-}
-   rule681 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
-     _lhsIallInhmap
-   {-# INLINE rule682 #-}
-   rule682 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
-     _lhsIallInitStates
-   {-# INLINE rule683 #-}
-   rule683 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
-     _lhsIallSynmap
-   {-# INLINE rule684 #-}
-   rule684 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
-     _lhsIallVisitKinds
-   {-# INLINE rule685 #-}
-   rule685 = \ ((_lhsIallintramap) :: Map StateIdentifier (Map String (Maybe NonLocalAttr))) ->
-     _lhsIallintramap
-   {-# INLINE rule686 #-}
-   rule686 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
-     _lhsIavisitdefs
-   {-# INLINE rule687 #-}
-   rule687 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
-     _lhsIavisituses
-   {-# INLINE rule688 #-}
-   rule688 = \ ((_lhsIchildTypes) :: Map Identifier Type) ->
-     _lhsIchildTypes
-   {-# INLINE rule689 #-}
-   rule689 = \ ((_lhsIcon) :: ConstructorIdent) ->
-     _lhsIcon
-   {-# INLINE rule690 #-}
-   rule690 = \ ((_lhsIinhmap) :: Attributes) ->
-     _lhsIinhmap
-   {-# INLINE rule691 #-}
-   rule691 = \ ((_lhsInextVisits) :: Map StateIdentifier StateCtx) ->
-     _lhsInextVisits
    {-# INLINE rule692 #-}
-   rule692 = \ ((_lhsInt) :: NontermIdent) ->
-     _lhsInt
+   rule692 = \ ((_hdIallvisits) ::  VisitStateState ) ((_tlIallvisits) :: [VisitStateState]) ->
+     _hdIallvisits : _tlIallvisits
    {-# INLINE rule693 #-}
-   rule693 = \ ((_lhsIoptions) :: Options) ->
-     _lhsIoptions
+   rule693 = \ ((_hdIerrors) :: Seq Error) ((_tlIerrors) :: Seq Error) ->
+     _hdIerrors Seq.>< _tlIerrors
    {-# INLINE rule694 #-}
-   rule694 = \ ((_lhsIparams) :: [Identifier]) ->
-     _lhsIparams
+   rule694 = \ ((_hdIfromToStates) :: Map VisitIdentifier (Int,Int)) ((_tlIfromToStates) :: Map VisitIdentifier (Int,Int)) ->
+     _hdIfromToStates `mappend` _tlIfromToStates
    {-# INLINE rule695 #-}
-   rule695 = \ ((_lhsIprevVisits) :: Map StateIdentifier StateCtx) ->
-     _lhsIprevVisits
+   rule695 = \ ((_hdIintramap) :: Map StateIdentifier (Map String (Maybe NonLocalAttr))) ((_tlIintramap) :: Map StateIdentifier (Map String (Maybe NonLocalAttr))) ->
+     _hdIintramap `uwMapUnion` _tlIintramap
    {-# INLINE rule696 #-}
-   rule696 = \ ((_lhsIruledefs) :: Map Identifier (Set String)) ->
-     _lhsIruledefs
+   rule696 = \ ((_hdIlazyIntras) :: Set String) ((_tlIlazyIntras) :: Set String) ->
+     _hdIlazyIntras `Set.union` _tlIlazyIntras
    {-# INLINE rule697 #-}
-   rule697 = \ ((_lhsIruleuses) :: Map Identifier (Map String (Maybe NonLocalAttr))) ->
-     _lhsIruleuses
+   rule697 = \ ((_hdIruleKinds) :: Map Identifier (Set VisitKind)) ((_tlIruleKinds) :: Map Identifier (Set VisitKind)) ->
+     _hdIruleKinds `unionWithMappend` _tlIruleKinds
    {-# INLINE rule698 #-}
-   rule698 = \ ((_lhsIsynmap) :: Attributes) ->
-     _lhsIsynmap
+   rule698 = \ ((_hdIruleUsage) :: Map Identifier Int) ((_tlIruleUsage) :: Map Identifier Int) ->
+     _hdIruleUsage `unionWithSum` _tlIruleUsage
    {-# INLINE rule699 #-}
-   rule699 = \ ((_lhsIterminaldefs) :: Set String) ->
-     _lhsIterminaldefs
+   rule699 = \ ((_hdIusedArgs) :: Set String) ((_tlIusedArgs) :: Set String) ->
+     _hdIusedArgs `Set.union` _tlIusedArgs
    {-# INLINE rule700 #-}
-   rule700 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
-     _lhsIallFromToStates
+   rule700 = \ ((_hdIvisitKinds) :: Map VisitIdentifier VisitKind) ((_tlIvisitKinds) :: Map VisitIdentifier VisitKind) ->
+     _hdIvisitKinds `mappend` _tlIvisitKinds
    {-# INLINE rule701 #-}
-   rule701 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
-     _lhsIallInhmap
+   rule701 = \ ((_hdIvisitdefs) :: Map VisitIdentifier (Set Identifier)) ((_tlIvisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
+     _hdIvisitdefs `uwSetUnion` _tlIvisitdefs
    {-# INLINE rule702 #-}
-   rule702 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
-     _lhsIallInitStates
+   rule702 = \ ((_hdIvisituses) :: Map VisitIdentifier (Set Identifier)) ((_tlIvisituses) :: Map VisitIdentifier (Set Identifier)) ->
+     _hdIvisituses `uwSetUnion` _tlIvisituses
    {-# INLINE rule703 #-}
-   rule703 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
-     _lhsIallSynmap
+   rule703 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
+     _lhsIallFromToStates
    {-# INLINE rule704 #-}
-   rule704 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
-     _lhsIallVisitKinds
+   rule704 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
+     _lhsIallInhmap
    {-# INLINE rule705 #-}
-   rule705 = \ ((_lhsIallintramap) :: Map StateIdentifier (Map String (Maybe NonLocalAttr))) ->
-     _lhsIallintramap
+   rule705 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
+     _lhsIallInitStates
    {-# INLINE rule706 #-}
-   rule706 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
-     _lhsIavisitdefs
+   rule706 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
+     _lhsIallSynmap
    {-# INLINE rule707 #-}
-   rule707 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
-     _lhsIavisituses
+   rule707 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
+     _lhsIallVisitKinds
    {-# INLINE rule708 #-}
-   rule708 = \ ((_lhsIchildTypes) :: Map Identifier Type) ->
-     _lhsIchildTypes
+   rule708 = \ ((_lhsIallintramap) :: Map StateIdentifier (Map String (Maybe NonLocalAttr))) ->
+     _lhsIallintramap
    {-# INLINE rule709 #-}
-   rule709 = \ ((_lhsIcon) :: ConstructorIdent) ->
-     _lhsIcon
+   rule709 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
+     _lhsIavisitdefs
    {-# INLINE rule710 #-}
-   rule710 = \ ((_lhsIinhmap) :: Attributes) ->
-     _lhsIinhmap
+   rule710 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
+     _lhsIavisituses
    {-# INLINE rule711 #-}
-   rule711 = \ ((_lhsInextVisits) :: Map StateIdentifier StateCtx) ->
-     _lhsInextVisits
+   rule711 = \ ((_lhsIchildTypes) :: Map Identifier Type) ->
+     _lhsIchildTypes
    {-# INLINE rule712 #-}
-   rule712 = \ ((_lhsInt) :: NontermIdent) ->
-     _lhsInt
+   rule712 = \ ((_lhsIcon) :: ConstructorIdent) ->
+     _lhsIcon
    {-# INLINE rule713 #-}
-   rule713 = \ ((_lhsIoptions) :: Options) ->
-     _lhsIoptions
+   rule713 = \ ((_lhsIinhmap) :: Attributes) ->
+     _lhsIinhmap
    {-# INLINE rule714 #-}
-   rule714 = \ ((_lhsIparams) :: [Identifier]) ->
-     _lhsIparams
+   rule714 = \ ((_lhsInextVisits) :: Map StateIdentifier StateCtx) ->
+     _lhsInextVisits
    {-# INLINE rule715 #-}
-   rule715 = \ ((_lhsIprevVisits) :: Map StateIdentifier StateCtx) ->
-     _lhsIprevVisits
+   rule715 = \ ((_lhsInt) :: NontermIdent) ->
+     _lhsInt
    {-# INLINE rule716 #-}
-   rule716 = \ ((_lhsIruledefs) :: Map Identifier (Set String)) ->
-     _lhsIruledefs
+   rule716 = \ ((_lhsIoptions) :: Options) ->
+     _lhsIoptions
    {-# INLINE rule717 #-}
-   rule717 = \ ((_lhsIruleuses) :: Map Identifier (Map String (Maybe NonLocalAttr))) ->
-     _lhsIruleuses
+   rule717 = \ ((_lhsIparams) :: [Identifier]) ->
+     _lhsIparams
    {-# INLINE rule718 #-}
-   rule718 = \ ((_lhsIsynmap) :: Attributes) ->
-     _lhsIsynmap
+   rule718 = \ ((_lhsIprevVisits) :: Map StateIdentifier StateCtx) ->
+     _lhsIprevVisits
    {-# INLINE rule719 #-}
-   rule719 = \ ((_lhsIterminaldefs) :: Set String) ->
+   rule719 = \ ((_lhsIruledefs) :: Map Identifier (Set String)) ->
+     _lhsIruledefs
+   {-# INLINE rule720 #-}
+   rule720 = \ ((_lhsIruleuses) :: Map Identifier (Map String (Maybe NonLocalAttr))) ->
+     _lhsIruleuses
+   {-# INLINE rule721 #-}
+   rule721 = \ ((_lhsIsynmap) :: Attributes) ->
+     _lhsIsynmap
+   {-# INLINE rule722 #-}
+   rule722 = \ ((_lhsIterminaldefs) :: Set String) ->
+     _lhsIterminaldefs
+   {-# INLINE rule723 #-}
+   rule723 = \ ((_lhsIallFromToStates) :: Map VisitIdentifier (Int,Int)) ->
+     _lhsIallFromToStates
+   {-# INLINE rule724 #-}
+   rule724 = \ ((_lhsIallInhmap) :: Map NontermIdent Attributes) ->
+     _lhsIallInhmap
+   {-# INLINE rule725 #-}
+   rule725 = \ ((_lhsIallInitStates) :: Map NontermIdent Int) ->
+     _lhsIallInitStates
+   {-# INLINE rule726 #-}
+   rule726 = \ ((_lhsIallSynmap) :: Map NontermIdent Attributes) ->
+     _lhsIallSynmap
+   {-# INLINE rule727 #-}
+   rule727 = \ ((_lhsIallVisitKinds) :: Map VisitIdentifier VisitKind) ->
+     _lhsIallVisitKinds
+   {-# INLINE rule728 #-}
+   rule728 = \ ((_lhsIallintramap) :: Map StateIdentifier (Map String (Maybe NonLocalAttr))) ->
+     _lhsIallintramap
+   {-# INLINE rule729 #-}
+   rule729 = \ ((_lhsIavisitdefs) :: Map VisitIdentifier (Set Identifier)) ->
+     _lhsIavisitdefs
+   {-# INLINE rule730 #-}
+   rule730 = \ ((_lhsIavisituses) :: Map VisitIdentifier (Set Identifier)) ->
+     _lhsIavisituses
+   {-# INLINE rule731 #-}
+   rule731 = \ ((_lhsIchildTypes) :: Map Identifier Type) ->
+     _lhsIchildTypes
+   {-# INLINE rule732 #-}
+   rule732 = \ ((_lhsIcon) :: ConstructorIdent) ->
+     _lhsIcon
+   {-# INLINE rule733 #-}
+   rule733 = \ ((_lhsIinhmap) :: Attributes) ->
+     _lhsIinhmap
+   {-# INLINE rule734 #-}
+   rule734 = \ ((_lhsInextVisits) :: Map StateIdentifier StateCtx) ->
+     _lhsInextVisits
+   {-# INLINE rule735 #-}
+   rule735 = \ ((_lhsInt) :: NontermIdent) ->
+     _lhsInt
+   {-# INLINE rule736 #-}
+   rule736 = \ ((_lhsIoptions) :: Options) ->
+     _lhsIoptions
+   {-# INLINE rule737 #-}
+   rule737 = \ ((_lhsIparams) :: [Identifier]) ->
+     _lhsIparams
+   {-# INLINE rule738 #-}
+   rule738 = \ ((_lhsIprevVisits) :: Map StateIdentifier StateCtx) ->
+     _lhsIprevVisits
+   {-# INLINE rule739 #-}
+   rule739 = \ ((_lhsIruledefs) :: Map Identifier (Set String)) ->
+     _lhsIruledefs
+   {-# INLINE rule740 #-}
+   rule740 = \ ((_lhsIruleuses) :: Map Identifier (Map String (Maybe NonLocalAttr))) ->
+     _lhsIruleuses
+   {-# INLINE rule741 #-}
+   rule741 = \ ((_lhsIsynmap) :: Attributes) ->
+     _lhsIsynmap
+   {-# INLINE rule742 #-}
+   rule742 = \ ((_lhsIterminaldefs) :: Set String) ->
      _lhsIterminaldefs
 {-# NOINLINE sem_Visits_Nil #-}
 sem_Visits_Nil ::  T_Visits 
@@ -5021,60 +5230,60 @@ sem_Visits_Nil  = T_Visits (return st56) where
       v55 :: T_Visits_v55 
       v55 = \ (T_Visits_vIn55 _lhsIallFromToStates _lhsIallInhmap _lhsIallInitStates _lhsIallSynmap _lhsIallVisitKinds _lhsIallintramap _lhsIavisitdefs _lhsIavisituses _lhsIchildTypes _lhsIcon _lhsIinhmap _lhsInextVisits _lhsInt _lhsIoptions _lhsIparams _lhsIprevVisits _lhsIruledefs _lhsIruleuses _lhsIsynmap _lhsIterminaldefs) -> ( let
          _lhsOallvisits :: [VisitStateState]
-         _lhsOallvisits = rule720  ()
+         _lhsOallvisits = rule743  ()
          _lhsOerrors :: Seq Error
-         _lhsOerrors = rule721  ()
+         _lhsOerrors = rule744  ()
          _lhsOfromToStates :: Map VisitIdentifier (Int,Int)
-         _lhsOfromToStates = rule722  ()
+         _lhsOfromToStates = rule745  ()
          _lhsOintramap :: Map StateIdentifier (Map String (Maybe NonLocalAttr))
-         _lhsOintramap = rule723  ()
+         _lhsOintramap = rule746  ()
          _lhsOlazyIntras :: Set String
-         _lhsOlazyIntras = rule724  ()
+         _lhsOlazyIntras = rule747  ()
          _lhsOruleKinds :: Map Identifier (Set VisitKind)
-         _lhsOruleKinds = rule725  ()
+         _lhsOruleKinds = rule748  ()
          _lhsOruleUsage :: Map Identifier Int
-         _lhsOruleUsage = rule726  ()
+         _lhsOruleUsage = rule749  ()
          _lhsOusedArgs :: Set String
-         _lhsOusedArgs = rule727  ()
+         _lhsOusedArgs = rule750  ()
          _lhsOvisitKinds :: Map VisitIdentifier VisitKind
-         _lhsOvisitKinds = rule728  ()
+         _lhsOvisitKinds = rule751  ()
          _lhsOvisitdefs :: Map VisitIdentifier (Set Identifier)
-         _lhsOvisitdefs = rule729  ()
+         _lhsOvisitdefs = rule752  ()
          _lhsOvisituses :: Map VisitIdentifier (Set Identifier)
-         _lhsOvisituses = rule730  ()
+         _lhsOvisituses = rule753  ()
          __result_ = T_Visits_vOut55 _lhsOallvisits _lhsOerrors _lhsOfromToStates _lhsOintramap _lhsOlazyIntras _lhsOruleKinds _lhsOruleUsage _lhsOusedArgs _lhsOvisitKinds _lhsOvisitdefs _lhsOvisituses
          in __result_ )
      in C_Visits_s56 v55
-   {-# INLINE rule720 #-}
-   rule720 = \  (_ :: ()) ->
+   {-# INLINE rule743 #-}
+   rule743 = \  (_ :: ()) ->
      []
-   {-# INLINE rule721 #-}
-   rule721 = \  (_ :: ()) ->
+   {-# INLINE rule744 #-}
+   rule744 = \  (_ :: ()) ->
      Seq.empty
-   {-# INLINE rule722 #-}
-   rule722 = \  (_ :: ()) ->
+   {-# INLINE rule745 #-}
+   rule745 = \  (_ :: ()) ->
      mempty
-   {-# INLINE rule723 #-}
-   rule723 = \  (_ :: ()) ->
+   {-# INLINE rule746 #-}
+   rule746 = \  (_ :: ()) ->
      Map.empty
-   {-# INLINE rule724 #-}
-   rule724 = \  (_ :: ()) ->
+   {-# INLINE rule747 #-}
+   rule747 = \  (_ :: ()) ->
      Set.empty
-   {-# INLINE rule725 #-}
-   rule725 = \  (_ :: ()) ->
+   {-# INLINE rule748 #-}
+   rule748 = \  (_ :: ()) ->
      Map.empty
-   {-# INLINE rule726 #-}
-   rule726 = \  (_ :: ()) ->
+   {-# INLINE rule749 #-}
+   rule749 = \  (_ :: ()) ->
      Map.empty
-   {-# INLINE rule727 #-}
-   rule727 = \  (_ :: ()) ->
+   {-# INLINE rule750 #-}
+   rule750 = \  (_ :: ()) ->
      Set.empty
-   {-# INLINE rule728 #-}
-   rule728 = \  (_ :: ()) ->
+   {-# INLINE rule751 #-}
+   rule751 = \  (_ :: ()) ->
      mempty
-   {-# INLINE rule729 #-}
-   rule729 = \  (_ :: ()) ->
+   {-# INLINE rule752 #-}
+   rule752 = \  (_ :: ()) ->
      Map.empty
-   {-# INLINE rule730 #-}
-   rule730 = \  (_ :: ()) ->
+   {-# INLINE rule753 #-}
+   rule753 = \  (_ :: ()) ->
      Map.empty

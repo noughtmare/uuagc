@@ -1,6 +1,6 @@
 
 
--- UUAGC 0.9.53 (src-ag/Code.ag)
+-- UUAGC 0.9.53.1 (src-ag/Code.ag)
 module Code where
 {-# LINE 2 "src-ag/Code.ag" #-}
 
@@ -36,6 +36,7 @@ mkTupleLhs  unbox' noInh comps | not unbox' || noInh || length comps == 1 = Tupl
          child expr           : Expr 
 -}
 data CaseAlt = CaseAlt (Lhs) (Expr)
+             deriving ( Show)
 -- CaseAlts ----------------------------------------------------
 {-
    alternatives:
@@ -60,6 +61,7 @@ type CaseAlts = [CaseAlt]
          child semNames       : {[String]}
 -}
 data Chunk = Chunk (String) (Decl) (Decls) (Decls) (Decls) (Decls) (Decls) (Decls) (([String]))
+           deriving ( Show)
 -- Chunks ------------------------------------------------------
 {-
    alternatives:
@@ -81,6 +83,7 @@ type Chunks = [Chunk]
 -}
 data DataAlt = DataAlt (String) (Types)
              | Record (String) (NamedTypes)
+             deriving ( Show)
 -- DataAlts ----------------------------------------------------
 {-
    alternatives:
@@ -147,6 +150,7 @@ data Decl = Decl (Lhs) (Expr) ((Set String)) ((Set String))
           | PragmaDecl (String)
           | Resume (Bool) (String) (Lhs) (Expr)
           | EvalDecl (String) (Lhs) (Expr)
+          deriving ( Show)
 -- Decls -------------------------------------------------------
 {-
    alternatives:
@@ -229,6 +233,7 @@ data Expr = Let (Decls) (Expr)
           | InvokeExpr (String) (Expr) (Exprs)
           | ResumeExpr (String) (Expr) (Lhs) (Expr)
           | SemFun (String) (Exprs) (Expr)
+          deriving ( Show)
 -- Exprs -------------------------------------------------------
 {-
    alternatives:
@@ -262,6 +267,7 @@ data Lhs = Pattern3 (Pattern)
          | UnboxedTupleLhs (([String]))
          | Fun (String) (Exprs)
          | Unwrap (String) (Lhs)
+         deriving ( Show)
 -- NamedType ---------------------------------------------------
 {-
    alternatives:
@@ -271,6 +277,7 @@ data Lhs = Pattern3 (Pattern)
          child tp             : Type 
 -}
 data NamedType = Named (Bool) (String) (Type)
+               deriving ( Show)
 -- NamedTypes --------------------------------------------------
 {-
    alternatives:
@@ -288,6 +295,7 @@ type NamedTypes = [NamedType]
          child ordered        : {Bool}
 -}
 data Program = Program (Chunks) (Bool)
+             deriving ( Show)
 -- Type --------------------------------------------------------
 {-
    alternatives:
