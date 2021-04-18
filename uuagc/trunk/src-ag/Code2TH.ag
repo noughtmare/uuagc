@@ -71,7 +71,16 @@ seqsE xs x = foldr (TH.AppE . TH.AppE (TH.VarE (TH.mkName "seq"))) x xs
 -- ATTR Expr Exprs Decl Decls CaseAlt CaseAlts Lhs [ outputfile : {String} | | ]
 
 SEM Chunk
-  | Chunk loc.th = maybe id (:) @comment.th $ concat [@info.th, @dataDef.th, @cataFun.th, @semDom.th, @semWrapper.th, @semFunctions.th]
+  | Chunk loc.th = maybe id (:) @comment.th $ concat
+                     [ @info.th
+                     , @dataDef.th
+                     , @cataFun.th
+                     , @semDom.th
+                     , @semWrapper.th
+                     , @semFunctions.th
+                     ] -- ++
+                     -- ( Map.findWithDefault empty (BlockOther, Just $ identifier @name) @lhs.textBlockMap
+                     -- )
 
 ATTR Program                            [ options:{Options} | | th:{[TH.Dec]} ]
 
@@ -131,7 +140,7 @@ SEM Decl
   | Type       lhs.th      = pure $ TH.TySynD (TH.mkName @name)
                                               (map (TH.PlainTV . TH.mkName) @params)
                                               @tp.th
-  | TSig       lhs.th      = pure $ TH.SigD (TH.mkName @name) @tp.th
+  | TSig       lhs.th      = if @lhs.isDeclOfLet then empty else pure $ TH.SigD (TH.mkName @name) @tp.th
   -- | Comment    lhs.th      = TODO TH doesn't support comments yet
   -- | PragmaDecl lhs.th      = TODO: "THDec $ Th.PragmaD @txt" This probably needs a more precise PragmaDecl type
   | Resume   lhs.(th,stmt) = if @monadic
@@ -194,7 +203,7 @@ SEM Expr
                                       -- >-< ""
                lhs.pat     = error "Cannot use line pragma expression in pattern"
   | TypedExpr  lhs.th      = TH.SigE @expr.th @tp.th
-               lhs.pat     = error "Cannot use typed expression in pattern"
+               lhs.pat     = @expr.pat
   | ResultExpr lhs.th      = if breadthFirst @lhs.options
                              then TH.VarE (TH.mkName "final") `TH.AppE` (TH.ConE (TH.mkName (@nt ++ "_Syn")) `TH.AppE` @expr.th)
                              else @expr.th
@@ -283,7 +292,7 @@ SEM Type
       lhs.th = foldl TH.AppT @func.th @args.th
 
   | CtxApp
-      lhs.th = TH.ForallT [] (map (\(n,ns) -> foldl (\xs x -> TH.AppT xs (TH.ConT (TH.mkName x))) (TH.ConT (TH.mkName n)) ns) @left) @right.th
+      lhs.th = TH.ForallT [] (map (\(n,ns) -> foldl (\xs x -> TH.AppT xs (either error id $ Meta.parseType x)) (either error id $ Meta.parseType n) ns) @left) @right.th
   | QuantApp
       lhs.th = error ("Deal with quant: " ++ @left) -- >#< @right.pp
 
@@ -293,7 +302,7 @@ SEM Type
 
   | List       lhs.th      = TH.ListT `TH.AppT` @tp.th
 
-  | SimpleType lhs.th      = TH.ConT (TH.mkName @txt)
+  | SimpleType lhs.th      = either error id $ Meta.parseType @txt
 
   | NontermType  lhs.th    = foldl TH.AppT (TH.ConT (TH.mkName (@loc.prefix ++ @name))) (map (TH.VarT . TH.mkName) @params)
                  loc.prefix = if @deforested
@@ -301,10 +310,10 @@ SEM Type
                               else ""
   | TMaybe       lhs.th    = TH.ConT (TH.mkName "Maybe") `TH.AppT` @tp.th
   | TEither      lhs.th    = TH.ConT (TH.mkName "Either") `TH.AppT` @left.th `TH.AppT` @right.th
-  | TMap         lhs.pp    = TH.ConT (TH.mkName "Data.Map.Map") `TH.AppT` @key.th `TH.AppT` @value.th
-  | TIntMap      lhs.pp    = TH.ConT (TH.mkName "Data.IntMap.IntMap") `TH.AppT` @value.th
-  | TSet         lhs.pp    = TH.ConT (TH.mkName "Data.Set.Set") `TH.AppT` @tp.th
-  | TIntSet      lhs.pp    = TH.ConT (TH.mkName "Data.IntSet.IntSet")
+  | TMap         lhs.th    = TH.ConT (TH.mkName "Data.Map.Map") `TH.AppT` @key.th `TH.AppT` @value.th
+  | TIntMap      lhs.th    = TH.ConT (TH.mkName "Data.IntMap.IntMap") `TH.AppT` @value.th
+  | TSet         lhs.th    = TH.ConT (TH.mkName "Data.Set.Set") `TH.AppT` @tp.th
+  | TIntSet      lhs.th    = TH.ConT (TH.mkName "Data.IntSet.IntSet")
 
 
 -------------------------------------------------------------------------------
@@ -414,80 +423,3 @@ SEM Expr
 SEM CaseAlt
   | CaseAlt
       left.isDeclOfLet = False
-
-
-
--------------------------------------------------------------------------------
---         Alternative code printing to separate modules
--------------------------------------------------------------------------------
-
--- ATTR Program [ mainBlocksDoc : PP_Doc | | genIO : {IO ()} ]
--- ATTR Program Chunks Chunk
---   [ importBlocks : PP_Doc
---     pragmaBlocks : String
---     textBlocks : PP_Doc
---     textBlockMap : {Map BlockInfo PP_Doc}
---     optionsLine : String
---     mainFile : String
---     mainName : String
---     moduleHeader : {String -> String -> String -> Bool -> String}
---      | | ]
--- 
--- SEM Program
---   | Program
---       loc.mainModuleFile = @lhs.mainFile
---       loc.genMainModule
---         = writeModule @loc.mainModuleFile
---             ( [ pp $ @lhs.pragmaBlocks
---               , pp $ @lhs.optionsLine
---               , pp $ @lhs.moduleHeader @lhs.mainName "" "" False
---               , pp $ ("import " ++ @lhs.mainName ++ "_common\n")
---               ]
---               ++ map pp @chunks.imports
---               ++ map vlist @chunks.appendMain
---               ++ [@lhs.mainBlocksDoc]
---             )
--- 
---       loc.commonFile = replaceBaseName @lhs.mainFile (takeBaseName @lhs.mainFile ++ "_common")
---       loc.genCommonModule
---         = writeModule @loc.commonFile
---               ( [ pp $ @lhs.pragmaBlocks
---                 , pp $ @lhs.optionsLine
---                 , pp $ @lhs.moduleHeader @lhs.mainName "_common" "" True
---                 , @lhs.importBlocks
---                 , @lhs.textBlocks
---                 ]
---                 ++ map vlist @chunks.appendCommon
---               )
--- 
--- 
--- {
--- renderDocs :: [PP_Doc] -> String
--- renderDocs pps = foldr (.) id (map (\d -> (disp d 50000) . ( '\n':) ) pps) ""
--- }
--- 
--- ATTR Chunk Chunks [ | | imports USE {++} {[]} : {[String]} ]
--- SEM Chunk
---   | Chunk
---       lhs.imports = ["import " ++ @lhs.mainName ++ "_" ++ @name ++ "\n"]
--- 
--- ATTR Chunk Chunks [ | | appendCommon, appendMain USE {++} {[]} : {[[PP_Doc]]} ]
--- 
--- SEM Chunk
---   | Chunk
---       lhs.appendCommon
---         = [ [@comment.pp]
---           , @dataDef.pps
---           , @semDom.pps
---           , if reference @lhs.options then @semWrapper.pps else []
---           ]
---       lhs.appendMain
---         = [ [@comment.pp]
---           , @cataFun.pps
---           , if reference @lhs.options then [] else @semWrapper.pps
---           ]
--- 
--- SEM Chunk
---   | Chunk
---       loc.exports = concat $ intersperse "," @semNames
--- 

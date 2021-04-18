@@ -11,9 +11,9 @@ import System.Exit (ExitCode(..))
 uuagc :: [String] -> FilePath -> IO (ExitCode, [FilePath])
 uuagc = uuagcLib
 
-uuagcTH :: String -> [String] -> [AG] -> String -> Q [Dec]
-uuagcTH n opts old str = do
-  name <- newName n
+uuagcTH :: [String] -> [AG] -> String -> Q [Dec]
+uuagcTH opts old str = do
+  name <- newName "ag"
   (new, decs) <- uuagcLibTH opts str (AG (foldr (\(AG x) xs -> x ++ xs) [] old))
   new' <- lift new
   pure (ValD (VarP name) (NormalB new') [] : decs)

@@ -50,13 +50,15 @@ import qualified AG2AspectAG as AspectAGDump (pragmaAspectAG, sem_Grammar,  wrap
 import Options
 import Version       (banner)
 import Parser        (parseAG, parseAGString, depsAG, parseAGI)
-import ErrorMessages (Error(ParserError))
+import ErrorMessages (Error(ParserError, HsParseError))
 import CommonTypes
 import ATermWrite
 import Data.Aeson (encode)
 import qualified Data.ByteString.Lazy as ByteString
 import qualified Language.Haskell.TH as TH
+import qualified Language.Haskell.Meta.Parse as Meta
 import ConcreteSyntax (AG (AG))
+import Data.Bifunctor (first, second)
 
 -- Library version
 import System.Exit (ExitCode(..), exitWith)
@@ -170,9 +172,9 @@ compileTH flags input (AG prev)
                        { Pass5c.options_Inh_Program  = flags'
                        -- , Pass5c.pragmaBlocks_Inh_Program = pragmaBlocksTxt
                        -- , Pass5c.importBlocks_Inh_Program = importBlocksTxt
-                       -- , Pass5c.textBlocks_Inh_Program = textBlocksDoc
-                       -- , Pass5c.textBlockMap_Inh_Program = textBlockMapl
-                       -- , Pass5c.mainBlocksDoc_Inh_Program = mainBlocksDoc
+                       -- , Pass5c.textBlocks_Inh_Program = textBlocksTH
+                       -- , Pass5c.textBlockMap_Inh_Program = textBlockMap
+                       -- , Pass5c.mainBlocksDoc_Inh_Program = mainBlocksTH
                        -- , Pass5c.optionsLine_Inh_Program = optionsLine
                        -- , Pass5c.mainFile_Inh_Program = mainFile
                        -- , Pass5c.moduleHeader_Inh_Program = mkModuleHeader $ Pass1.moduleDecl_Syn_AG output1
@@ -197,6 +199,7 @@ compileTH flags input (AG prev)
                                Seq.>< Pass2a.errors_Syn_Grammar output2a)
           furtherErrors    = -- toList (Pass4e.errors_Syn_ExecutionPlan output4e)
                              toList ( Pass3.errors_Syn_Grammar  output3 Seq.>< Pass4.errors_Syn_CGrammar output4)
+                             ++ textBlocksError
 
 --                              if loag flags'
 --                              then toList (Pass3b.errors_Syn_Grammar output3b)
@@ -236,17 +239,24 @@ compileTH flags input (AG prev)
           (importBlocks, textBlocks) = Map.partitionWithKey (\(k, at) _->k==BlockImport && at == Nothing) blocks2
 
           -- importBlocksTxt = vlist_sep "" . map addLocationPragma . concat . Map.elems $ importBlocks
-          -- textBlocksDoc   = vlist_sep "" . map addLocationPragma . Map.findWithDefault [] (BlockOther, Nothing) $ textBlocks
+          (textBlocksError, textBlocksTH)   = second concat . traverse (mkError . first (splitEither . Meta.parseDecs . unlines)) . Map.findWithDefault [] (BlockOther, Nothing) $ textBlocks
           -- mainBlocksDoc   = vlist_sep "" . map addLocationPragma . Map.findWithDefault [] (BlockMain, Nothing) $ textBlocks
           -- dataBlocksDoc   = vlist_sep "" . map addLocationPragma . Map.findWithDefault [] (BlockData, Nothing) $ textBlocks
           -- recBlocksDoc    = vlist_sep "" . map addLocationPragma . Map.findWithDefault [] (BlockRec, Nothing) $ textBlocks
           -- pragmaBlocksTxt = unlines . concat . map fst  . concat . Map.elems $ pragmaBlocks
-          -- textBlockMap    = Map.map (vlist_sep "" . map addLocationPragma) . Map.filterWithKey (\(_, at) _ -> at /= Nothing) $ textBlocks
+          -- (textBlockMapError, textBlockMap)    = traverse (fmap concat . traverse (mkError . first (splitEither . Meta.parseDecs . unlines))) . Map.filterWithKey (\(_, at) _ -> at /= Nothing) $ textBlocks
+
+          mkError :: Functor f => ((f String, b), Pos) -> (f Error, b)
+          mkError ((x,y),z) = ((\w -> HsParseError z w) <$> x, y)
 
           -- outputfile = if null output then outputFile flags' inputfile else output
           -- mainFile | null output = outputFile flags' inputfile
           --          | otherwise   = output
           mainName = dropExtension $ takeFileName inputfile
+
+          splitEither :: Either a b -> ([a], b)
+          splitEither (Left x) = ([x], error "You have been too strict")
+          splitEither (Right x) = ([], x)
 
           -- addLocationPragma :: ([String], Pos) -> PP_Doc
           -- addLocationPragma (strs, p)
@@ -302,7 +312,7 @@ compileTH flags input (AG prev)
       if not (null errorsToStopOn)  -- note: this may already run quite a part of the compilation...
            then fail "Encountered critical errors"
 
-           else return (output0, Pass5c.th_Syn_Program output5c)
+           else return (output0, textBlocksTH ++ Pass5c.th_Syn_Program output5c)
 --            do
 --               if genvisage flags'
 --                then writeFile (outputfile++".visage") (writeATerm aterm)

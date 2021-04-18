@@ -156,15 +156,15 @@ sem_CaseAlt_CaseAlt arg_left_ arg_expr_ = T_CaseAlt (return st2) where
          in __result_ )
      in C_CaseAlt_s2 v1
    {-# INLINE rule0 #-}
-   {-# LINE 230 "src-ag/Code2TH.ag" #-}
+   {-# LINE 239 "src-ag/Code2TH.ag" #-}
    rule0 = \ ((_exprIth) :: TH.Exp) ((_leftIpat) :: TH.Pat) ->
-                              {-# LINE 230 "src-ag/Code2TH.ag" #-}
+                              {-# LINE 239 "src-ag/Code2TH.ag" #-}
                               TH.Match _leftIpat (TH.NormalB _exprIth) []
                               {-# LINE 164 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule1 #-}
-   {-# LINE 416 "src-ag/Code2TH.ag" #-}
+   {-# LINE 425 "src-ag/Code2TH.ag" #-}
    rule1 = \  (_ :: ()) ->
-                           {-# LINE 416 "src-ag/Code2TH.ag" #-}
+                           {-# LINE 425 "src-ag/Code2TH.ag" #-}
                            False
                            {-# LINE 170 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule2 #-}
@@ -343,8 +343,15 @@ sem_Chunk_Chunk _ arg_comment_ arg_info_ arg_dataDef_ arg_cataFun_ arg_semDom_ a
    {-# LINE 74 "src-ag/Code2TH.ag" #-}
    rule12 = \ ((_cataFunIth) :: [TH.Dec]) ((_commentIth) :: Maybe TH.Dec) ((_dataDefIth) :: [TH.Dec]) ((_infoIth) :: [TH.Dec]) ((_semDomIth) :: [TH.Dec]) ((_semFunctionsIth) :: [TH.Dec]) ((_semWrapperIth) :: [TH.Dec]) ->
                      {-# LINE 74 "src-ag/Code2TH.ag" #-}
-                     maybe id (:) _commentIth $ concat [_infoIth, _dataDefIth, _cataFunIth, _semDomIth, _semWrapperIth, _semFunctionsIth]
-                     {-# LINE 348 "src-generated/Code2TH.hs" #-}
+                     maybe id (:) _commentIth $ concat
+                       [ _infoIth
+                       , _dataDefIth
+                       , _cataFunIth
+                       , _semDomIth
+                       , _semWrapperIth
+                       , _semFunctionsIth
+                       ]
+                     {-# LINE 355 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule13 #-}
    rule13 = \ _th ->
      _th
@@ -548,11 +555,11 @@ sem_DataAlt_DataAlt !arg_name_ arg_args_ = T_DataAlt (return st14) where
          in __result_ )
      in C_DataAlt_s14 v13
    {-# INLINE rule43 #-}
-   {-# LINE 236 "src-ag/Code2TH.ag" #-}
+   {-# LINE 245 "src-ag/Code2TH.ag" #-}
    rule43 = \ ((_argsIth) :: [TH.Type]) ((_lhsIstrictPre) :: TH.Bang) name_ ->
-                               {-# LINE 236 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 245 "src-ag/Code2TH.ag" #-}
                                TH.NormalC (TH.mkName name_) (map (\x -> (_lhsIstrictPre, x)) _argsIth)
-                               {-# LINE 556 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 563 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule44 #-}
    rule44 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -572,11 +579,11 @@ sem_DataAlt_Record !arg_name_ arg_args_ = T_DataAlt (return st14) where
          in __result_ )
      in C_DataAlt_s14 v13
    {-# INLINE rule45 #-}
-   {-# LINE 237 "src-ag/Code2TH.ag" #-}
+   {-# LINE 246 "src-ag/Code2TH.ag" #-}
    rule45 = \ ((_argsIth) :: [TH.VarBangType]) name_ ->
-                               {-# LINE 237 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 246 "src-ag/Code2TH.ag" #-}
                                TH.RecC (TH.mkName name_) _argsIth
-                               {-# LINE 580 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 587 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule46 #-}
    rule46 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -726,11 +733,11 @@ sem_Decl_Decl arg_left_ arg_rhs_ _ _ = T_Decl (return st20) where
          in __result_ )
      in C_Decl_s20 v19
    {-# INLINE rule53 #-}
-   {-# LINE 115 "src-ag/Code2TH.ag" #-}
+   {-# LINE 124 "src-ag/Code2TH.ag" #-}
    rule53 = \ ((_leftIth) :: TH.Exp -> TH.Dec) ((_rhsIth) :: TH.Exp) ->
-                               {-# LINE 115 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 124 "src-ag/Code2TH.ag" #-}
                                pure $ _leftIth _rhsIth
-                               {-# LINE 734 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 741 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule54 #-}
    rule54 = \  (_ :: ()) ->
      Nothing
@@ -773,11 +780,11 @@ sem_Decl_Bind arg_left_ arg_rhs_ = T_Decl (return st20) where
          in __result_ )
      in C_Decl_s20 v19
    {-# INLINE rule60 #-}
-   {-# LINE 116 "src-ag/Code2TH.ag" #-}
+   {-# LINE 125 "src-ag/Code2TH.ag" #-}
    rule60 = \ ((_leftIpat) :: TH.Pat) ((_rhsIth) :: TH.Exp) ->
-                               {-# LINE 116 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 125 "src-ag/Code2TH.ag" #-}
                                pure $ TH.BindS _leftIpat _rhsIth
-                               {-# LINE 781 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 788 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule61 #-}
    rule61 = \ ((_leftIth) :: TH.Exp -> TH.Dec) ((_rhsIth) :: TH.Exp) ->
      (error "can't combine decl th" _leftIth _rhsIth)
@@ -820,11 +827,11 @@ sem_Decl_BindLet arg_left_ arg_rhs_ = T_Decl (return st20) where
          in __result_ )
      in C_Decl_s20 v19
    {-# INLINE rule67 #-}
-   {-# LINE 117 "src-ag/Code2TH.ag" #-}
+   {-# LINE 126 "src-ag/Code2TH.ag" #-}
    rule67 = \ ((_leftIth) :: TH.Exp -> TH.Dec) ((_rhsIth) :: TH.Exp) ->
-                               {-# LINE 117 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 126 "src-ag/Code2TH.ag" #-}
                                pure $ TH.LetS [_leftIth _rhsIth]
-                               {-# LINE 828 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 835 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule68 #-}
    rule68 = \ ((_leftIth) :: TH.Exp -> TH.Dec) ((_rhsIth) :: TH.Exp) ->
      (error "can't combine decl th" _leftIth _rhsIth)
@@ -862,23 +869,23 @@ sem_Decl_Data !arg_name_ !arg_params_ arg_alts_ !arg_strict_ !arg_derivings_ = T
          in __result_ )
      in C_Decl_s20 v19
    {-# INLINE rule74 #-}
-   {-# LINE 118 "src-ag/Code2TH.ag" #-}
+   {-# LINE 127 "src-ag/Code2TH.ag" #-}
    rule74 = \ ((_altsIth) :: [TH.Con]) derivings_ name_ params_ ->
-                               {-# LINE 118 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 127 "src-ag/Code2TH.ag" #-}
                                pure $ TH.DataD []
                                                (TH.mkName name_)
                                                (map (TH.PlainTV . TH.mkName) params_)
                                                Nothing
                                                _altsIth
                                                [TH.DerivClause Nothing (map (TH.ConT . TH.mkName) derivings_)]
-                               {-# LINE 875 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 882 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule75 #-}
-   {-# LINE 317 "src-ag/Code2TH.ag" #-}
+   {-# LINE 326 "src-ag/Code2TH.ag" #-}
    rule75 = \ strict_ ->
-                            {-# LINE 317 "src-ag/Code2TH.ag" #-}
+                            {-# LINE 326 "src-ag/Code2TH.ag" #-}
                             if strict_ then TH.Bang TH.NoSourceUnpackedness TH.SourceStrict
                                        else TH.Bang TH.NoSourceUnpackedness TH.NoSourceStrictness
-                            {-# LINE 882 "src-generated/Code2TH.hs" #-}
+                            {-# LINE 889 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule76 #-}
    rule76 = \  (_ :: ()) ->
      Nothing
@@ -903,9 +910,9 @@ sem_Decl_NewType !arg_name_ !arg_params_ !arg_con_ arg_tp_ = T_Decl (return st20
          in __result_ )
      in C_Decl_s20 v19
    {-# INLINE rule78 #-}
-   {-# LINE 124 "src-ag/Code2TH.ag" #-}
+   {-# LINE 133 "src-ag/Code2TH.ag" #-}
    rule78 = \ ((_tpIth) :: TH.Type) con_ name_ params_ ->
-                               {-# LINE 124 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 133 "src-ag/Code2TH.ag" #-}
                                pure $ TH.NewtypeD []
                                                   (TH.mkName name_)
                                                   (map (TH.PlainTV . TH.mkName) params_)
@@ -913,7 +920,7 @@ sem_Decl_NewType !arg_name_ !arg_params_ !arg_con_ arg_tp_ = T_Decl (return st20
                                                   (TH.NormalC (TH.mkName con_)
                                                     [(TH.Bang TH.NoSourceUnpackedness TH.NoSourceStrictness, _tpIth)])
                                                   []
-                               {-# LINE 917 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 924 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule79 #-}
    rule79 = \  (_ :: ()) ->
      Nothing
@@ -938,13 +945,13 @@ sem_Decl_Type !arg_name_ !arg_params_ arg_tp_ = T_Decl (return st20) where
          in __result_ )
      in C_Decl_s20 v19
    {-# INLINE rule81 #-}
-   {-# LINE 131 "src-ag/Code2TH.ag" #-}
+   {-# LINE 140 "src-ag/Code2TH.ag" #-}
    rule81 = \ ((_tpIth) :: TH.Type) name_ params_ ->
-                               {-# LINE 131 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 140 "src-ag/Code2TH.ag" #-}
                                pure $ TH.TySynD (TH.mkName name_)
                                                 (map (TH.PlainTV . TH.mkName) params_)
                                                 _tpIth
-                               {-# LINE 948 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 955 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule82 #-}
    rule82 = \  (_ :: ()) ->
      Nothing
@@ -961,7 +968,7 @@ sem_Decl_TSig !arg_name_ arg_tp_ = T_Decl (return st20) where
          _tpX50 = Control.Monad.Identity.runIdentity (attach_T_Type (arg_tp_))
          (T_Type_vOut49 _tpIth) = inv_Type_s50 _tpX50 (T_Type_vIn49 _tpOnested)
          _lhsOth :: Maybe TH.Dec
-         _lhsOth = rule84 _tpIth arg_name_
+         _lhsOth = rule84 _lhsIisDeclOfLet _tpIth arg_name_
          _lhsOstmt :: Maybe TH.Stmt
          _lhsOstmt = rule85  ()
          _tpOnested = rule86 _lhsInested
@@ -969,11 +976,11 @@ sem_Decl_TSig !arg_name_ arg_tp_ = T_Decl (return st20) where
          in __result_ )
      in C_Decl_s20 v19
    {-# INLINE rule84 #-}
-   {-# LINE 134 "src-ag/Code2TH.ag" #-}
-   rule84 = \ ((_tpIth) :: TH.Type) name_ ->
-                               {-# LINE 134 "src-ag/Code2TH.ag" #-}
-                               pure $ TH.SigD (TH.mkName name_) _tpIth
-                               {-# LINE 977 "src-generated/Code2TH.hs" #-}
+   {-# LINE 143 "src-ag/Code2TH.ag" #-}
+   rule84 = \ ((_lhsIisDeclOfLet) :: Bool) ((_tpIth) :: TH.Type) name_ ->
+                               {-# LINE 143 "src-ag/Code2TH.ag" #-}
+                               if _lhsIisDeclOfLet then empty else pure $ TH.SigD (TH.mkName name_) _tpIth
+                               {-# LINE 984 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule85 #-}
    rule85 = \  (_ :: ()) ->
      Nothing
@@ -1043,13 +1050,13 @@ sem_Decl_Resume !arg_monadic_ _ arg_left_ arg_rhs_ = T_Decl (return st20) where
          in __result_ )
      in C_Decl_s20 v19
    {-# INLINE rule91 #-}
-   {-# LINE 137 "src-ag/Code2TH.ag" #-}
+   {-# LINE 146 "src-ag/Code2TH.ag" #-}
    rule91 = \ ((_leftIpat) :: TH.Pat) ((_leftIth) :: TH.Exp -> TH.Dec) ((_rhsIth) :: TH.Exp) monadic_ ->
-                               {-# LINE 137 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 146 "src-ag/Code2TH.ag" #-}
                                if monadic_
                                then (Nothing, Just (TH.BindS _leftIpat _rhsIth))
                                else (Just (_leftIth _rhsIth), Nothing)
-                               {-# LINE 1053 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1060 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule92 #-}
    rule92 = \ ((_lhsIisDeclOfLet) :: Bool) ->
      _lhsIisDeclOfLet
@@ -1090,17 +1097,17 @@ sem_Decl_EvalDecl !arg_nt_ arg_left_ arg_rhs_ = T_Decl (return st20) where
          in __result_ )
      in C_Decl_s20 v19
    {-# INLINE rule97 #-}
-   {-# LINE 140 "src-ag/Code2TH.ag" #-}
+   {-# LINE 149 "src-ag/Code2TH.ag" #-}
    rule97 = \ ((_lhsIoptions) :: Options) ->
-                               {-# LINE 140 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 149 "src-ag/Code2TH.ag" #-}
                                if breadthFirstStrict _lhsIoptions
                                then TH.VarE (TH.mkName "stepwiseEval")
                                else TH.VarE (TH.mkName "lazyEval")
-                               {-# LINE 1100 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1107 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule98 #-}
-   {-# LINE 143 "src-ag/Code2TH.ag" #-}
+   {-# LINE 152 "src-ag/Code2TH.ag" #-}
    rule98 = \ ((_leftIth) :: TH.Exp -> TH.Dec) ((_lhsIoptions) :: Options) ((_rhsIth) :: TH.Exp) _strat nt_ ->
-                               {-# LINE 143 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 152 "src-ag/Code2TH.ag" #-}
                                pure $ if breadthFirst _lhsIoptions
                                then _leftIth $ TH.CaseE (TH.AppE _strat     _rhsIth)
                                     [ TH.Match (TH.ConP (TH.mkName (nt_ ++ "_Syn"))
@@ -1109,7 +1116,7 @@ sem_Decl_EvalDecl !arg_nt_ arg_left_ arg_rhs_ = T_Decl (return st20) where
                                                []
                                     ]
                                else _leftIth _rhsIth
-                               {-# LINE 1113 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1120 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule99 #-}
    rule99 = \  (_ :: ()) ->
      Nothing
@@ -1298,23 +1305,23 @@ sem_Expr_Let arg_decls_ arg_body_ = T_Expr (return st26) where
          in __result_ )
      in C_Expr_s26 v25
    {-# INLINE rule115 #-}
-   {-# LINE 153 "src-ag/Code2TH.ag" #-}
+   {-# LINE 162 "src-ag/Code2TH.ag" #-}
    rule115 = \ ((_bodyIth) :: TH.Exp) ((_declsIth) :: [TH.Dec]) ->
-                               {-# LINE 153 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 162 "src-ag/Code2TH.ag" #-}
                                TH.LetE _declsIth _bodyIth
-                               {-# LINE 1306 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1313 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule116 #-}
-   {-# LINE 154 "src-ag/Code2TH.ag" #-}
+   {-# LINE 163 "src-ag/Code2TH.ag" #-}
    rule116 = \  (_ :: ()) ->
-                               {-# LINE 154 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 163 "src-ag/Code2TH.ag" #-}
                                error "Cannot use let expression in pattern"
-                               {-# LINE 1312 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1319 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule117 #-}
-   {-# LINE 408 "src-ag/Code2TH.ag" #-}
+   {-# LINE 417 "src-ag/Code2TH.ag" #-}
    rule117 = \  (_ :: ()) ->
-                            {-# LINE 408 "src-ag/Code2TH.ag" #-}
+                            {-# LINE 417 "src-ag/Code2TH.ag" #-}
                             True
-                            {-# LINE 1318 "src-generated/Code2TH.hs" #-}
+                            {-# LINE 1325 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule118 #-}
    rule118 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -1350,17 +1357,17 @@ sem_Expr_Case arg_expr_ arg_alts_ = T_Expr (return st26) where
          in __result_ )
      in C_Expr_s26 v25
    {-# INLINE rule122 #-}
-   {-# LINE 155 "src-ag/Code2TH.ag" #-}
+   {-# LINE 164 "src-ag/Code2TH.ag" #-}
    rule122 = \ ((_altsIth) :: [TH.Match]) ((_exprIth) :: TH.Exp) ->
-                               {-# LINE 155 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 164 "src-ag/Code2TH.ag" #-}
                                TH.CaseE _exprIth _altsIth
-                               {-# LINE 1358 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1365 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule123 #-}
-   {-# LINE 156 "src-ag/Code2TH.ag" #-}
+   {-# LINE 165 "src-ag/Code2TH.ag" #-}
    rule123 = \  (_ :: ()) ->
-                               {-# LINE 156 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 165 "src-ag/Code2TH.ag" #-}
                                error "Cannot use case expression in pattern"
-                               {-# LINE 1364 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1371 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule124 #-}
    rule124 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -1397,23 +1404,23 @@ sem_Expr_Do arg_stmts_ arg_body_ = T_Expr (return st26) where
          in __result_ )
      in C_Expr_s26 v25
    {-# INLINE rule128 #-}
-   {-# LINE 157 "src-ag/Code2TH.ag" #-}
+   {-# LINE 166 "src-ag/Code2TH.ag" #-}
    rule128 = \ ((_bodyIth) :: TH.Exp) ((_stmtsIstmt) :: [TH.Stmt]) ->
-                               {-# LINE 157 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 166 "src-ag/Code2TH.ag" #-}
                                TH.DoE (_stmtsIstmt ++ [TH.NoBindS (TH.VarE (TH.mkName "return") `TH.AppE` _bodyIth)])
-                               {-# LINE 1405 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1412 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule129 #-}
-   {-# LINE 158 "src-ag/Code2TH.ag" #-}
+   {-# LINE 167 "src-ag/Code2TH.ag" #-}
    rule129 = \  (_ :: ()) ->
-                               {-# LINE 158 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 167 "src-ag/Code2TH.ag" #-}
                                error "Cannot use do expression in pattern"
-                               {-# LINE 1411 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1418 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule130 #-}
-   {-# LINE 410 "src-ag/Code2TH.ag" #-}
+   {-# LINE 419 "src-ag/Code2TH.ag" #-}
    rule130 = \  (_ :: ()) ->
-                            {-# LINE 410 "src-ag/Code2TH.ag" #-}
+                            {-# LINE 419 "src-ag/Code2TH.ag" #-}
                             False
-                            {-# LINE 1417 "src-generated/Code2TH.hs" #-}
+                            {-# LINE 1424 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule131 #-}
    rule131 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -1451,33 +1458,33 @@ sem_Expr_Lambda arg_args_ arg_body_ = T_Expr (return st26) where
          in __result_ )
      in C_Expr_s26 v25
    {-# INLINE rule135 #-}
-   {-# LINE 159 "src-ag/Code2TH.ag" #-}
+   {-# LINE 168 "src-ag/Code2TH.ag" #-}
    rule135 = \ ((_argsIth) :: [TH.Exp]) ((_lhsIoptions) :: Options) ->
-                                    {-# LINE 159 "src-ag/Code2TH.ag" #-}
+                                    {-# LINE 168 "src-ag/Code2TH.ag" #-}
                                     if strictSems _lhsIoptions
                                     then _argsIth
                                     else []
-                                    {-# LINE 1461 "src-generated/Code2TH.hs" #-}
+                                    {-# LINE 1468 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule136 #-}
-   {-# LINE 162 "src-ag/Code2TH.ag" #-}
+   {-# LINE 171 "src-ag/Code2TH.ag" #-}
    rule136 = \ ((_lhsIoptions) :: Options) ->
-                               {-# LINE 162 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 171 "src-ag/Code2TH.ag" #-}
                                if bangpats _lhsIoptions
                                then TH.BangP
                                else id
-                               {-# LINE 1469 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1476 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule137 #-}
-   {-# LINE 165 "src-ag/Code2TH.ag" #-}
+   {-# LINE 174 "src-ag/Code2TH.ag" #-}
    rule137 = \ _addBang ((_argsIpat) :: [TH.Pat]) ((_bodyIth) :: TH.Exp) _strictParams ->
-                               {-# LINE 165 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 174 "src-ag/Code2TH.ag" #-}
                                TH.LamE (map _addBang     _argsIpat) (seqsE _strictParams     _bodyIth)
-                               {-# LINE 1475 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1482 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule138 #-}
-   {-# LINE 166 "src-ag/Code2TH.ag" #-}
+   {-# LINE 175 "src-ag/Code2TH.ag" #-}
    rule138 = \  (_ :: ()) ->
-                               {-# LINE 166 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 175 "src-ag/Code2TH.ag" #-}
                                error "Cannot use lambda expression in pattern"
-                               {-# LINE 1481 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1488 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule139 #-}
    rule139 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -1509,17 +1516,17 @@ sem_Expr_TupleExpr arg_exprs_ = T_Expr (return st26) where
          in __result_ )
      in C_Expr_s26 v25
    {-# INLINE rule143 #-}
-   {-# LINE 167 "src-ag/Code2TH.ag" #-}
+   {-# LINE 176 "src-ag/Code2TH.ag" #-}
    rule143 = \ ((_exprsIth) :: [TH.Exp]) ((_lhsInested) :: Bool) ->
-                               {-# LINE 167 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 176 "src-ag/Code2TH.ag" #-}
                                tupleE False _lhsInested _exprsIth
-                               {-# LINE 1517 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1524 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule144 #-}
-   {-# LINE 168 "src-ag/Code2TH.ag" #-}
+   {-# LINE 177 "src-ag/Code2TH.ag" #-}
    rule144 = \ ((_exprsIpat) :: [TH.Pat]) ((_lhsInested) :: Bool) ->
-                               {-# LINE 168 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 177 "src-ag/Code2TH.ag" #-}
                                pure $ tupleP False _lhsInested _exprsIpat
-                               {-# LINE 1523 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1530 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule145 #-}
    rule145 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -1545,17 +1552,17 @@ sem_Expr_UnboxedTupleExpr arg_exprs_ = T_Expr (return st26) where
          in __result_ )
      in C_Expr_s26 v25
    {-# INLINE rule147 #-}
-   {-# LINE 170 "src-ag/Code2TH.ag" #-}
+   {-# LINE 179 "src-ag/Code2TH.ag" #-}
    rule147 = \ ((_exprsIth) :: [TH.Exp]) ((_lhsInested) :: Bool) ->
-                               {-# LINE 170 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 179 "src-ag/Code2TH.ag" #-}
                                tupleE True _lhsInested _exprsIth
-                               {-# LINE 1553 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1560 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule148 #-}
-   {-# LINE 171 "src-ag/Code2TH.ag" #-}
+   {-# LINE 180 "src-ag/Code2TH.ag" #-}
    rule148 = \ ((_exprsIpat) :: [TH.Pat]) ((_lhsInested) :: Bool) ->
-                               {-# LINE 171 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 180 "src-ag/Code2TH.ag" #-}
                                pure $ tupleP True _lhsInested _exprsIpat
-                               {-# LINE 1559 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1566 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule149 #-}
    rule149 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -1581,17 +1588,17 @@ sem_Expr_App !arg_name_ arg_args_ = T_Expr (return st26) where
          in __result_ )
      in C_Expr_s26 v25
    {-# INLINE rule151 #-}
-   {-# LINE 172 "src-ag/Code2TH.ag" #-}
+   {-# LINE 181 "src-ag/Code2TH.ag" #-}
    rule151 = \ ((_argsIth) :: [TH.Exp]) name_ ->
-                               {-# LINE 172 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 181 "src-ag/Code2TH.ag" #-}
                                foldl TH.AppE (varConE name_) _argsIth
-                               {-# LINE 1589 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1596 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule152 #-}
-   {-# LINE 173 "src-ag/Code2TH.ag" #-}
+   {-# LINE 182 "src-ag/Code2TH.ag" #-}
    rule152 = \ ((_argsIpat) :: [TH.Pat]) name_ ->
-                               {-# LINE 173 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 182 "src-ag/Code2TH.ag" #-}
                                pure $ TH.ConP (TH.mkName name_) _argsIpat
-                               {-# LINE 1595 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1602 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule153 #-}
    rule153 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -1613,17 +1620,17 @@ sem_Expr_SimpleExpr !arg_txt_ = T_Expr (return st26) where
          in __result_ )
      in C_Expr_s26 v25
    {-# INLINE rule155 #-}
-   {-# LINE 174 "src-ag/Code2TH.ag" #-}
+   {-# LINE 183 "src-ag/Code2TH.ag" #-}
    rule155 = \ txt_ ->
-                               {-# LINE 174 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 183 "src-ag/Code2TH.ag" #-}
                                varConE txt_
-                               {-# LINE 1621 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1628 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule156 #-}
-   {-# LINE 175 "src-ag/Code2TH.ag" #-}
+   {-# LINE 184 "src-ag/Code2TH.ag" #-}
    rule156 = \ txt_ ->
-                               {-# LINE 175 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 184 "src-ag/Code2TH.ag" #-}
                                pure $ TH.VarP (TH.mkName txt_)
-                               {-# LINE 1627 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1634 "src-generated/Code2TH.hs" #-}
 {-# NOINLINE sem_Expr_TextExpr #-}
 sem_Expr_TextExpr :: ([String]) -> T_Expr 
 sem_Expr_TextExpr !arg_lns_ = T_Expr (return st26) where
@@ -1639,17 +1646,17 @@ sem_Expr_TextExpr !arg_lns_ = T_Expr (return st26) where
          in __result_ )
      in C_Expr_s26 v25
    {-# INLINE rule157 #-}
-   {-# LINE 176 "src-ag/Code2TH.ag" #-}
+   {-# LINE 185 "src-ag/Code2TH.ag" #-}
    rule157 = \ lns_ ->
-                               {-# LINE 176 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 185 "src-ag/Code2TH.ag" #-}
                                either error id $ Meta.parseExp (unlines lns_)
-                               {-# LINE 1647 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1654 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule158 #-}
-   {-# LINE 177 "src-ag/Code2TH.ag" #-}
+   {-# LINE 186 "src-ag/Code2TH.ag" #-}
    rule158 = \  (_ :: ()) ->
-                               {-# LINE 177 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 186 "src-ag/Code2TH.ag" #-}
                                error "Figure out what to do with TextExpr pat"
-                               {-# LINE 1653 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1660 "src-generated/Code2TH.hs" #-}
 {-# NOINLINE sem_Expr_Trace #-}
 sem_Expr_Trace :: (String) -> T_Expr  -> T_Expr 
 sem_Expr_Trace !arg_txt_ arg_expr_ = T_Expr (return st26) where
@@ -1669,17 +1676,17 @@ sem_Expr_Trace !arg_txt_ arg_expr_ = T_Expr (return st26) where
          in __result_ )
      in C_Expr_s26 v25
    {-# INLINE rule159 #-}
-   {-# LINE 178 "src-ag/Code2TH.ag" #-}
+   {-# LINE 187 "src-ag/Code2TH.ag" #-}
    rule159 = \ ((_exprIth) :: TH.Exp) txt_ ->
-                               {-# LINE 178 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 187 "src-ag/Code2TH.ag" #-}
                                TH.VarE (TH.mkName "trace") `TH.AppE` (TH.LitE (TH.StringL txt_)) `TH.AppE` _exprIth
-                               {-# LINE 1677 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1684 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule160 #-}
-   {-# LINE 179 "src-ag/Code2TH.ag" #-}
+   {-# LINE 188 "src-ag/Code2TH.ag" #-}
    rule160 = \  (_ :: ()) ->
-                               {-# LINE 179 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 188 "src-ag/Code2TH.ag" #-}
                                error "Cannot use trace expression in pattern"
-                               {-# LINE 1683 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1690 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule161 #-}
    rule161 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -1735,17 +1742,17 @@ sem_Expr_LineExpr arg_expr_ = T_Expr (return st26) where
          in __result_ )
      in C_Expr_s26 v25
    {-# INLINE rule167 #-}
-   {-# LINE 192 "src-ag/Code2TH.ag" #-}
+   {-# LINE 201 "src-ag/Code2TH.ag" #-}
    rule167 = \ ((_exprIth) :: TH.Exp) ->
-                               {-# LINE 192 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 201 "src-ag/Code2TH.ag" #-}
                                _exprIth
-                               {-# LINE 1743 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1750 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule168 #-}
-   {-# LINE 195 "src-ag/Code2TH.ag" #-}
+   {-# LINE 204 "src-ag/Code2TH.ag" #-}
    rule168 = \  (_ :: ()) ->
-                               {-# LINE 195 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 204 "src-ag/Code2TH.ag" #-}
                                error "Cannot use line pragma expression in pattern"
-                               {-# LINE 1749 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1756 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule169 #-}
    rule169 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -1766,7 +1773,7 @@ sem_Expr_TypedExpr arg_expr_ arg_tp_ = T_Expr (return st26) where
          _lhsOth :: TH.Exp
          _lhsOth = rule171 _exprIth _tpIth
          _lhsOpat :: Maybe TH.Pat
-         _lhsOpat = rule172  ()
+         _lhsOpat = rule172 _exprIpat
          _exprOnested = rule173 _lhsInested
          _exprOoptions = rule174 _lhsIoptions
          _tpOnested = rule175 _lhsInested
@@ -1774,17 +1781,17 @@ sem_Expr_TypedExpr arg_expr_ arg_tp_ = T_Expr (return st26) where
          in __result_ )
      in C_Expr_s26 v25
    {-# INLINE rule171 #-}
-   {-# LINE 196 "src-ag/Code2TH.ag" #-}
+   {-# LINE 205 "src-ag/Code2TH.ag" #-}
    rule171 = \ ((_exprIth) :: TH.Exp) ((_tpIth) :: TH.Type) ->
-                               {-# LINE 196 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 205 "src-ag/Code2TH.ag" #-}
                                TH.SigE _exprIth _tpIth
-                               {-# LINE 1782 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1789 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule172 #-}
-   {-# LINE 197 "src-ag/Code2TH.ag" #-}
-   rule172 = \  (_ :: ()) ->
-                               {-# LINE 197 "src-ag/Code2TH.ag" #-}
-                               error "Cannot use typed expression in pattern"
-                               {-# LINE 1788 "src-generated/Code2TH.hs" #-}
+   {-# LINE 206 "src-ag/Code2TH.ag" #-}
+   rule172 = \ ((_exprIpat) :: Maybe TH.Pat) ->
+                               {-# LINE 206 "src-ag/Code2TH.ag" #-}
+                               _exprIpat
+                               {-# LINE 1795 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule173 #-}
    rule173 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -1813,19 +1820,19 @@ sem_Expr_ResultExpr !arg_nt_ arg_expr_ = T_Expr (return st26) where
          in __result_ )
      in C_Expr_s26 v25
    {-# INLINE rule176 #-}
-   {-# LINE 198 "src-ag/Code2TH.ag" #-}
+   {-# LINE 207 "src-ag/Code2TH.ag" #-}
    rule176 = \ ((_exprIth) :: TH.Exp) ((_lhsIoptions) :: Options) nt_ ->
-                               {-# LINE 198 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 207 "src-ag/Code2TH.ag" #-}
                                if breadthFirst _lhsIoptions
                                then TH.VarE (TH.mkName "final") `TH.AppE` (TH.ConE (TH.mkName (nt_ ++ "_Syn")) `TH.AppE` _exprIth)
                                else _exprIth
-                               {-# LINE 1823 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1830 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule177 #-}
-   {-# LINE 201 "src-ag/Code2TH.ag" #-}
+   {-# LINE 210 "src-ag/Code2TH.ag" #-}
    rule177 = \  (_ :: ()) ->
-                               {-# LINE 201 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 210 "src-ag/Code2TH.ag" #-}
                                error "Cannot use result expression in pattern"
-                               {-# LINE 1829 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1836 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule178 #-}
    rule178 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -1855,21 +1862,21 @@ sem_Expr_InvokeExpr !arg_nt_ arg_expr_ arg_args_ = T_Expr (return st26) where
          in __result_ )
      in C_Expr_s26 v25
    {-# INLINE rule180 #-}
-   {-# LINE 202 "src-ag/Code2TH.ag" #-}
+   {-# LINE 211 "src-ag/Code2TH.ag" #-}
    rule180 = \ ((_argsIth) :: [TH.Exp]) ((_exprIth) :: TH.Exp) ((_lhsIoptions) :: Options) nt_ ->
-                               {-# LINE 202 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 211 "src-ag/Code2TH.ag" #-}
                                if breadthFirst _lhsIoptions
                                then TH.VarE (TH.mkName "invoke")
                                    `TH.AppE` _exprIth
                                    `TH.AppE` (TH.ConE (TH.mkName (nt_ ++ "_Inh")) `TH.AppE` (TH.TupE (map Just _argsIth)))
                                else foldl TH.AppE _exprIth _argsIth
-                               {-# LINE 1867 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1874 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule181 #-}
-   {-# LINE 207 "src-ag/Code2TH.ag" #-}
+   {-# LINE 216 "src-ag/Code2TH.ag" #-}
    rule181 = \  (_ :: ()) ->
-                               {-# LINE 207 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 216 "src-ag/Code2TH.ag" #-}
                                error "Cannot use invoke expression in pattern"
-                               {-# LINE 1873 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1880 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule182 #-}
    rule182 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -1910,28 +1917,28 @@ sem_Expr_ResumeExpr !arg_nt_ arg_expr_ arg_left_ arg_rhs_ = T_Expr (return st26)
          in __result_ )
      in C_Expr_s26 v25
    {-# INLINE rule186 #-}
-   {-# LINE 208 "src-ag/Code2TH.ag" #-}
+   {-# LINE 217 "src-ag/Code2TH.ag" #-}
    rule186 = \ ((_exprIth) :: TH.Exp) ((_leftIpat) :: TH.Pat) ((_leftIth) :: TH.Exp -> TH.Dec) ((_lhsIoptions) :: Options) ((_rhsIth) :: TH.Exp) nt_ ->
-                               {-# LINE 208 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 217 "src-ag/Code2TH.ag" #-}
                                if breadthFirst _lhsIoptions
                                then TH.VarE (TH.mkName "resume")
                                    `TH.AppE` _exprIth
                                    `TH.AppE` TH.LamE [TH.TildeP (TH.ConP (TH.mkName (nt_ ++ "_Syn")) [TH.VarP (TH.mkName "_inh_arg")])]
                                                      (TH.LetE [_leftIth (TH.VarE (TH.mkName "_inh_arg"))] _rhsIth)
                                else TH.CaseE _exprIth [TH.Match _leftIpat (TH.NormalB _rhsIth) []]
-                               {-# LINE 1923 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1930 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule187 #-}
-   {-# LINE 214 "src-ag/Code2TH.ag" #-}
+   {-# LINE 223 "src-ag/Code2TH.ag" #-}
    rule187 = \  (_ :: ()) ->
-                               {-# LINE 214 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 223 "src-ag/Code2TH.ag" #-}
                                error "Cannot use resume expression in pattern"
-                               {-# LINE 1929 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1936 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule188 #-}
-   {-# LINE 412 "src-ag/Code2TH.ag" #-}
+   {-# LINE 421 "src-ag/Code2TH.ag" #-}
    rule188 = \  (_ :: ()) ->
-                           {-# LINE 412 "src-ag/Code2TH.ag" #-}
+                           {-# LINE 421 "src-ag/Code2TH.ag" #-}
                            False
-                           {-# LINE 1935 "src-generated/Code2TH.hs" #-}
+                           {-# LINE 1942 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule189 #-}
    rule189 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -1975,23 +1982,23 @@ sem_Expr_SemFun !arg_nt_ arg_args_ arg_body_ = T_Expr (return st26) where
          in __result_ )
      in C_Expr_s26 v25
    {-# INLINE rule195 #-}
-   {-# LINE 215 "src-ag/Code2TH.ag" #-}
+   {-# LINE 224 "src-ag/Code2TH.ag" #-}
    rule195 = \ ((_argsIth) :: [TH.Exp]) ((_lhsIoptions) :: Options) ->
-                                    {-# LINE 215 "src-ag/Code2TH.ag" #-}
+                                    {-# LINE 224 "src-ag/Code2TH.ag" #-}
                                     if strictSems _lhsIoptions
                                     then _argsIth
                                     else []
-                                    {-# LINE 1985 "src-generated/Code2TH.hs" #-}
+                                    {-# LINE 1992 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule196 #-}
-   {-# LINE 218 "src-ag/Code2TH.ag" #-}
+   {-# LINE 227 "src-ag/Code2TH.ag" #-}
    rule196 = \ ((_lhsIoptions) :: Options) ->
-                               {-# LINE 218 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 227 "src-ag/Code2TH.ag" #-}
                                if bangpats _lhsIoptions then TH.BangP else id
-                               {-# LINE 1991 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 1998 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule197 #-}
-   {-# LINE 219 "src-ag/Code2TH.ag" #-}
+   {-# LINE 228 "src-ag/Code2TH.ag" #-}
    rule197 = \ _addBang ((_argsIpat) :: [TH.Pat]) ((_bodyIth) :: TH.Exp) ((_lhsIoptions) :: Options) _strictParams nt_ ->
-                               {-# LINE 219 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 228 "src-ag/Code2TH.ag" #-}
                                if breadthFirst _lhsIoptions
                                then TH.ConE (TH.mkName "Child")
                                    `TH.AppE` TH.LamE [TH.ConP (TH.mkName (nt_ ++ "_Inh")) [TH.TupP (map _addBang     _argsIpat)]]
@@ -2000,13 +2007,13 @@ sem_Expr_SemFun !arg_nt_ arg_args_ arg_body_ = T_Expr (return st26) where
                                     then _bodyIth
                                     else TH.LamE (map _addBang     _argsIpat)
                                                  (seqsE _strictParams     _bodyIth)
-                               {-# LINE 2004 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 2011 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule198 #-}
-   {-# LINE 227 "src-ag/Code2TH.ag" #-}
+   {-# LINE 236 "src-ag/Code2TH.ag" #-}
    rule198 = \  (_ :: ()) ->
-                               {-# LINE 227 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 236 "src-ag/Code2TH.ag" #-}
                                error "Cannot use semfun expression in pattern"
-                               {-# LINE 2010 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 2017 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule199 #-}
    rule199 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -2166,23 +2173,23 @@ sem_Lhs_Pattern3 arg_pat3_ = T_Lhs (return st32) where
          in __result_ )
      in C_Lhs_s32 v31
    {-# INLINE rule211 #-}
-   {-# LINE 266 "src-ag/Code2TH.ag" #-}
+   {-# LINE 275 "src-ag/Code2TH.ag" #-}
    rule211 = \  (_ :: ()) ->
-                                {-# LINE 266 "src-ag/Code2TH.ag" #-}
+                                {-# LINE 275 "src-ag/Code2TH.ag" #-}
                                 error "pat Deal with Pattern3"
-                                {-# LINE 2174 "src-generated/Code2TH.hs" #-}
+                                {-# LINE 2181 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule212 #-}
-   {-# LINE 267 "src-ag/Code2TH.ag" #-}
+   {-# LINE 276 "src-ag/Code2TH.ag" #-}
    rule212 = \ ((_pat3IstrictVars) :: [TH.Name]) ((_pat3Ith) :: TH.Pat) ->
-                                {-# LINE 267 "src-ag/Code2TH.ag" #-}
+                                {-# LINE 276 "src-ag/Code2TH.ag" #-}
                                 \x -> TH.ValD _pat3Ith (TH.NormalB (seqsE (map TH.VarE _pat3IstrictVars) x)) []
-                                {-# LINE 2180 "src-generated/Code2TH.hs" #-}
+                                {-# LINE 2187 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule213 #-}
-   {-# LINE 373 "src-ag/Code2TH.ag" #-}
+   {-# LINE 382 "src-ag/Code2TH.ag" #-}
    rule213 = \  (_ :: ()) ->
-                                {-# LINE 373 "src-ag/Code2TH.ag" #-}
+                                {-# LINE 382 "src-ag/Code2TH.ag" #-}
                                 False
-                                {-# LINE 2186 "src-generated/Code2TH.hs" #-}
+                                {-# LINE 2193 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule214 #-}
    rule214 = \ ((_lhsIisDeclOfLet) :: Bool) ->
      _lhsIisDeclOfLet
@@ -2209,23 +2216,23 @@ sem_Lhs_Pattern3SM arg_pat3_ = T_Lhs (return st32) where
          in __result_ )
      in C_Lhs_s32 v31
    {-# INLINE rule216 #-}
-   {-# LINE 268 "src-ag/Code2TH.ag" #-}
+   {-# LINE 277 "src-ag/Code2TH.ag" #-}
    rule216 = \  (_ :: ()) ->
-                                {-# LINE 268 "src-ag/Code2TH.ag" #-}
+                                {-# LINE 277 "src-ag/Code2TH.ag" #-}
                                 error "pat Deal with Pattern3SM"
-                                {-# LINE 2217 "src-generated/Code2TH.hs" #-}
+                                {-# LINE 2224 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule217 #-}
-   {-# LINE 269 "src-ag/Code2TH.ag" #-}
+   {-# LINE 278 "src-ag/Code2TH.ag" #-}
    rule217 = \  (_ :: ()) ->
-                                {-# LINE 269 "src-ag/Code2TH.ag" #-}
+                                {-# LINE 278 "src-ag/Code2TH.ag" #-}
                                 error "th Deal with Pattern3SM"
-                                {-# LINE 2223 "src-generated/Code2TH.hs" #-}
+                                {-# LINE 2230 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule218 #-}
-   {-# LINE 373 "src-ag/Code2TH.ag" #-}
+   {-# LINE 382 "src-ag/Code2TH.ag" #-}
    rule218 = \  (_ :: ()) ->
-                                {-# LINE 373 "src-ag/Code2TH.ag" #-}
+                                {-# LINE 382 "src-ag/Code2TH.ag" #-}
                                 False
-                                {-# LINE 2229 "src-generated/Code2TH.hs" #-}
+                                {-# LINE 2236 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule219 #-}
    rule219 = \ ((_lhsIisDeclOfLet) :: Bool) ->
      _lhsIisDeclOfLet
@@ -2249,23 +2256,23 @@ sem_Lhs_TupleLhs !arg_comps_ = T_Lhs (return st32) where
          in __result_ )
      in C_Lhs_s32 v31
    {-# INLINE rule221 #-}
-   {-# LINE 264 "src-ag/Code2TH.ag" #-}
+   {-# LINE 273 "src-ag/Code2TH.ag" #-}
    rule221 = \ ((_lhsIoptions) :: Options) ->
-                      {-# LINE 264 "src-ag/Code2TH.ag" #-}
+                      {-# LINE 273 "src-ag/Code2TH.ag" #-}
                       if bangpats _lhsIoptions then TH.BangP else id
-                      {-# LINE 2257 "src-generated/Code2TH.hs" #-}
+                      {-# LINE 2264 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule222 #-}
-   {-# LINE 270 "src-ag/Code2TH.ag" #-}
+   {-# LINE 279 "src-ag/Code2TH.ag" #-}
    rule222 = \ _addBang ((_lhsInested) :: Bool) comps_ ->
-                                {-# LINE 270 "src-ag/Code2TH.ag" #-}
+                                {-# LINE 279 "src-ag/Code2TH.ag" #-}
                                 tupleP False _lhsInested (map (_addBang     . TH.VarP . TH.mkName) comps_)
-                                {-# LINE 2263 "src-generated/Code2TH.hs" #-}
+                                {-# LINE 2270 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule223 #-}
-   {-# LINE 271 "src-ag/Code2TH.ag" #-}
+   {-# LINE 280 "src-ag/Code2TH.ag" #-}
    rule223 = \ _pat ->
-                                {-# LINE 271 "src-ag/Code2TH.ag" #-}
+                                {-# LINE 280 "src-ag/Code2TH.ag" #-}
                                 \x -> TH.ValD _pat     (TH.NormalB x) []
-                                {-# LINE 2269 "src-generated/Code2TH.hs" #-}
+                                {-# LINE 2276 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule224 #-}
    rule224 = \ _pat ->
      _pat
@@ -2285,23 +2292,23 @@ sem_Lhs_UnboxedTupleLhs _ = T_Lhs (return st32) where
          in __result_ )
      in C_Lhs_s32 v31
    {-# INLINE rule225 #-}
-   {-# LINE 264 "src-ag/Code2TH.ag" #-}
-   rule225 = \ ((_lhsIoptions) :: Options) ->
-                      {-# LINE 264 "src-ag/Code2TH.ag" #-}
-                      if bangpats _lhsIoptions then TH.BangP else id
-                      {-# LINE 2293 "src-generated/Code2TH.hs" #-}
-   {-# INLINE rule226 #-}
-   {-# LINE 272 "src-ag/Code2TH.ag" #-}
-   rule226 = \  (_ :: ()) ->
-                                       {-# LINE 272 "src-ag/Code2TH.ag" #-}
-                                       error "pat Deal with UnboxedTupleLhs"
-                                       {-# LINE 2299 "src-generated/Code2TH.hs" #-}
-   {-# INLINE rule227 #-}
    {-# LINE 273 "src-ag/Code2TH.ag" #-}
+   rule225 = \ ((_lhsIoptions) :: Options) ->
+                      {-# LINE 273 "src-ag/Code2TH.ag" #-}
+                      if bangpats _lhsIoptions then TH.BangP else id
+                      {-# LINE 2300 "src-generated/Code2TH.hs" #-}
+   {-# INLINE rule226 #-}
+   {-# LINE 281 "src-ag/Code2TH.ag" #-}
+   rule226 = \  (_ :: ()) ->
+                                       {-# LINE 281 "src-ag/Code2TH.ag" #-}
+                                       error "pat Deal with UnboxedTupleLhs"
+                                       {-# LINE 2306 "src-generated/Code2TH.hs" #-}
+   {-# INLINE rule227 #-}
+   {-# LINE 282 "src-ag/Code2TH.ag" #-}
    rule227 = \  (_ :: ()) ->
-                                       {-# LINE 273 "src-ag/Code2TH.ag" #-}
+                                       {-# LINE 282 "src-ag/Code2TH.ag" #-}
                                        error "th Deal with UnboxedTupleLhs"
-                                       {-# LINE 2305 "src-generated/Code2TH.hs" #-}
+                                       {-# LINE 2312 "src-generated/Code2TH.hs" #-}
 {-# NOINLINE sem_Lhs_Fun #-}
 sem_Lhs_Fun :: (String) -> T_Exprs  -> T_Lhs 
 sem_Lhs_Fun !arg_name_ arg_args_ = T_Lhs (return st32) where
@@ -2322,23 +2329,23 @@ sem_Lhs_Fun !arg_name_ arg_args_ = T_Lhs (return st32) where
          in __result_ )
      in C_Lhs_s32 v31
    {-# INLINE rule228 #-}
-   {-# LINE 264 "src-ag/Code2TH.ag" #-}
+   {-# LINE 273 "src-ag/Code2TH.ag" #-}
    rule228 = \ ((_lhsIoptions) :: Options) ->
-                      {-# LINE 264 "src-ag/Code2TH.ag" #-}
+                      {-# LINE 273 "src-ag/Code2TH.ag" #-}
                       if bangpats _lhsIoptions then TH.BangP else id
-                      {-# LINE 2330 "src-generated/Code2TH.hs" #-}
+                      {-# LINE 2337 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule229 #-}
-   {-# LINE 274 "src-ag/Code2TH.ag" #-}
+   {-# LINE 283 "src-ag/Code2TH.ag" #-}
    rule229 = \  (_ :: ()) ->
-                                {-# LINE 274 "src-ag/Code2TH.ag" #-}
+                                {-# LINE 283 "src-ag/Code2TH.ag" #-}
                                 error "pat Deal with Fun"
-                                {-# LINE 2336 "src-generated/Code2TH.hs" #-}
+                                {-# LINE 2343 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule230 #-}
-   {-# LINE 275 "src-ag/Code2TH.ag" #-}
+   {-# LINE 284 "src-ag/Code2TH.ag" #-}
    rule230 = \ _addBang ((_argsIpat) :: [TH.Pat]) name_ ->
-                                {-# LINE 275 "src-ag/Code2TH.ag" #-}
+                                {-# LINE 284 "src-ag/Code2TH.ag" #-}
                                 \x -> TH.FunD (TH.mkName name_) [TH.Clause (map _addBang     _argsIpat) (TH.NormalB x) []]
-                                {-# LINE 2342 "src-generated/Code2TH.hs" #-}
+                                {-# LINE 2349 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule231 #-}
    rule231 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -2365,17 +2372,17 @@ sem_Lhs_Unwrap _ arg_sub_ = T_Lhs (return st32) where
          in __result_ )
      in C_Lhs_s32 v31
    {-# INLINE rule233 #-}
-   {-# LINE 276 "src-ag/Code2TH.ag" #-}
+   {-# LINE 285 "src-ag/Code2TH.ag" #-}
    rule233 = \  (_ :: ()) ->
-                                {-# LINE 276 "src-ag/Code2TH.ag" #-}
+                                {-# LINE 285 "src-ag/Code2TH.ag" #-}
                                 error "pat Deal with Unwrap"
-                                {-# LINE 2373 "src-generated/Code2TH.hs" #-}
+                                {-# LINE 2380 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule234 #-}
-   {-# LINE 277 "src-ag/Code2TH.ag" #-}
+   {-# LINE 286 "src-ag/Code2TH.ag" #-}
    rule234 = \  (_ :: ()) ->
-                                {-# LINE 277 "src-ag/Code2TH.ag" #-}
+                                {-# LINE 286 "src-ag/Code2TH.ag" #-}
                                 error "th Deal with Unwrap"
-                                {-# LINE 2379 "src-generated/Code2TH.hs" #-}
+                                {-# LINE 2386 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule235 #-}
    rule235 = \ ((_lhsIisDeclOfLet) :: Bool) ->
      _lhsIisDeclOfLet
@@ -2432,13 +2439,13 @@ sem_NamedType_Named !arg_strict_ !arg_name_ arg_tp_ = T_NamedType (return st35) 
          in __result_ )
      in C_NamedType_s35 v34
    {-# INLINE rule238 #-}
-   {-# LINE 240 "src-ag/Code2TH.ag" #-}
+   {-# LINE 249 "src-ag/Code2TH.ag" #-}
    rule238 = \ ((_tpIth) :: TH.Type) name_ strict_ ->
-                               {-# LINE 240 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 249 "src-ag/Code2TH.ag" #-}
                                if strict_
                                then (TH.mkName name_, TH.Bang TH.NoSourceUnpackedness TH.SourceStrict, _tpIth)
                                else (TH.mkName name_, TH.Bang TH.NoSourceUnpackedness TH.NoSourceStrictness, _tpIth)
-                               {-# LINE 2442 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 2449 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule239 #-}
    rule239 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -2576,23 +2583,23 @@ sem_Pattern_Constr !arg_name_ arg_pats_ = T_Pattern (return st41) where
          in __result_ )
      in C_Pattern_s41 v40
    {-# INLINE rule244 #-}
-   {-# LINE 348 "src-ag/Code2TH.ag" #-}
+   {-# LINE 357 "src-ag/Code2TH.ag" #-}
    rule244 = \ ((_lhsIbelowIrrefutable) :: Bool) ((_lhsIisDeclOfLet) :: Bool) ((_lhsIoptions) :: Options) ->
-                      {-# LINE 348 "src-ag/Code2TH.ag" #-}
+                      {-# LINE 357 "src-ag/Code2TH.ag" #-}
                       if bangpats _lhsIoptions && not _lhsIisDeclOfLet && not _lhsIbelowIrrefutable then TH.BangP else id
-                      {-# LINE 2584 "src-generated/Code2TH.hs" #-}
+                      {-# LINE 2591 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule245 #-}
-   {-# LINE 351 "src-ag/Code2TH.ag" #-}
+   {-# LINE 360 "src-ag/Code2TH.ag" #-}
    rule245 = \ _addBang ((_patsIth) :: [TH.Pat]) name_ ->
-                           {-# LINE 351 "src-ag/Code2TH.ag" #-}
+                           {-# LINE 360 "src-ag/Code2TH.ag" #-}
                            _addBang     $ TH.ConP (TH.mkName (getName name_)) _patsIth
-                           {-# LINE 2590 "src-generated/Code2TH.hs" #-}
+                           {-# LINE 2597 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule246 #-}
-   {-# LINE 361 "src-ag/Code2TH.ag" #-}
+   {-# LINE 370 "src-ag/Code2TH.ag" #-}
    rule246 = \  (_ :: ()) ->
-                                    {-# LINE 361 "src-ag/Code2TH.ag" #-}
+                                    {-# LINE 370 "src-ag/Code2TH.ag" #-}
                                     False
-                                    {-# LINE 2596 "src-generated/Code2TH.hs" #-}
+                                    {-# LINE 2603 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule247 #-}
    rule247 = \ ((_patsIstrictVars) :: [TH.Name]) ->
      _patsIstrictVars
@@ -2637,23 +2644,23 @@ sem_Pattern_Product !arg_pos_ arg_pats_ = T_Pattern (return st41) where
          in __result_ )
      in C_Pattern_s41 v40
    {-# INLINE rule253 #-}
-   {-# LINE 348 "src-ag/Code2TH.ag" #-}
+   {-# LINE 357 "src-ag/Code2TH.ag" #-}
    rule253 = \ ((_lhsIbelowIrrefutable) :: Bool) ((_lhsIisDeclOfLet) :: Bool) ((_lhsIoptions) :: Options) ->
-                      {-# LINE 348 "src-ag/Code2TH.ag" #-}
+                      {-# LINE 357 "src-ag/Code2TH.ag" #-}
                       if bangpats _lhsIoptions && not _lhsIisDeclOfLet && not _lhsIbelowIrrefutable then TH.BangP else id
-                      {-# LINE 2645 "src-generated/Code2TH.hs" #-}
+                      {-# LINE 2652 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule254 #-}
-   {-# LINE 352 "src-ag/Code2TH.ag" #-}
+   {-# LINE 361 "src-ag/Code2TH.ag" #-}
    rule254 = \ _addBang ((_patsIth) :: [TH.Pat]) ->
-                           {-# LINE 352 "src-ag/Code2TH.ag" #-}
+                           {-# LINE 361 "src-ag/Code2TH.ag" #-}
                            _addBang     $ TH.TupP _patsIth
-                           {-# LINE 2651 "src-generated/Code2TH.hs" #-}
+                           {-# LINE 2658 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule255 #-}
-   {-# LINE 362 "src-ag/Code2TH.ag" #-}
+   {-# LINE 371 "src-ag/Code2TH.ag" #-}
    rule255 = \  (_ :: ()) ->
-                                    {-# LINE 362 "src-ag/Code2TH.ag" #-}
+                                    {-# LINE 371 "src-ag/Code2TH.ag" #-}
                                     False
-                                    {-# LINE 2657 "src-generated/Code2TH.hs" #-}
+                                    {-# LINE 2664 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule256 #-}
    rule256 = \ ((_patsIstrictVars) :: [TH.Name]) ->
      _patsIstrictVars
@@ -2701,53 +2708,53 @@ sem_Pattern_Alias !arg_field_ !arg_attr_ arg_pat_ = T_Pattern (return st41) wher
          in __result_ )
      in C_Pattern_s41 v40
    {-# INLINE rule262 #-}
-   {-# LINE 328 "src-ag/Code2TH.ag" #-}
+   {-# LINE 337 "src-ag/Code2TH.ag" #-}
    rule262 = \ ((_lhsIisDeclOfLet) :: Bool) ((_lhsIoptions) :: Options) _varName ->
-            {-# LINE 328 "src-ag/Code2TH.ag" #-}
+            {-# LINE 337 "src-ag/Code2TH.ag" #-}
             if strictCases _lhsIoptions && not _lhsIisDeclOfLet
             then [_varName    ]
             else []
-            {-# LINE 2711 "src-generated/Code2TH.hs" #-}
+            {-# LINE 2718 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule263 #-}
-   {-# LINE 332 "src-ag/Code2TH.ag" #-}
+   {-# LINE 341 "src-ag/Code2TH.ag" #-}
    rule263 = \ ((_lhsIisDeclOfLet) :: Bool) ((_lhsIoptions) :: Options) ((_patIstrictVars) :: [TH.Name]) ->
-            {-# LINE 332 "src-ag/Code2TH.ag" #-}
+            {-# LINE 341 "src-ag/Code2TH.ag" #-}
             if stricterCases _lhsIoptions && not _lhsIisDeclOfLet
             then _patIstrictVars
             else []
-            {-# LINE 2719 "src-generated/Code2TH.hs" #-}
+            {-# LINE 2726 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule264 #-}
-   {-# LINE 336 "src-ag/Code2TH.ag" #-}
+   {-# LINE 345 "src-ag/Code2TH.ag" #-}
    rule264 = \ _strictPatVars _strictVar ->
-            {-# LINE 336 "src-ag/Code2TH.ag" #-}
+            {-# LINE 345 "src-ag/Code2TH.ag" #-}
             _strictVar     ++ _strictPatVars
-            {-# LINE 2725 "src-generated/Code2TH.hs" #-}
+            {-# LINE 2732 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule265 #-}
-   {-# LINE 348 "src-ag/Code2TH.ag" #-}
+   {-# LINE 357 "src-ag/Code2TH.ag" #-}
    rule265 = \ ((_lhsIbelowIrrefutable) :: Bool) ((_lhsIisDeclOfLet) :: Bool) ((_lhsIoptions) :: Options) ->
-                      {-# LINE 348 "src-ag/Code2TH.ag" #-}
+                      {-# LINE 357 "src-ag/Code2TH.ag" #-}
                       if bangpats _lhsIoptions && not _lhsIisDeclOfLet && not _lhsIbelowIrrefutable then TH.BangP else id
-                      {-# LINE 2731 "src-generated/Code2TH.hs" #-}
+                      {-# LINE 2738 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule266 #-}
-   {-# LINE 353 "src-ag/Code2TH.ag" #-}
+   {-# LINE 362 "src-ag/Code2TH.ag" #-}
    rule266 = \ ((_lhsIoptions) :: Options) attr_ field_ ->
-                             {-# LINE 353 "src-ag/Code2TH.ag" #-}
+                             {-# LINE 362 "src-ag/Code2TH.ag" #-}
                              TH.mkName (attrname _lhsIoptions False field_ attr_)
-                             {-# LINE 2737 "src-generated/Code2TH.hs" #-}
+                             {-# LINE 2744 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule267 #-}
-   {-# LINE 354 "src-ag/Code2TH.ag" #-}
+   {-# LINE 363 "src-ag/Code2TH.ag" #-}
    rule267 = \ _addBang ((_patIisUnderscore) :: Bool) ((_patIth) :: TH.Pat) _varName ->
-                           {-# LINE 354 "src-ag/Code2TH.ag" #-}
+                           {-# LINE 363 "src-ag/Code2TH.ag" #-}
                            _addBang     $ if _patIisUnderscore
                             then TH.VarP _varName
                             else TH.AsP _varName     _patIth
-                           {-# LINE 2745 "src-generated/Code2TH.hs" #-}
+                           {-# LINE 2752 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule268 #-}
-   {-# LINE 363 "src-ag/Code2TH.ag" #-}
+   {-# LINE 372 "src-ag/Code2TH.ag" #-}
    rule268 = \  (_ :: ()) ->
-                                    {-# LINE 363 "src-ag/Code2TH.ag" #-}
+                                    {-# LINE 372 "src-ag/Code2TH.ag" #-}
                                     False
-                                    {-# LINE 2751 "src-generated/Code2TH.hs" #-}
+                                    {-# LINE 2758 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule269 #-}
    rule269 = \ ((_patIcopy) :: Pattern) attr_ field_ ->
      Alias field_ attr_ _patIcopy
@@ -2788,23 +2795,23 @@ sem_Pattern_Irrefutable arg_pat_ = T_Pattern (return st41) where
          in __result_ )
      in C_Pattern_s41 v40
    {-# INLINE rule274 #-}
-   {-# LINE 338 "src-ag/Code2TH.ag" #-}
+   {-# LINE 347 "src-ag/Code2TH.ag" #-}
    rule274 = \  (_ :: ()) ->
-                         {-# LINE 338 "src-ag/Code2TH.ag" #-}
+                         {-# LINE 347 "src-ag/Code2TH.ag" #-}
                          []
-                         {-# LINE 2796 "src-generated/Code2TH.hs" #-}
+                         {-# LINE 2803 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule275 #-}
-   {-# LINE 357 "src-ag/Code2TH.ag" #-}
+   {-# LINE 366 "src-ag/Code2TH.ag" #-}
    rule275 = \ ((_patIth) :: TH.Pat) ->
-                           {-# LINE 357 "src-ag/Code2TH.ag" #-}
+                           {-# LINE 366 "src-ag/Code2TH.ag" #-}
                            TH.TildeP _patIth
-                           {-# LINE 2802 "src-generated/Code2TH.hs" #-}
+                           {-# LINE 2809 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule276 #-}
-   {-# LINE 369 "src-ag/Code2TH.ag" #-}
+   {-# LINE 378 "src-ag/Code2TH.ag" #-}
    rule276 = \  (_ :: ()) ->
-                               {-# LINE 369 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 378 "src-ag/Code2TH.ag" #-}
                                True
-                               {-# LINE 2808 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 2815 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule277 #-}
    rule277 = \ ((_patIcopy) :: Pattern) ->
      Irrefutable _patIcopy
@@ -2840,17 +2847,17 @@ sem_Pattern_Underscore !arg_pos_ = T_Pattern (return st41) where
          in __result_ )
      in C_Pattern_s41 v40
    {-# INLINE rule282 #-}
-   {-# LINE 358 "src-ag/Code2TH.ag" #-}
+   {-# LINE 367 "src-ag/Code2TH.ag" #-}
    rule282 = \  (_ :: ()) ->
-                           {-# LINE 358 "src-ag/Code2TH.ag" #-}
+                           {-# LINE 367 "src-ag/Code2TH.ag" #-}
                            TH.WildP
-                           {-# LINE 2848 "src-generated/Code2TH.hs" #-}
+                           {-# LINE 2855 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule283 #-}
-   {-# LINE 364 "src-ag/Code2TH.ag" #-}
+   {-# LINE 373 "src-ag/Code2TH.ag" #-}
    rule283 = \  (_ :: ()) ->
-                                    {-# LINE 364 "src-ag/Code2TH.ag" #-}
+                                    {-# LINE 373 "src-ag/Code2TH.ag" #-}
                                     True
-                                    {-# LINE 2854 "src-generated/Code2TH.hs" #-}
+                                    {-# LINE 2861 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule284 #-}
    rule284 = \  (_ :: ()) ->
      []
@@ -3027,29 +3034,29 @@ sem_Program_Program arg_chunks_ !arg_ordered_ = T_Program (return st47) where
          in __result_ )
      in C_Program_s47 v46
    {-# INLINE rule301 #-}
-   {-# LINE 90 "src-ag/Code2TH.ag" #-}
+   {-# LINE 99 "src-ag/Code2TH.ag" #-}
    rule301 = \ ((_lhsIoptions) :: Options) ordered_ ->
-                  {-# LINE 90 "src-ag/Code2TH.ag" #-}
+                  {-# LINE 99 "src-ag/Code2TH.ag" #-}
                   _lhsIoptions { breadthFirst = breadthFirst _lhsIoptions && visit _lhsIoptions && cases _lhsIoptions && ordered_ }
-                  {-# LINE 3035 "src-generated/Code2TH.hs" #-}
+                  {-# LINE 3042 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule302 #-}
-   {-# LINE 93 "src-ag/Code2TH.ag" #-}
+   {-# LINE 102 "src-ag/Code2TH.ag" #-}
    rule302 = \ ((_lhsIoptions) :: Options) ->
-                              {-# LINE 93 "src-ag/Code2TH.ag" #-}
+                              {-# LINE 102 "src-ag/Code2TH.ag" #-}
                               nest _lhsIoptions
-                              {-# LINE 3041 "src-generated/Code2TH.hs" #-}
+                              {-# LINE 3048 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule303 #-}
-   {-# LINE 96 "src-ag/Code2TH.ag" #-}
+   {-# LINE 105 "src-ag/Code2TH.ag" #-}
    rule303 = \ ((_chunksIth) :: [TH.Dec]) ->
-                           {-# LINE 96 "src-ag/Code2TH.ag" #-}
+                           {-# LINE 105 "src-ag/Code2TH.ag" #-}
                            dedupFunDecls _chunksIth
-                           {-# LINE 3047 "src-generated/Code2TH.hs" #-}
+                           {-# LINE 3054 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule304 #-}
-   {-# LINE 404 "src-ag/Code2TH.ag" #-}
+   {-# LINE 413 "src-ag/Code2TH.ag" #-}
    rule304 = \  (_ :: ()) ->
-                             {-# LINE 404 "src-ag/Code2TH.ag" #-}
+                             {-# LINE 413 "src-ag/Code2TH.ag" #-}
                              False
-                             {-# LINE 3053 "src-generated/Code2TH.hs" #-}
+                             {-# LINE 3060 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule305 #-}
    rule305 = \ _options ->
      _options
@@ -3117,11 +3124,11 @@ sem_Type_Arr arg_left_ arg_right_ = T_Type (return st50) where
          in __result_ )
      in C_Type_s50 v49
    {-# INLINE rule306 #-}
-   {-# LINE 280 "src-ag/Code2TH.ag" #-}
+   {-# LINE 289 "src-ag/Code2TH.ag" #-}
    rule306 = \ ((_leftIth) :: TH.Type) ((_rightIth) :: TH.Type) ->
-                                {-# LINE 280 "src-ag/Code2TH.ag" #-}
+                                {-# LINE 289 "src-ag/Code2TH.ag" #-}
                                 TH.AppT (TH.AppT TH.ArrowT _leftIth) _rightIth
-                                {-# LINE 3125 "src-generated/Code2TH.hs" #-}
+                                {-# LINE 3132 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule307 #-}
    rule307 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -3144,11 +3151,11 @@ sem_Type_CtxApp !arg_left_ arg_right_ = T_Type (return st50) where
          in __result_ )
      in C_Type_s50 v49
    {-# INLINE rule309 #-}
-   {-# LINE 286 "src-ag/Code2TH.ag" #-}
+   {-# LINE 295 "src-ag/Code2TH.ag" #-}
    rule309 = \ ((_rightIth) :: TH.Type) left_ ->
-                 {-# LINE 286 "src-ag/Code2TH.ag" #-}
-                 TH.ForallT [] (map (\(n,ns) -> foldl (\xs x -> TH.AppT xs (TH.ConT (TH.mkName x))) (TH.ConT (TH.mkName n)) ns) left_) _rightIth
-                 {-# LINE 3152 "src-generated/Code2TH.hs" #-}
+                 {-# LINE 295 "src-ag/Code2TH.ag" #-}
+                 TH.ForallT [] (map (\(n,ns) -> foldl (\xs x -> TH.AppT xs (either error id $ Meta.parseType x)) (either error id $ Meta.parseType n) ns) left_) _rightIth
+                 {-# LINE 3159 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule310 #-}
    rule310 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -3168,11 +3175,11 @@ sem_Type_QuantApp !arg_left_ arg_right_ = T_Type (return st50) where
          in __result_ )
      in C_Type_s50 v49
    {-# INLINE rule311 #-}
-   {-# LINE 288 "src-ag/Code2TH.ag" #-}
+   {-# LINE 297 "src-ag/Code2TH.ag" #-}
    rule311 = \ left_ ->
-                 {-# LINE 288 "src-ag/Code2TH.ag" #-}
+                 {-# LINE 297 "src-ag/Code2TH.ag" #-}
                  error ("Deal with quant: " ++ left_)
-                 {-# LINE 3176 "src-generated/Code2TH.hs" #-}
+                 {-# LINE 3183 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule312 #-}
    rule312 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -3195,11 +3202,11 @@ sem_Type_TypeApp arg_func_ arg_args_ = T_Type (return st50) where
          in __result_ )
      in C_Type_s50 v49
    {-# INLINE rule313 #-}
-   {-# LINE 283 "src-ag/Code2TH.ag" #-}
+   {-# LINE 292 "src-ag/Code2TH.ag" #-}
    rule313 = \ ((_argsIth) :: [TH.Type]) ((_funcIth) :: TH.Type) ->
-                 {-# LINE 283 "src-ag/Code2TH.ag" #-}
+                 {-# LINE 292 "src-ag/Code2TH.ag" #-}
                  foldl TH.AppT _funcIth _argsIth
-                 {-# LINE 3203 "src-generated/Code2TH.hs" #-}
+                 {-# LINE 3210 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule314 #-}
    rule314 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -3222,11 +3229,11 @@ sem_Type_TupleType arg_tps_ = T_Type (return st50) where
          in __result_ )
      in C_Type_s50 v49
    {-# INLINE rule316 #-}
-   {-# LINE 290 "src-ag/Code2TH.ag" #-}
+   {-# LINE 299 "src-ag/Code2TH.ag" #-}
    rule316 = \ ((_lhsInested) :: Bool) ((_tpsIth) :: [TH.Type]) ->
-                               {-# LINE 290 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 299 "src-ag/Code2TH.ag" #-}
                                tupleT False _lhsInested _tpsIth
-                               {-# LINE 3230 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 3237 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule317 #-}
    rule317 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -3246,11 +3253,11 @@ sem_Type_UnboxedTupleType arg_tps_ = T_Type (return st50) where
          in __result_ )
      in C_Type_s50 v49
    {-# INLINE rule318 #-}
-   {-# LINE 292 "src-ag/Code2TH.ag" #-}
+   {-# LINE 301 "src-ag/Code2TH.ag" #-}
    rule318 = \ ((_lhsInested) :: Bool) ((_tpsIth) :: [TH.Type]) ->
-                                      {-# LINE 292 "src-ag/Code2TH.ag" #-}
+                                      {-# LINE 301 "src-ag/Code2TH.ag" #-}
                                       tupleT True _lhsInested _tpsIth
-                                      {-# LINE 3254 "src-generated/Code2TH.hs" #-}
+                                      {-# LINE 3261 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule319 #-}
    rule319 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -3270,11 +3277,11 @@ sem_Type_List arg_tp_ = T_Type (return st50) where
          in __result_ )
      in C_Type_s50 v49
    {-# INLINE rule320 #-}
-   {-# LINE 294 "src-ag/Code2TH.ag" #-}
+   {-# LINE 303 "src-ag/Code2TH.ag" #-}
    rule320 = \ ((_tpIth) :: TH.Type) ->
-                               {-# LINE 294 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 303 "src-ag/Code2TH.ag" #-}
                                TH.ListT `TH.AppT` _tpIth
-                               {-# LINE 3278 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 3285 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule321 #-}
    rule321 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -3291,11 +3298,11 @@ sem_Type_SimpleType !arg_txt_ = T_Type (return st50) where
          in __result_ )
      in C_Type_s50 v49
    {-# INLINE rule322 #-}
-   {-# LINE 296 "src-ag/Code2TH.ag" #-}
+   {-# LINE 305 "src-ag/Code2TH.ag" #-}
    rule322 = \ txt_ ->
-                               {-# LINE 296 "src-ag/Code2TH.ag" #-}
-                               TH.ConT (TH.mkName txt_)
-                               {-# LINE 3299 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 305 "src-ag/Code2TH.ag" #-}
+                               either error id $ Meta.parseType txt_
+                               {-# LINE 3306 "src-generated/Code2TH.hs" #-}
 {-# NOINLINE sem_Type_NontermType #-}
 sem_Type_NontermType :: (String) -> ([String]) -> (Bool) -> T_Type 
 sem_Type_NontermType !arg_name_ !arg_params_ !arg_deforested_ = T_Type (return st50) where
@@ -3310,19 +3317,19 @@ sem_Type_NontermType !arg_name_ !arg_params_ !arg_deforested_ = T_Type (return s
          in __result_ )
      in C_Type_s50 v49
    {-# INLINE rule323 #-}
-   {-# LINE 298 "src-ag/Code2TH.ag" #-}
+   {-# LINE 307 "src-ag/Code2TH.ag" #-}
    rule323 = \ _prefix name_ params_ ->
-                               {-# LINE 298 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 307 "src-ag/Code2TH.ag" #-}
                                foldl TH.AppT (TH.ConT (TH.mkName (_prefix     ++ name_))) (map (TH.VarT . TH.mkName) params_)
-                               {-# LINE 3318 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 3325 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule324 #-}
-   {-# LINE 299 "src-ag/Code2TH.ag" #-}
+   {-# LINE 308 "src-ag/Code2TH.ag" #-}
    rule324 = \ deforested_ ->
-                                {-# LINE 299 "src-ag/Code2TH.ag" #-}
+                                {-# LINE 308 "src-ag/Code2TH.ag" #-}
                                 if deforested_
                                 then "T_"
                                 else ""
-                                {-# LINE 3326 "src-generated/Code2TH.hs" #-}
+                                {-# LINE 3333 "src-generated/Code2TH.hs" #-}
 {-# NOINLINE sem_Type_TMaybe #-}
 sem_Type_TMaybe :: T_Type  -> T_Type 
 sem_Type_TMaybe arg_tp_ = T_Type (return st50) where
@@ -3339,11 +3346,11 @@ sem_Type_TMaybe arg_tp_ = T_Type (return st50) where
          in __result_ )
      in C_Type_s50 v49
    {-# INLINE rule325 #-}
-   {-# LINE 302 "src-ag/Code2TH.ag" #-}
+   {-# LINE 311 "src-ag/Code2TH.ag" #-}
    rule325 = \ ((_tpIth) :: TH.Type) ->
-                               {-# LINE 302 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 311 "src-ag/Code2TH.ag" #-}
                                TH.ConT (TH.mkName "Maybe") `TH.AppT` _tpIth
-                               {-# LINE 3347 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 3354 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule326 #-}
    rule326 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -3366,11 +3373,11 @@ sem_Type_TEither arg_left_ arg_right_ = T_Type (return st50) where
          in __result_ )
      in C_Type_s50 v49
    {-# INLINE rule327 #-}
-   {-# LINE 303 "src-ag/Code2TH.ag" #-}
+   {-# LINE 312 "src-ag/Code2TH.ag" #-}
    rule327 = \ ((_leftIth) :: TH.Type) ((_rightIth) :: TH.Type) ->
-                               {-# LINE 303 "src-ag/Code2TH.ag" #-}
+                               {-# LINE 312 "src-ag/Code2TH.ag" #-}
                                TH.ConT (TH.mkName "Either") `TH.AppT` _leftIth `TH.AppT` _rightIth
-                               {-# LINE 3374 "src-generated/Code2TH.hs" #-}
+                               {-# LINE 3381 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule328 #-}
    rule328 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -3389,15 +3396,18 @@ sem_Type_TMap arg_key_ arg_value_ = T_Type (return st50) where
          (T_Type_vOut49 _keyIth) = inv_Type_s50 _keyX50 (T_Type_vIn49 _keyOnested)
          (T_Type_vOut49 _valueIth) = inv_Type_s50 _valueX50 (T_Type_vIn49 _valueOnested)
          _lhsOth :: TH.Type
-         _lhsOth = rule330 _valueIth
+         _lhsOth = rule330 _keyIth _valueIth
          _keyOnested = rule331 _lhsInested
          _valueOnested = rule332 _lhsInested
          !__result_ = T_Type_vOut49 _lhsOth
          in __result_ )
      in C_Type_s50 v49
    {-# INLINE rule330 #-}
-   rule330 = \ ((_valueIth) :: TH.Type) ->
-     _valueIth
+   {-# LINE 313 "src-ag/Code2TH.ag" #-}
+   rule330 = \ ((_keyIth) :: TH.Type) ((_valueIth) :: TH.Type) ->
+                               {-# LINE 313 "src-ag/Code2TH.ag" #-}
+                               TH.ConT (TH.mkName "Data.Map.Map") `TH.AppT` _keyIth `TH.AppT` _valueIth
+                               {-# LINE 3411 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule331 #-}
    rule331 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -3420,8 +3430,11 @@ sem_Type_TIntMap arg_value_ = T_Type (return st50) where
          in __result_ )
      in C_Type_s50 v49
    {-# INLINE rule333 #-}
+   {-# LINE 314 "src-ag/Code2TH.ag" #-}
    rule333 = \ ((_valueIth) :: TH.Type) ->
-     _valueIth
+                               {-# LINE 314 "src-ag/Code2TH.ag" #-}
+                               TH.ConT (TH.mkName "Data.IntMap.IntMap") `TH.AppT` _valueIth
+                               {-# LINE 3438 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule334 #-}
    rule334 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -3441,8 +3454,11 @@ sem_Type_TSet arg_tp_ = T_Type (return st50) where
          in __result_ )
      in C_Type_s50 v49
    {-# INLINE rule335 #-}
+   {-# LINE 315 "src-ag/Code2TH.ag" #-}
    rule335 = \ ((_tpIth) :: TH.Type) ->
-     _tpIth
+                               {-# LINE 315 "src-ag/Code2TH.ag" #-}
+                               TH.ConT (TH.mkName "Data.Set.Set") `TH.AppT` _tpIth
+                               {-# LINE 3462 "src-generated/Code2TH.hs" #-}
    {-# INLINE rule336 #-}
    rule336 = \ ((_lhsInested) :: Bool) ->
      _lhsInested
@@ -3459,8 +3475,11 @@ sem_Type_TIntSet  = T_Type (return st50) where
          in __result_ )
      in C_Type_s50 v49
    {-# INLINE rule337 #-}
+   {-# LINE 316 "src-ag/Code2TH.ag" #-}
    rule337 = \  (_ :: ()) ->
-     error "missing rule: Type.TIntSet.lhs.th"
+                               {-# LINE 316 "src-ag/Code2TH.ag" #-}
+                               TH.ConT (TH.mkName "Data.IntSet.IntSet")
+                               {-# LINE 3483 "src-generated/Code2TH.hs" #-}
 
 -- Types -------------------------------------------------------
 -- wrapper
