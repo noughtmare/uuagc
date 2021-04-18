@@ -1,8 +1,16 @@
+optpragmas
+{
+{-# LANGUAGE DeriveLift #-}
+}
 imports
 {
 import CommonTypes
 import UU.Scanner.Position(Pos)
+import Language.Haskell.TH.Syntax (Lift)
+import LiftOrphans ()
 }
+
+DERIVING * : Lift
 
 DATA HsTokensRoot
    | HsTokensRoot tokens : HsTokens

@@ -2,13 +2,16 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
+{-# LANGUAGE DeriveLift #-}
 module DefaultRules where
-{-# LINE 2 "src-ag/Patterns.ag" #-}
+{-# LINE 6 "src-ag/Patterns.ag" #-}
 
 -- Patterns.ag imports
 import UU.Scanner.Position(Pos)
 import CommonTypes (ConstructorIdent,Identifier)
-{-# LINE 12 "src-generated/DefaultRules.hs" #-}
+import Language.Haskell.TH.Syntax (Lift)
+import LiftOrphans ()
+{-# LINE 15 "src-generated/DefaultRules.hs" #-}
 
 {-# LINE 2 "src-ag/AbstractSyntax.ag" #-}
 
@@ -20,7 +23,7 @@ import Expression  (Expression(..))
 import Macro --marcos
 import CommonTypes
 import ErrorMessages
-{-# LINE 24 "src-generated/DefaultRules.hs" #-}
+{-# LINE 27 "src-generated/DefaultRules.hs" #-}
 
 {-# LINE 15 "src-ag/DefaultRules.ag" #-}
 
@@ -42,7 +45,7 @@ import AbstractSyntax
 import ErrorMessages
 
 import Options
-{-# LINE 46 "src-generated/DefaultRules.hs" #-}
+{-# LINE 49 "src-generated/DefaultRules.hs" #-}
 import Control.Monad.Identity (Identity)
 import qualified Control.Monad.Identity
 {-# LINE 80 "src-ag/DefaultRules.ag" #-}
@@ -155,7 +158,7 @@ removeDefined defined (fld,as)
       ]
     )
 
-{-# LINE 159 "src-generated/DefaultRules.hs" #-}
+{-# LINE 162 "src-generated/DefaultRules.hs" #-}
 
 {-# LINE 255 "src-ag/DefaultRules.ag" #-}
 
@@ -307,7 +310,7 @@ copyRule options wrappers nt con modcopy locals (env,(fld,as))
                       nonlocal  =  maybe False (/= _LOC)    sel
                       local     =  maybe False (== _LOC)    sel
                       deprChild =  maybe False (== _ACHILD) sel
-{-# LINE 311 "src-generated/DefaultRules.hs" #-}
+{-# LINE 314 "src-generated/DefaultRules.hs" #-}
 
 {-# LINE 488 "src-ag/DefaultRules.ag" #-}
 
@@ -376,7 +379,7 @@ addMerges (target,(_,_,expr)) rules
   where
     rule = Rule Nothing (Alias _LOC childLoc (Underscore noPos)) expr False "merge rule" False True False Nothing False
     childLoc = Ident (show target ++ "_merge") (getPos target)
-{-# LINE 380 "src-generated/DefaultRules.hs" #-}
+{-# LINE 383 "src-generated/DefaultRules.hs" #-}
 
 {-# LINE 606 "src-ag/DefaultRules.ag" #-}
 
@@ -387,7 +390,7 @@ elimSelfId _ _ tp = tp
 elimSelfStr :: NontermIdent -> [String] -> Type -> Type
 elimSelfStr nt args Self = NT nt args False
 elimSelfStr _ _ tp = tp
-{-# LINE 391 "src-generated/DefaultRules.hs" #-}
+{-# LINE 394 "src-generated/DefaultRules.hs" #-}
 
 {-# LINE 658 "src-ag/DefaultRules.ag" #-}
 
@@ -402,13 +405,13 @@ mkRuleAlias (Rule (Just nm) pat expr owrt origin expl pure identity mbErr eager)
   expr' = Expression pos tks
   tks   = [mkLocVar (Ident ("_rule_" ++ show nm) pos) pos (Just ("Indirection to rule " ++ show nm))]
   r'    = Rule Nothing pat expr' owrt origin False True identity Nothing False
-{-# LINE 406 "src-generated/DefaultRules.hs" #-}
+{-# LINE 409 "src-generated/DefaultRules.hs" #-}
 
 {-# LINE 675 "src-ag/DefaultRules.ag" #-}
 
 needsMultiRules :: Options -> Bool
 needsMultiRules opts = (visit opts || withCycle opts) && not (kennedyWarren opts)
-{-# LINE 412 "src-generated/DefaultRules.hs" #-}
+{-# LINE 415 "src-generated/DefaultRules.hs" #-}
 
 {-# LINE 680 "src-ag/DefaultRules.ag" #-}
 
@@ -458,7 +461,7 @@ multiRule (Rule _ pat expr owrt origin expl pure identity mbErr eager) uniq
              )
      in snd (f expl id expr pat uniq)
 
-{-# LINE 462 "src-generated/DefaultRules.hs" #-}
+{-# LINE 465 "src-generated/DefaultRules.hs" #-}
 -- Child -------------------------------------------------------
 -- wrapper
 data Inh_Child  = Inh_Child { con_Inh_Child :: !(ConstructorIdent), cr_Inh_Child :: !(Bool), inhMap_Inh_Child :: !(Map Identifier Attributes), merged_Inh_Child :: !(Set Identifier), nt_Inh_Child :: !(NontermIdent), params_Inh_Child :: !([Identifier]), synMap_Inh_Child :: !(Map Identifier Attributes) }
@@ -598,31 +601,31 @@ sem_Child_Child !arg_name_ !arg_tp_ !arg_kind_ = T_Child (return st0) where
                          NT nt _ _ -> nt
                          Self      -> error ("The type of child " ++ show name_ ++ " should not be a Self type.")
                          Haskell t -> identifier ""
-                       {-# LINE 602 "src-generated/DefaultRules.hs" #-}
+                       {-# LINE 605 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule1 #-}
    {-# LINE 23 "src-ag/DistChildAttr.ag" #-}
    rule1 = \ !_chnt ((!_lhsIinhMap) :: Map Identifier Attributes) ->
                       {-# LINE 23 "src-ag/DistChildAttr.ag" #-}
                       Map.findWithDefault Map.empty _chnt     _lhsIinhMap
-                      {-# LINE 608 "src-generated/DefaultRules.hs" #-}
+                      {-# LINE 611 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule2 #-}
    {-# LINE 24 "src-ag/DistChildAttr.ag" #-}
    rule2 = \ !_chnt ((!_lhsIsynMap) :: Map Identifier Attributes) ->
                       {-# LINE 24 "src-ag/DistChildAttr.ag" #-}
                       Map.findWithDefault Map.empty _chnt     _lhsIsynMap
-                      {-# LINE 614 "src-generated/DefaultRules.hs" #-}
+                      {-# LINE 617 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule3 #-}
    {-# LINE 229 "src-ag/DefaultRules.ag" #-}
    rule3 = \ !name_ ->
                          {-# LINE 229 "src-ag/DefaultRules.ag" #-}
                          name_
-                         {-# LINE 620 "src-generated/DefaultRules.hs" #-}
+                         {-# LINE 623 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule4 #-}
    {-# LINE 238 "src-ag/DefaultRules.ag" #-}
    rule4 = \ !_inh1 ->
                             {-# LINE 238 "src-ag/DefaultRules.ag" #-}
                             _inh1
-                            {-# LINE 626 "src-generated/DefaultRules.hs" #-}
+                            {-# LINE 629 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule5 #-}
    {-# LINE 239 "src-ag/DefaultRules.ag" #-}
    rule5 = \ ((!_lhsImerged) :: Set Identifier) !_syn1 !name_ ->
@@ -630,13 +633,13 @@ sem_Child_Child !arg_name_ !arg_tp_ !arg_kind_ = T_Child (return st0) where
                               if name_ `Set.member` _lhsImerged
                               then Map.empty
                               else _syn1
-                              {-# LINE 634 "src-generated/DefaultRules.hs" #-}
+                              {-# LINE 637 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule6 #-}
    {-# LINE 574 "src-ag/DefaultRules.ag" #-}
    rule6 = \ !kind_ !name_ !tp_ ->
                         {-# LINE 574 "src-ag/DefaultRules.ag" #-}
                         (name_,tp_,kind_)
-                        {-# LINE 640 "src-generated/DefaultRules.hs" #-}
+                        {-# LINE 643 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule7 #-}
    {-# LINE 596 "src-ag/DefaultRules.ag" #-}
    rule7 = \ !name_ !tp_ ->
@@ -645,25 +648,25 @@ sem_Child_Child !arg_name_ !arg_tp_ !arg_kind_ = T_Child (return st0) where
                              NT nt params _ -> (nt, params)
                              Self           -> error ("The type of child " ++ show name_ ++ " should not be a Self type.")
                              Haskell t      -> (identifier t, [])
-                           {-# LINE 649 "src-generated/DefaultRules.hs" #-}
+                           {-# LINE 652 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule8 #-}
    {-# LINE 600 "src-ag/DefaultRules.ag" #-}
    rule8 = \ !_inh !_nt !_params ->
                {-# LINE 600 "src-ag/DefaultRules.ag" #-}
                Map.map (elimSelfStr _nt     _params    ) _inh
-               {-# LINE 655 "src-generated/DefaultRules.hs" #-}
+               {-# LINE 658 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule9 #-}
    {-# LINE 601 "src-ag/DefaultRules.ag" #-}
    rule9 = \ !_nt !_params !_syn ->
                {-# LINE 601 "src-ag/DefaultRules.ag" #-}
                Map.map (elimSelfStr _nt     _params    ) _syn
-               {-# LINE 661 "src-generated/DefaultRules.hs" #-}
+               {-# LINE 664 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule10 #-}
    {-# LINE 642 "src-ag/DefaultRules.ag" #-}
    rule10 = \ !kind_ !name_ !tp_ ->
                  {-# LINE 642 "src-ag/DefaultRules.ag" #-}
                  Child name_ tp_ kind_
-                 {-# LINE 667 "src-generated/DefaultRules.hs" #-}
+                 {-# LINE 670 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule11 #-}
    rule11 = \  (_ :: ()) ->
      Seq.empty
@@ -815,19 +818,19 @@ sem_Children_Cons arg_hd_ arg_tl_ = T_Children (return st2) where
    rule13 = \ ((!_hdIinherited) :: Attributes) ((!_hdIname) :: Identifier) ((!_tlIinputs) :: [(Identifier, Attributes)]) ->
                          {-# LINE 244 "src-ag/DefaultRules.ag" #-}
                          (_hdIname, _hdIinherited) : _tlIinputs
-                         {-# LINE 819 "src-generated/DefaultRules.hs" #-}
+                         {-# LINE 822 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule14 #-}
    {-# LINE 245 "src-ag/DefaultRules.ag" #-}
    rule14 = \ ((!_hdIname) :: Identifier) ((!_hdIsynthesized) :: Attributes) ((!_tlIoutputs) :: [(Identifier, Attributes)]) ->
                          {-# LINE 245 "src-ag/DefaultRules.ag" #-}
                          (_hdIname, _hdIsynthesized) : _tlIoutputs
-                         {-# LINE 825 "src-generated/DefaultRules.hs" #-}
+                         {-# LINE 828 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule15 #-}
    {-# LINE 570 "src-ag/DefaultRules.ag" #-}
    rule15 = \ ((!_hdIfield) ::  (Identifier,Type,ChildKind) ) ((!_tlIfields) :: [(Identifier,Type,ChildKind)]) ->
                         {-# LINE 570 "src-ag/DefaultRules.ag" #-}
                         _hdIfield : _tlIfields
-                        {-# LINE 831 "src-generated/DefaultRules.hs" #-}
+                        {-# LINE 834 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule16 #-}
    rule16 = \ ((!_hdIerrors) :: Seq Error) ((!_tlIerrors) :: Seq Error) ->
      _hdIerrors Seq.>< _tlIerrors
@@ -923,19 +926,19 @@ sem_Children_Nil  = T_Children (return st2) where
    rule33 = \  (_ :: ()) ->
                          {-# LINE 246 "src-ag/DefaultRules.ag" #-}
                          []
-                         {-# LINE 927 "src-generated/DefaultRules.hs" #-}
+                         {-# LINE 930 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule34 #-}
    {-# LINE 247 "src-ag/DefaultRules.ag" #-}
    rule34 = \  (_ :: ()) ->
                          {-# LINE 247 "src-ag/DefaultRules.ag" #-}
                          []
-                         {-# LINE 933 "src-generated/DefaultRules.hs" #-}
+                         {-# LINE 936 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule35 #-}
    {-# LINE 571 "src-ag/DefaultRules.ag" #-}
    rule35 = \  (_ :: ()) ->
                         {-# LINE 571 "src-ag/DefaultRules.ag" #-}
                         []
-                        {-# LINE 939 "src-generated/DefaultRules.hs" #-}
+                        {-# LINE 942 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule36 #-}
    rule36 = \  (_ :: ()) ->
      Seq.empty
@@ -1013,73 +1016,73 @@ sem_Grammar_Grammar !arg_typeSyns_ !arg_useMap_ !arg_derivings_ !arg_wrappers_ a
    rule39 = \ ((!_nontsIinhMap') :: Map Identifier Attributes) ->
                              {-# LINE 15 "src-ag/DistChildAttr.ag" #-}
                              _nontsIinhMap'
-                             {-# LINE 1017 "src-generated/DefaultRules.hs" #-}
+                             {-# LINE 1020 "src-generated/DefaultRules.hs" #-}
    {-# INLINE rule40 #-}
    {-# LINE 16 "src-ag/DistChildAttr.ag" #-}
    rule40 = \ ((!_nontsIsynMap') :: Map Identifier Attributes) ->
                              {-# LINE 16 "src-ag/DistChildAttr.ag" #-}
                              _nontsIsynMap'
-                             {-# LINE 1023 "src-generated/DefaultRules.hs" #-}
+                             {-# LINE 1026 "src-generated/DefaultRules.hs" #-}
    {-# INLINE rule41 #-}
    {-# LINE 60 "src-ag/DefaultRules.ag" #-}
    rule41 = \ ((!_lhsIoptions) :: Options) ->
                                     {-# LINE 60 "src-ag/DefaultRules.ag" #-}
                                     rename    _lhsIoptions
-                                    {-# LINE 1029 "src-generated/DefaultRules.hs" #-}
+                                    {-# LINE 1032 "src-generated/DefaultRules.hs" #-}
    {-# INLINE rule42 #-}
    {-# LINE 61 "src-ag/DefaultRules.ag" #-}
    rule42 = \ ((!_lhsIoptions) :: Options) ->
                                     {-# LINE 61 "src-ag/DefaultRules.ag" #-}
                                     modcopy   _lhsIoptions
-                                    {-# LINE 1035 "src-generated/DefaultRules.hs" #-}
+                                    {-# LINE 1038 "src-generated/DefaultRules.hs" #-}
    {-# INLINE rule43 #-}
    {-# LINE 69 "src-ag/DefaultRules.ag" #-}
    rule43 = \ !wrappers_ ->
                      {-# LINE 69 "src-ag/DefaultRules.ag" #-}
                      wrappers_
-                     {-# LINE 1041 "src-generated/DefaultRules.hs" #-}
+                     {-# LINE 1044 "src-generated/DefaultRules.hs" #-}
    {-# INLINE rule45 #-}
    {-# LINE 231 "src-ag/DefaultRules.ag" #-}
    rule45 = \ !useMap_ ->
                                {-# LINE 231 "src-ag/DefaultRules.ag" #-}
                                useMap_
-                               {-# LINE 1047 "src-generated/DefaultRules.hs" #-}
+                               {-# LINE 1050 "src-generated/DefaultRules.hs" #-}
    {-# INLINE rule46 #-}
    {-# LINE 233 "src-ag/DefaultRules.ag" #-}
    rule46 = \ !typeSyns_ ->
                                  {-# LINE 233 "src-ag/DefaultRules.ag" #-}
                                  typeSyns_
-                                 {-# LINE 1053 "src-generated/DefaultRules.hs" #-}
+                                 {-# LINE 1056 "src-generated/DefaultRules.hs" #-}
    {-# INLINE rule47 #-}
    {-# LINE 623 "src-ag/DefaultRules.ag" #-}
    rule47 = \  (_ :: ()) ->
                            {-# LINE 623 "src-ag/DefaultRules.ag" #-}
                            1
-                           {-# LINE 1059 "src-generated/DefaultRules.hs" #-}
+                           {-# LINE 1062 "src-generated/DefaultRules.hs" #-}
    {-# INLINE rule48 #-}
    {-# LINE 737 "src-ag/DefaultRules.ag" #-}
    rule48 = \ !manualAttrOrderMap_ ->
                                    {-# LINE 737 "src-ag/DefaultRules.ag" #-}
                                    manualAttrOrderMap_
-                                   {-# LINE 1065 "src-generated/DefaultRules.hs" #-}
+                                   {-# LINE 1068 "src-generated/DefaultRules.hs" #-}
    {-# INLINE rule49 #-}
    {-# LINE 803 "src-ag/DefaultRules.ag" #-}
    rule49 = \ !augmentsMap_ ->
                                                     {-# LINE 803 "src-ag/DefaultRules.ag" #-}
                                                     augmentsMap_
-                                                    {-# LINE 1071 "src-generated/DefaultRules.hs" #-}
+                                                    {-# LINE 1074 "src-generated/DefaultRules.hs" #-}
    {-# INLINE rule50 #-}
    {-# LINE 810 "src-ag/DefaultRules.ag" #-}
    rule50 = \ !aroundsMap_ ->
                                                    {-# LINE 810 "src-ag/DefaultRules.ag" #-}
                                                    aroundsMap_
-                                                   {-# LINE 1077 "src-generated/DefaultRules.hs" #-}
+                                                   {-# LINE 1080 "src-generated/DefaultRules.hs" #-}
    {-# INLINE rule51 #-}
    {-# LINE 818 "src-ag/DefaultRules.ag" #-}
    rule51 = \ !mergeMap_ ->
                                                   {-# LINE 818 "src-ag/DefaultRules.ag" #-}
                                                   mergeMap_
-                                                  {-# LINE 1083 "src-generated/DefaultRules.hs" #-}
+                                                  {-# LINE 1086 "src-generated/DefaultRules.hs" #-}
    {-# INLINE rule52 #-}
    rule52 = \ ((!_nontsIerrors) :: Seq Error) ->
      _nontsIerrors
@@ -1413,91 +1416,91 @@ sem_Nonterminal_Nonterminal !arg_nt_ !arg_params_ !arg_inh_ !arg_syn_ arg_prods_
    rule57 = \ !inh_ !nt_ ->
                                  {-# LINE 7 "src-ag/DistChildAttr.ag" #-}
                                  Map.singleton nt_ inh_
-                                 {-# LINE 1417 "src-generated/DefaultRules.hs" #-}
+                                 {-# LINE 1420 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE rule58 #-}
    {-# LINE 8 "src-ag/DistChildAttr.ag" #-}
    rule58 = \ !nt_ !syn_ ->
                                  {-# LINE 8 "src-ag/DistChildAttr.ag" #-}
                                  Map.singleton nt_ syn_
-                                 {-# LINE 1423 "src-generated/DefaultRules.hs" #-}
+                                 {-# LINE 1426 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE rule59 #-}
    {-# LINE 44 "src-ag/DefaultRules.ag" #-}
    rule59 = \ !params_ ->
                    {-# LINE 44 "src-ag/DefaultRules.ag" #-}
                    params_
-                   {-# LINE 1429 "src-generated/DefaultRules.hs" #-}
+                   {-# LINE 1432 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule60 #-}
    {-# LINE 205 "src-ag/DefaultRules.ag" #-}
    rule60 = \ !nt_ ->
                                     {-# LINE 205 "src-ag/DefaultRules.ag" #-}
                                     Set.singleton nt_
-                                    {-# LINE 1435 "src-generated/DefaultRules.hs" #-}
+                                    {-# LINE 1438 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE rule61 #-}
    {-# LINE 219 "src-ag/DefaultRules.ag" #-}
    rule61 = \ !_inh1 ->
                                    {-# LINE 219 "src-ag/DefaultRules.ag" #-}
                                    _inh1
-                                   {-# LINE 1441 "src-generated/DefaultRules.hs" #-}
+                                   {-# LINE 1444 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE rule62 #-}
    {-# LINE 220 "src-ag/DefaultRules.ag" #-}
    rule62 = \ !_syn1 ->
                                    {-# LINE 220 "src-ag/DefaultRules.ag" #-}
                                    _syn1
-                                   {-# LINE 1447 "src-generated/DefaultRules.hs" #-}
+                                   {-# LINE 1450 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE rule64 #-}
    {-# LINE 222 "src-ag/DefaultRules.ag" #-}
    rule64 = \ !syn_ ->
                                    {-# LINE 222 "src-ag/DefaultRules.ag" #-}
                                    syn_
-                                   {-# LINE 1453 "src-generated/DefaultRules.hs" #-}
+                                   {-# LINE 1456 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE rule65 #-}
    {-# LINE 223 "src-ag/DefaultRules.ag" #-}
    rule65 = \ ((!_lhsIuseMap) :: UseMap) !nt_ ->
                                    {-# LINE 223 "src-ag/DefaultRules.ag" #-}
                                    Map.findWithDefault Map.empty nt_ _lhsIuseMap
-                                   {-# LINE 1459 "src-generated/DefaultRules.hs" #-}
+                                   {-# LINE 1462 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE rule66 #-}
    {-# LINE 235 "src-ag/DefaultRules.ag" #-}
    rule66 = \ !nt_ ->
                                {-# LINE 235 "src-ag/DefaultRules.ag" #-}
                                nt_
-                               {-# LINE 1465 "src-generated/DefaultRules.hs" #-}
+                               {-# LINE 1468 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE rule67 #-}
    {-# LINE 592 "src-ag/DefaultRules.ag" #-}
    rule67 = \ !inh_ !nt_ !params_ ->
                {-# LINE 592 "src-ag/DefaultRules.ag" #-}
                Map.map (elimSelfId nt_ params_) inh_
-               {-# LINE 1471 "src-generated/DefaultRules.hs" #-}
+               {-# LINE 1474 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE rule68 #-}
    {-# LINE 593 "src-ag/DefaultRules.ag" #-}
    rule68 = \ !nt_ !params_ !syn_ ->
                {-# LINE 593 "src-ag/DefaultRules.ag" #-}
                Map.map (elimSelfId nt_ params_) syn_
-               {-# LINE 1477 "src-generated/DefaultRules.hs" #-}
+               {-# LINE 1480 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE rule69 #-}
    {-# LINE 632 "src-ag/DefaultRules.ag" #-}
    rule69 = \ !_inh1 ((!_prodsIoutput) :: Productions) !_syn1 !nt_ !params_ ->
                  {-# LINE 632 "src-ag/DefaultRules.ag" #-}
                  Nonterminal nt_ params_ _inh1     _syn1     _prodsIoutput
-                 {-# LINE 1483 "src-generated/DefaultRules.hs" #-}
+                 {-# LINE 1486 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE rule70 #-}
    {-# LINE 804 "src-ag/DefaultRules.ag" #-}
    rule70 = \ ((!_lhsIaugmentsIn) :: Map NontermIdent (Map ConstructorIdent (Map Identifier [Expression]))) !nt_ ->
                                                   {-# LINE 804 "src-ag/DefaultRules.ag" #-}
                                                   Map.findWithDefault Map.empty nt_ _lhsIaugmentsIn
-                                                  {-# LINE 1489 "src-generated/DefaultRules.hs" #-}
+                                                  {-# LINE 1492 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE rule71 #-}
    {-# LINE 811 "src-ag/DefaultRules.ag" #-}
    rule71 = \ ((!_lhsIaroundsIn) :: Map NontermIdent (Map ConstructorIdent (Map Identifier [Expression]))) !nt_ ->
                                                    {-# LINE 811 "src-ag/DefaultRules.ag" #-}
                                                    Map.findWithDefault Map.empty nt_ _lhsIaroundsIn
-                                                   {-# LINE 1495 "src-generated/DefaultRules.hs" #-}
+                                                   {-# LINE 1498 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE rule72 #-}
    {-# LINE 819 "src-ag/DefaultRules.ag" #-}
    rule72 = \ ((!_lhsImergesIn) :: Map NontermIdent (Map ConstructorIdent (Map Identifier (Identifier,[Identifier],Expression)))) !nt_ ->
                                                   {-# LINE 819 "src-ag/DefaultRules.ag" #-}
                                                   Map.findWithDefault Map.empty nt_ _lhsImergesIn
-                                                  {-# LINE 1501 "src-generated/DefaultRules.hs" #-}
+                                                  {-# LINE 1504 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule73 #-}
    rule73 = \ ((!_prodsIerrors) :: Seq Error) ->
      _prodsIerrors
@@ -2610,7 +2613,7 @@ sem_Pattern_Alias !arg_field_ !arg_attr_ arg_pat_ = T_Pattern (return st10) wher
    rule154 = \ ((!_patIdefinedAttrs) :: Set (Identifier,Identifier)) !attr_ !field_ ->
                                {-# LINE 564 "src-ag/DefaultRules.ag" #-}
                                Set.insert (field_,attr_) _patIdefinedAttrs
-                               {-# LINE 2614 "src-generated/DefaultRules.hs" #-}
+                               {-# LINE 2617 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE rule155 #-}
    {-# LINE 565 "src-ag/DefaultRules.ag" #-}
    rule155 = \ ((!_patIlocals) :: Set Identifier) !attr_ !field_ ->
@@ -2618,13 +2621,13 @@ sem_Pattern_Alias !arg_field_ !arg_attr_ arg_pat_ = T_Pattern (return st10) wher
                                if field_ == _LOC
                                   then Set.insert attr_ _patIlocals
                                   else _patIlocals
-                               {-# LINE 2622 "src-generated/DefaultRules.hs" #-}
+                               {-# LINE 2625 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE rule156 #-}
    {-# LINE 582 "src-ag/DefaultRules.ag" #-}
    rule156 = \  (_ :: ()) ->
                                     {-# LINE 582 "src-ag/DefaultRules.ag" #-}
                                     True
-                                    {-# LINE 2628 "src-generated/DefaultRules.hs" #-}
+                                    {-# LINE 2631 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule157 #-}
    rule157 = \ ((!_patIerrors) :: Seq Error) ->
      _patIerrors
@@ -3523,7 +3526,7 @@ sem_Production_Production !arg_con_ !arg_params_ !arg_constraints_ arg_children_
    rule204 = \ ((!_childrenIerrors) :: Seq Error) !_errs !_orderErrs ((!_rulesIerrors) :: Seq Error) ->
                   {-# LINE 412 "src-ag/DefaultRules.ag" #-}
                   _childrenIerrors >< _errs >< _rulesIerrors >< _orderErrs
-                  {-# LINE 3527 "src-generated/DefaultRules.hs" #-}
+                  {-# LINE 3530 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule205 #-}
    {-# LINE 416 "src-ag/DefaultRules.ag" #-}
    rule205 = \ ((!_childrenIfields) :: [(Identifier,Type,ChildKind)]) ((!_childrenIinputs) :: [(Identifier, Attributes)]) ((!_childrenIoutputs) :: [(Identifier, Attributes)]) ((!_lhsIconstructorTypeMap) :: Map NontermIdent ConstructorType) ((!_lhsIcr) :: Bool) ((!_lhsIinh) :: Attributes) ((!_lhsInt) :: NontermIdent) ((!_lhsIo_rename) :: Bool) ((!_lhsIoptions) :: Options) ((!_lhsIsyn) :: Attributes) ((!_lhsIsynOrig) :: Attributes) ((!_lhsItypeSyns) :: TypeSyns) ((!_lhsIuseMap) :: Map Identifier (String,String,String)) ((!_lhsIwrappers) :: Set NontermIdent) ((!_rulesIdefinedAttrs) :: Set (Identifier,Identifier)) ((!_rulesIlocals) :: Set Identifier) !con_ ->
@@ -3584,37 +3587,37 @@ sem_Production_Production !arg_con_ !arg_params_ !arg_constraints_ arg_children_
                        locals
                        (lhs_env, (_LHS, others))
       in (uRules++selfLocRules++selfRules++rules5++rules1, errors1><errs5)
-      {-# LINE 3588 "src-generated/DefaultRules.hs" #-}
+      {-# LINE 3591 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule206 #-}
    {-# LINE 636 "src-ag/DefaultRules.ag" #-}
    rule206 = \ !_augmentsIn !_newRls ((!_rulesIoutput) :: Rules) ->
                      {-# LINE 636 "src-ag/DefaultRules.ag" #-}
                      foldr addAugments (_rulesIoutput ++ _newRls) (Map.assocs _augmentsIn    )
-                     {-# LINE 3594 "src-generated/DefaultRules.hs" #-}
+                     {-# LINE 3597 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule207 #-}
    {-# LINE 637 "src-ag/DefaultRules.ag" #-}
    rule207 = \ !_aroundsIn !_extra1 ->
                      {-# LINE 637 "src-ag/DefaultRules.ag" #-}
                      foldr addArounds _extra1     (Map.assocs _aroundsIn    )
-                     {-# LINE 3600 "src-generated/DefaultRules.hs" #-}
+                     {-# LINE 3603 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule208 #-}
    {-# LINE 638 "src-ag/DefaultRules.ag" #-}
    rule208 = \ !_extra2 !_mergesIn ->
                      {-# LINE 638 "src-ag/DefaultRules.ag" #-}
                      foldr addMerges _extra2     (Map.assocs _mergesIn    )
-                     {-# LINE 3606 "src-generated/DefaultRules.hs" #-}
+                     {-# LINE 3609 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule209 #-}
    {-# LINE 639 "src-ag/DefaultRules.ag" #-}
    rule209 = \ ((!_childrenIoutput) :: Children) !_extra3 ((!_typeSigsIoutput) :: TypeSigs) !con_ !constraints_ !macro_ !params_ ->
                      {-# LINE 639 "src-ag/DefaultRules.ag" #-}
                      Production con_ params_ constraints_ _childrenIoutput _extra3     _typeSigsIoutput macro_
-                     {-# LINE 3612 "src-generated/DefaultRules.hs" #-}
+                     {-# LINE 3615 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule210 #-}
    {-# LINE 747 "src-ag/DefaultRules.ag" #-}
    rule210 = \ ((!_lhsImanualAttrOrderMap) :: AttrOrderMap) ((!_lhsInt) :: NontermIdent) !con_ ->
                         {-# LINE 747 "src-ag/DefaultRules.ag" #-}
                         Set.toList $ Map.findWithDefault Set.empty con_ $ Map.findWithDefault Map.empty _lhsInt _lhsImanualAttrOrderMap
-                        {-# LINE 3618 "src-generated/DefaultRules.hs" #-}
+                        {-# LINE 3621 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule211 #-}
    {-# LINE 750 "src-ag/DefaultRules.ag" #-}
    rule211 = \ ((!_childrenIinputs) :: [(Identifier, Attributes)]) ((!_childrenIoutputs) :: [(Identifier, Attributes)]) ((!_lhsIinh) :: Attributes) ((!_lhsInt) :: NontermIdent) ((!_lhsIsyn) :: Attributes) !_orderDeps ((!_rulesIlocals) :: Set Identifier) ((!_rulesIruleNames) :: Set Identifier) !con_ ->
@@ -3654,31 +3657,31 @@ sem_Production_Production !arg_con_ !arg_params_ !arg_constraints_ arg_children_
                [ checkIn occA ++ checkOut occB
                | (Dependency occA occB) <- _orderDeps
                ]
-            {-# LINE 3658 "src-generated/DefaultRules.hs" #-}
+            {-# LINE 3661 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule212 #-}
    {-# LINE 805 "src-ag/DefaultRules.ag" #-}
    rule212 = \ ((!_lhsIaugmentsIn) :: Map ConstructorIdent (Map Identifier [Expression])) !con_ ->
                                                   {-# LINE 805 "src-ag/DefaultRules.ag" #-}
                                                   Map.findWithDefault Map.empty con_ _lhsIaugmentsIn
-                                                  {-# LINE 3664 "src-generated/DefaultRules.hs" #-}
+                                                  {-# LINE 3667 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule213 #-}
    {-# LINE 812 "src-ag/DefaultRules.ag" #-}
    rule213 = \ ((!_lhsIaroundsIn) :: Map ConstructorIdent (Map Identifier [Expression])) !con_ ->
                                                    {-# LINE 812 "src-ag/DefaultRules.ag" #-}
                                                    Map.findWithDefault Map.empty con_ _lhsIaroundsIn
-                                                   {-# LINE 3670 "src-generated/DefaultRules.hs" #-}
+                                                   {-# LINE 3673 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule214 #-}
    {-# LINE 820 "src-ag/DefaultRules.ag" #-}
    rule214 = \ ((!_lhsImergesIn) :: Map ConstructorIdent (Map Identifier (Identifier,[Identifier],Expression))) !con_ ->
                                                   {-# LINE 820 "src-ag/DefaultRules.ag" #-}
                                                   Map.findWithDefault Map.empty con_ _lhsImergesIn
-                                                  {-# LINE 3676 "src-generated/DefaultRules.hs" #-}
+                                                  {-# LINE 3679 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule215 #-}
    {-# LINE 821 "src-ag/DefaultRules.ag" #-}
    rule215 = \ !_mergesIn ->
                                                   {-# LINE 821 "src-ag/DefaultRules.ag" #-}
                                                   Set.fromList [ c | (_,cs,_) <- Map.elems _mergesIn    , c <- cs ]
-                                                  {-# LINE 3682 "src-generated/DefaultRules.hs" #-}
+                                                  {-# LINE 3685 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule217 #-}
    rule217 = \ ((!_rulesIuniq) :: Int) ->
      _rulesIuniq
@@ -4267,13 +4270,13 @@ sem_Rule_Rule !arg_mbName_ arg_pattern_ !arg_rhs_ !arg_owrt_ !arg_origin_ !arg_e
    rule280 = \ !pure_ ->
                                 {-# LINE 585 "src-ag/DefaultRules.ag" #-}
                                 pure_
-                                {-# LINE 4271 "src-generated/DefaultRules.hs" #-}
+                                {-# LINE 4274 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule281 #-}
    {-# LINE 652 "src-ag/DefaultRules.ag" #-}
    rule281 = \ !_output ->
                                          {-# LINE 652 "src-ag/DefaultRules.ag" #-}
                                          mkRuleAlias _output
-                                         {-# LINE 4277 "src-generated/DefaultRules.hs" #-}
+                                         {-# LINE 4280 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule282 #-}
    {-# LINE 653 "src-ag/DefaultRules.ag" #-}
    rule282 = \ ((!_lhsIoptions) :: Options) ((!_lhsIuniq) :: Int) !_output1 ->
@@ -4281,13 +4284,13 @@ sem_Rule_Rule !arg_mbName_ arg_pattern_ !arg_rhs_ !arg_owrt_ !arg_origin_ !arg_e
                                       if needsMultiRules _lhsIoptions
                                       then multiRule _output1     _lhsIuniq
                                       else ([_output1    ], _lhsIuniq)
-                                      {-# LINE 4285 "src-generated/DefaultRules.hs" #-}
+                                      {-# LINE 4288 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule283 #-}
    {-# LINE 656 "src-ag/DefaultRules.ag" #-}
    rule283 = \ !_mbAlias !_outputs ->
                           {-# LINE 656 "src-ag/DefaultRules.ag" #-}
                           maybe [] return _mbAlias     ++ _outputs
-                          {-# LINE 4291 "src-generated/DefaultRules.hs" #-}
+                          {-# LINE 4294 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule284 #-}
    {-# LINE 741 "src-ag/DefaultRules.ag" #-}
    rule284 = \ !mbName_ ->
@@ -4295,7 +4298,7 @@ sem_Rule_Rule !arg_mbName_ arg_pattern_ !arg_rhs_ !arg_owrt_ !arg_origin_ !arg_e
                                    case mbName_ of
                                      Nothing -> Set.empty
                                      Just nm -> Set.singleton nm
-                                   {-# LINE 4299 "src-generated/DefaultRules.hs" #-}
+                                   {-# LINE 4302 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule285 #-}
    rule285 = \ ((!_patternIcontainsVars) :: Bool) ->
      _patternIcontainsVars
@@ -4461,7 +4464,7 @@ sem_Rules_Cons arg_hd_ arg_tl_ = T_Rules (return st20) where
    rule293 = \ ((!_hdIcontainsVars) :: Bool) ((!_hdIisPure) :: Bool) ((!_hdIoutputs) :: Rules) ((!_tlIoutput) :: Rules) ->
                         {-# LINE 648 "src-ag/DefaultRules.ag" #-}
                         if _hdIcontainsVars && _hdIisPure then _hdIoutputs ++ _tlIoutput else _tlIoutput
-                        {-# LINE 4465 "src-generated/DefaultRules.hs" #-}
+                        {-# LINE 4468 "src-generated/DefaultRules.hs" #-}
    {-# NOINLINE[1] rule294 #-}
    rule294 = \ ((!_hdIdefinedAttrs) :: Set (Identifier,Identifier)) ((!_tlIdefinedAttrs) :: Set (Identifier,Identifier)) ->
      _hdIdefinedAttrs `Set.union` _tlIdefinedAttrs
@@ -4628,13 +4631,13 @@ sem_TypeSig_TypeSig !arg_name_ !arg_tp_ = T_TypeSig (return st22) where
    rule317 = \ ((!_lhsInt) :: NontermIdent) ((!_lhsIparams) :: [Identifier]) !tp_ ->
               {-# LINE 604 "src-ag/DefaultRules.ag" #-}
               elimSelfId _lhsInt _lhsIparams tp_
-              {-# LINE 4632 "src-generated/DefaultRules.hs" #-}
+              {-# LINE 4635 "src-generated/DefaultRules.hs" #-}
    {-# INLINE rule318 #-}
    {-# LINE 645 "src-ag/DefaultRules.ag" #-}
    rule318 = \ !_tp1 !name_ ->
                  {-# LINE 645 "src-ag/DefaultRules.ag" #-}
                  TypeSig name_ _tp1
-                 {-# LINE 4638 "src-generated/DefaultRules.hs" #-}
+                 {-# LINE 4641 "src-generated/DefaultRules.hs" #-}
 
 -- TypeSigs ----------------------------------------------------
 -- wrapper

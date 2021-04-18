@@ -1,11 +1,14 @@
 
 
+{-# LANGUAGE DeriveLift #-}
 -- UUAGC 0.9.53.1 (src-ag/Macro.ag)
 module Macro where
-{-# LINE 4 "src-ag/Macro.ag" #-}
+{-# LINE 9 "src-ag/Macro.ag" #-}
 
 import CommonTypes
-{-# LINE 9 "src-generated/Macro.hs" #-}
+import Language.Haskell.TH.Syntax (Lift)
+import LiftOrphans ()
+{-# LINE 12 "src-generated/Macro.hs" #-}
 -- Macro -------------------------------------------------------
 {-
    alternatives:
@@ -16,7 +19,7 @@ import CommonTypes
 -}
 data Macro = Macro (ConstructorIdent) (MacroChildren)
            | None
-           deriving ( Show)
+           deriving ( Lift,Show)
 -- MacroChild --------------------------------------------------
 {-
    alternatives:
@@ -33,7 +36,7 @@ data Macro = Macro (ConstructorIdent) (MacroChildren)
 data MacroChild = RuleChild (Identifier) (Macro)
                 | ChildChild (Identifier) (Identifier)
                 | ValueChild (Identifier) (String)
-                deriving ( Show)
+                deriving ( Lift,Show)
 -- MacroChildren -----------------------------------------------
 {-
    alternatives:

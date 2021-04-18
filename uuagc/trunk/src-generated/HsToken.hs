@@ -1,12 +1,15 @@
 
 
+{-# LANGUAGE DeriveLift #-}
 -- UUAGC 0.9.53.1 (src-ag/HsToken.ag)
 module HsToken where
-{-# LINE 2 "src-ag/HsToken.ag" #-}
+{-# LINE 6 "src-ag/HsToken.ag" #-}
 
 import CommonTypes
 import UU.Scanner.Position(Pos)
-{-# LINE 10 "src-generated/HsToken.hs" #-}
+import Language.Haskell.TH.Syntax (Lift)
+import LiftOrphans ()
+{-# LINE 13 "src-generated/HsToken.hs" #-}
 -- HsToken -----------------------------------------------------
 {-
    alternatives:
@@ -38,7 +41,7 @@ data HsToken = AGLocal (Identifier) (Pos) ((Maybe String))
              | CharToken (String) (Pos)
              | StrToken (String) (Pos)
              | Err (String) (Pos)
-             deriving ( Show)
+             deriving ( Lift,Show)
 -- HsTokens ----------------------------------------------------
 {-
    alternatives:
@@ -55,3 +58,4 @@ type HsTokens = [HsToken]
          child tokens         : HsTokens 
 -}
 data HsTokensRoot = HsTokensRoot (HsTokens)
+                  deriving ( Lift)

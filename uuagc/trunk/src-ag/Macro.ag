@@ -1,9 +1,18 @@
 --marcos: macros extension
 
+optpragmas
+{
+{-# LANGUAGE DeriveLift #-}
+}
+
 imports
 {
 import CommonTypes
+import Language.Haskell.TH.Syntax (Lift)
+import LiftOrphans ()
 }
+
+DERIVING * : Lift
 
 TYPE MaybeMacro  = MAYBE Macro
 

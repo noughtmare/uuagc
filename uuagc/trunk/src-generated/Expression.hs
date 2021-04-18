@@ -1,12 +1,15 @@
 
 
+{-# LANGUAGE DeriveLift #-}
 -- UUAGC 0.9.53.1 (src-ag/Expression.ag)
 module Expression where
-{-# LINE 2 "src-ag/Expression.ag" #-}
+{-# LINE 6 "src-ag/Expression.ag" #-}
 
 import UU.Scanner.Position(Pos)
 import HsToken
-{-# LINE 10 "src-generated/Expression.hs" #-}
+import Language.Haskell.TH.Syntax (Lift)
+import LiftOrphans ()
+{-# LINE 13 "src-generated/Expression.hs" #-}
 -- Expression --------------------------------------------------
 {-
    alternatives:
@@ -15,3 +18,4 @@ import HsToken
          child tks            : {[HsToken]}
 -}
 data Expression = Expression (Pos) (([HsToken]))
+                deriving ( Lift)

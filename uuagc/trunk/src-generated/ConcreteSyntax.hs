@@ -1,15 +1,18 @@
 
 
+{-# LANGUAGE DeriveLift #-}
 -- UUAGC 0.9.53.1 (src-ag/ConcreteSyntax.ag)
 module ConcreteSyntax where
-{-# LINE 2 "src-ag/ConcreteSyntax.ag" #-}
+{-# LINE 7 "src-ag/ConcreteSyntax.ag" #-}
 
 import UU.Scanner.Position (Pos)
 import Patterns   (Pattern)
 import Expression (Expression)
 import CommonTypes
 import Macro --marcos
-{-# LINE 13 "src-generated/ConcreteSyntax.hs" #-}
+import Language.Haskell.TH.Syntax (Lift)
+import LiftOrphans ()
+{-# LINE 16 "src-generated/ConcreteSyntax.hs" #-}
 -- AG ----------------------------------------------------------
 {-
    alternatives:
@@ -17,6 +20,7 @@ import Macro --marcos
          child elems          : Elems 
 -}
 data AG = AG (Elems)
+        deriving ( Lift)
 -- Alt ---------------------------------------------------------
 {-
    alternatives:
@@ -28,6 +32,7 @@ data AG = AG (Elems)
          child macro          : {MaybeMacro}
 -}
 data Alt = Alt (Pos) (ConstructorSet) (([Identifier])) (Fields) (MaybeMacro)
+         deriving ( Lift)
 -- Alts --------------------------------------------------------
 {-
    alternatives:
@@ -47,6 +52,7 @@ type Alts = [Alt]
          child syn            : {AttrNames}
 -}
 data Attrs = Attrs (Pos) (AttrNames) (AttrNames) (AttrNames)
+           deriving ( Lift)
 -- ConstructorSet ----------------------------------------------
 {-
    alternatives:
@@ -64,6 +70,7 @@ data ConstructorSet = CName (ConstructorIdent)
                     | CUnion (ConstructorSet) (ConstructorSet)
                     | CDifference (ConstructorSet) (ConstructorSet)
                     | CAll
+                    deriving ( Lift)
 -- Elem --------------------------------------------------------
 {-
    alternatives:
@@ -135,6 +142,7 @@ data Elem = Data (Pos) (ConstructorType) (ClassContext) (NontSet) (([Identifier]
           | Nocatas (Pos) (NontSet)
           | Pragma (Pos) (([NontermIdent]))
           | Module (Pos) (String) (String) (String)
+          deriving ( Lift)
 -- Elems -------------------------------------------------------
 {-
    alternatives:
@@ -155,6 +163,7 @@ type Elems = [Elem]
 -}
 data Field = FChild (Identifier) (Type)
            | FCtx (([Type]))
+           deriving ( Lift)
 -- Fields ------------------------------------------------------
 {-
    alternatives:
@@ -189,6 +198,7 @@ data NontSet = NamedSet (NontermIdent)
              | Intersect (NontSet) (NontSet)
              | Difference (NontSet) (NontSet)
              | Path (NontermIdent) (NontermIdent)
+             deriving ( Lift)
 -- SemAlt ------------------------------------------------------
 {-
    alternatives:
@@ -198,6 +208,7 @@ data NontSet = NamedSet (NontermIdent)
          child rules          : SemDefs 
 -}
 data SemAlt = SemAlt (Pos) (ConstructorSet) (SemDefs)
+            deriving ( Lift)
 -- SemAlts -----------------------------------------------------
 {-
    alternatives:
@@ -250,6 +261,7 @@ data SemDef = Def (Pos) ((Maybe Identifier)) (Pattern) (Expression) (Bool) (Bool
             | MergeDef (Identifier) (Identifier) (([Identifier])) (Expression)
             | SemPragma (([NontermIdent]))
             | AttrOrderBefore (([Occurrence])) (([Occurrence]))
+            deriving ( Lift)
 -- SemDefs -----------------------------------------------------
 {-
    alternatives:

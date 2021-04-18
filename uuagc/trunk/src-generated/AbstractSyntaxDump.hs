@@ -1,19 +1,26 @@
 {-# LANGUAGE Rank2Types, GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
+{-# LANGUAGE DeriveLift #-}
+
+{-# LANGUAGE DeriveLift #-}
 module AbstractSyntaxDump where
-{-# LINE 2 "src-ag/Expression.ag" #-}
+{-# LINE 6 "src-ag/Expression.ag" #-}
 
 import UU.Scanner.Position(Pos)
 import HsToken
-{-# LINE 10 "src-generated/AbstractSyntaxDump.hs" #-}
+import Language.Haskell.TH.Syntax (Lift)
+import LiftOrphans ()
+{-# LINE 15 "src-generated/AbstractSyntaxDump.hs" #-}
 
-{-# LINE 2 "src-ag/Patterns.ag" #-}
+{-# LINE 6 "src-ag/Patterns.ag" #-}
 
 -- Patterns.ag imports
 import UU.Scanner.Position(Pos)
 import CommonTypes (ConstructorIdent,Identifier)
-{-# LINE 17 "src-generated/AbstractSyntaxDump.hs" #-}
+import Language.Haskell.TH.Syntax (Lift)
+import LiftOrphans ()
+{-# LINE 24 "src-generated/AbstractSyntaxDump.hs" #-}
 
 {-# LINE 2 "src-ag/AbstractSyntax.ag" #-}
 
@@ -25,7 +32,7 @@ import Expression  (Expression(..))
 import Macro --marcos
 import CommonTypes
 import ErrorMessages
-{-# LINE 29 "src-generated/AbstractSyntaxDump.hs" #-}
+{-# LINE 36 "src-generated/AbstractSyntaxDump.hs" #-}
 
 {-# LINE 6 "src-ag/AbstractSyntaxDump.ag" #-}
 
@@ -37,7 +44,7 @@ import PPUtil
 
 import AbstractSyntax
 import TokenDef
-{-# LINE 41 "src-generated/AbstractSyntaxDump.hs" #-}
+{-# LINE 48 "src-generated/AbstractSyntaxDump.hs" #-}
 import Control.Monad.Identity (Identity)
 import qualified Control.Monad.Identity
 -- Child -------------------------------------------------------
@@ -87,7 +94,7 @@ sem_Child_Child arg_name_ arg_tp_ arg_kind_ = T_Child (return st2) where
    rule0 = \ kind_ name_ tp_ ->
                                               {-# LINE 35 "src-ag/AbstractSyntaxDump.ag" #-}
                                               ppNestInfo ["Child","Child"] [pp name_, ppShow tp_] [ppF "kind" $ ppShow kind_] []
-                                              {-# LINE 91 "src-generated/AbstractSyntaxDump.hs" #-}
+                                              {-# LINE 98 "src-generated/AbstractSyntaxDump.hs" #-}
 
 -- Children ----------------------------------------------------
 -- wrapper
@@ -142,7 +149,7 @@ sem_Children_Cons arg_hd_ arg_tl_ = T_Children (return st5) where
    rule1 = \ ((_hdIpp) :: PP_Doc) ((_tlIppL) :: [PP_Doc]) ->
                                               {-# LINE 67 "src-ag/AbstractSyntaxDump.ag" #-}
                                               _hdIpp : _tlIppL
-                                              {-# LINE 146 "src-generated/AbstractSyntaxDump.hs" #-}
+                                              {-# LINE 153 "src-generated/AbstractSyntaxDump.hs" #-}
    {-# INLINE rule2 #-}
    rule2 = \ ((_hdIpp) :: PP_Doc) ((_tlIpp) :: PP_Doc) ->
      _hdIpp >-< _tlIpp
@@ -165,7 +172,7 @@ sem_Children_Nil  = T_Children (return st5) where
    rule3 = \  (_ :: ()) ->
                                               {-# LINE 68 "src-ag/AbstractSyntaxDump.ag" #-}
                                               []
-                                              {-# LINE 169 "src-generated/AbstractSyntaxDump.hs" #-}
+                                              {-# LINE 176 "src-generated/AbstractSyntaxDump.hs" #-}
    {-# INLINE rule4 #-}
    rule4 = \  (_ :: ()) ->
      empty
@@ -217,7 +224,7 @@ sem_Expression_Expression arg_pos_ arg_tks_ = T_Expression (return st8) where
    rule5 = \ pos_ tks_ ->
                                               {-# LINE 50 "src-ag/AbstractSyntaxDump.ag" #-}
                                               ppNestInfo ["Expression","Expression"] [ppShow pos_] [ppF "txt" $ vlist . showTokens . tokensToStrings $ tks_] []
-                                              {-# LINE 221 "src-generated/AbstractSyntaxDump.hs" #-}
+                                              {-# LINE 228 "src-generated/AbstractSyntaxDump.hs" #-}
 
 -- Grammar -----------------------------------------------------
 -- wrapper
@@ -274,7 +281,7 @@ sem_Grammar_Grammar arg_typeSyns_ arg_useMap_ arg_derivings_ arg_wrappers_ arg_n
                                                          , ppF "wrappers" $ ppShow $ wrappers_
                                                          , ppF "nonts" $ ppVList _nontsIppL
                                                          ] []
-                                              {-# LINE 278 "src-generated/AbstractSyntaxDump.hs" #-}
+                                              {-# LINE 285 "src-generated/AbstractSyntaxDump.hs" #-}
 
 -- Nonterminal -------------------------------------------------
 -- wrapper
@@ -325,7 +332,7 @@ sem_Nonterminal_Nonterminal arg_nt_ arg_params_ arg_inh_ arg_syn_ arg_prods_ = T
    rule7 = \ ((_prodsIppL) :: [PP_Doc]) inh_ nt_ params_ syn_ ->
                                               {-# LINE 29 "src-ag/AbstractSyntaxDump.ag" #-}
                                               ppNestInfo ["Nonterminal","Nonterminal"] (pp nt_ : map pp params_) [ppF "inh" $ ppMap inh_, ppF "syn" $ ppMap syn_, ppF "prods" $ ppVList _prodsIppL] []
-                                              {-# LINE 329 "src-generated/AbstractSyntaxDump.hs" #-}
+                                              {-# LINE 336 "src-generated/AbstractSyntaxDump.hs" #-}
 
 -- Nonterminals ------------------------------------------------
 -- wrapper
@@ -380,7 +387,7 @@ sem_Nonterminals_Cons arg_hd_ arg_tl_ = T_Nonterminals (return st17) where
    rule8 = \ ((_hdIpp) :: PP_Doc) ((_tlIppL) :: [PP_Doc]) ->
                                               {-# LINE 75 "src-ag/AbstractSyntaxDump.ag" #-}
                                               _hdIpp : _tlIppL
-                                              {-# LINE 384 "src-generated/AbstractSyntaxDump.hs" #-}
+                                              {-# LINE 391 "src-generated/AbstractSyntaxDump.hs" #-}
    {-# INLINE rule9 #-}
    rule9 = \ ((_hdIpp) :: PP_Doc) ((_tlIpp) :: PP_Doc) ->
      _hdIpp >-< _tlIpp
@@ -403,7 +410,7 @@ sem_Nonterminals_Nil  = T_Nonterminals (return st17) where
    rule10 = \  (_ :: ()) ->
                                               {-# LINE 76 "src-ag/AbstractSyntaxDump.ag" #-}
                                               []
-                                              {-# LINE 407 "src-generated/AbstractSyntaxDump.hs" #-}
+                                              {-# LINE 414 "src-generated/AbstractSyntaxDump.hs" #-}
    {-# INLINE rule11 #-}
    rule11 = \  (_ :: ()) ->
      empty
@@ -464,7 +471,7 @@ sem_Pattern_Constr arg_name_ arg_pats_ = T_Pattern (return st20) where
    rule12 = \ ((_patsIppL) :: [PP_Doc]) name_ ->
                                               {-# LINE 44 "src-ag/AbstractSyntaxDump.ag" #-}
                                               ppNestInfo ["Pattern","Constr"] [pp name_] [ppF "pats" $ ppVList _patsIppL] []
-                                              {-# LINE 468 "src-generated/AbstractSyntaxDump.hs" #-}
+                                              {-# LINE 475 "src-generated/AbstractSyntaxDump.hs" #-}
    {-# INLINE rule13 #-}
    rule13 = \ ((_patsIcopy) :: Patterns) name_ ->
      Constr name_ _patsIcopy
@@ -493,7 +500,7 @@ sem_Pattern_Product arg_pos_ arg_pats_ = T_Pattern (return st20) where
    rule15 = \ ((_patsIppL) :: [PP_Doc]) pos_ ->
                                               {-# LINE 45 "src-ag/AbstractSyntaxDump.ag" #-}
                                               ppNestInfo ["Pattern","Product"] [ppShow pos_] [ppF "pats" $ ppVList _patsIppL] []
-                                              {-# LINE 497 "src-generated/AbstractSyntaxDump.hs" #-}
+                                              {-# LINE 504 "src-generated/AbstractSyntaxDump.hs" #-}
    {-# INLINE rule16 #-}
    rule16 = \ ((_patsIcopy) :: Patterns) pos_ ->
      Product pos_ _patsIcopy
@@ -522,7 +529,7 @@ sem_Pattern_Alias arg_field_ arg_attr_ arg_pat_ = T_Pattern (return st20) where
    rule18 = \ ((_patIpp) :: PP_Doc) attr_ field_ ->
                                               {-# LINE 46 "src-ag/AbstractSyntaxDump.ag" #-}
                                               ppNestInfo ["Pattern","Alias"] [pp field_, pp attr_] [ppF "pat" $ _patIpp] []
-                                              {-# LINE 526 "src-generated/AbstractSyntaxDump.hs" #-}
+                                              {-# LINE 533 "src-generated/AbstractSyntaxDump.hs" #-}
    {-# INLINE rule19 #-}
    rule19 = \ ((_patIcopy) :: Pattern) attr_ field_ ->
      Alias field_ attr_ _patIcopy
@@ -575,7 +582,7 @@ sem_Pattern_Underscore arg_pos_ = T_Pattern (return st20) where
    rule24 = \ pos_ ->
                                               {-# LINE 47 "src-ag/AbstractSyntaxDump.ag" #-}
                                               ppNestInfo ["Pattern","Underscore"] [ppShow pos_] [] []
-                                              {-# LINE 579 "src-generated/AbstractSyntaxDump.hs" #-}
+                                              {-# LINE 586 "src-generated/AbstractSyntaxDump.hs" #-}
    {-# INLINE rule25 #-}
    rule25 = \ pos_ ->
      Underscore pos_
@@ -639,7 +646,7 @@ sem_Patterns_Cons arg_hd_ arg_tl_ = T_Patterns (return st23) where
    rule27 = \ ((_hdIpp) :: PP_Doc) ((_tlIppL) :: [PP_Doc]) ->
                                               {-# LINE 55 "src-ag/AbstractSyntaxDump.ag" #-}
                                               _hdIpp : _tlIppL
-                                              {-# LINE 643 "src-generated/AbstractSyntaxDump.hs" #-}
+                                              {-# LINE 650 "src-generated/AbstractSyntaxDump.hs" #-}
    {-# INLINE rule28 #-}
    rule28 = \ ((_hdIpp) :: PP_Doc) ((_tlIpp) :: PP_Doc) ->
      _hdIpp >-< _tlIpp
@@ -671,7 +678,7 @@ sem_Patterns_Nil  = T_Patterns (return st23) where
    rule31 = \  (_ :: ()) ->
                                               {-# LINE 56 "src-ag/AbstractSyntaxDump.ag" #-}
                                               []
-                                              {-# LINE 675 "src-generated/AbstractSyntaxDump.hs" #-}
+                                              {-# LINE 682 "src-generated/AbstractSyntaxDump.hs" #-}
    {-# INLINE rule32 #-}
    rule32 = \  (_ :: ()) ->
      empty
@@ -735,7 +742,7 @@ sem_Production_Production arg_con_ _ _ arg_children_ arg_rules_ arg_typeSigs_ _ 
    rule35 = \ ((_childrenIppL) :: [PP_Doc]) ((_rulesIppL) :: [PP_Doc]) ((_typeSigsIppL) :: [PP_Doc]) con_ ->
                                               {-# LINE 32 "src-ag/AbstractSyntaxDump.ag" #-}
                                               ppNestInfo ["Production","Production"] [pp con_] [ppF "children" $ ppVList _childrenIppL,ppF "rules" $ ppVList _rulesIppL,ppF "typeSigs" $ ppVList _typeSigsIppL] []
-                                              {-# LINE 739 "src-generated/AbstractSyntaxDump.hs" #-}
+                                              {-# LINE 746 "src-generated/AbstractSyntaxDump.hs" #-}
 
 -- Productions -------------------------------------------------
 -- wrapper
@@ -790,7 +797,7 @@ sem_Productions_Cons arg_hd_ arg_tl_ = T_Productions (return st29) where
    rule36 = \ ((_hdIpp) :: PP_Doc) ((_tlIppL) :: [PP_Doc]) ->
                                               {-# LINE 71 "src-ag/AbstractSyntaxDump.ag" #-}
                                               _hdIpp : _tlIppL
-                                              {-# LINE 794 "src-generated/AbstractSyntaxDump.hs" #-}
+                                              {-# LINE 801 "src-generated/AbstractSyntaxDump.hs" #-}
    {-# INLINE rule37 #-}
    rule37 = \ ((_hdIpp) :: PP_Doc) ((_tlIpp) :: PP_Doc) ->
      _hdIpp >-< _tlIpp
@@ -813,7 +820,7 @@ sem_Productions_Nil  = T_Productions (return st29) where
    rule38 = \  (_ :: ()) ->
                                               {-# LINE 72 "src-ag/AbstractSyntaxDump.ag" #-}
                                               []
-                                              {-# LINE 817 "src-generated/AbstractSyntaxDump.hs" #-}
+                                              {-# LINE 824 "src-generated/AbstractSyntaxDump.hs" #-}
    {-# INLINE rule39 #-}
    rule39 = \  (_ :: ()) ->
      empty
@@ -869,7 +876,7 @@ sem_Rule_Rule _ arg_pattern_ arg_rhs_ arg_owrt_ arg_origin_ _ _ _ _ _ = T_Rule (
    rule40 = \ ((_patternIpp) :: PP_Doc) ((_rhsIpp) :: PP_Doc) origin_ owrt_ ->
                                               {-# LINE 38 "src-ag/AbstractSyntaxDump.ag" #-}
                                               ppNestInfo ["Rule","Rule"] [ppShow owrt_, pp origin_] [ppF "pattern" $ _patternIpp, ppF "rhs" $ _rhsIpp] []
-                                              {-# LINE 873 "src-generated/AbstractSyntaxDump.hs" #-}
+                                              {-# LINE 880 "src-generated/AbstractSyntaxDump.hs" #-}
 
 -- Rules -------------------------------------------------------
 -- wrapper
@@ -924,7 +931,7 @@ sem_Rules_Cons arg_hd_ arg_tl_ = T_Rules (return st35) where
    rule41 = \ ((_hdIpp) :: PP_Doc) ((_tlIppL) :: [PP_Doc]) ->
                                               {-# LINE 63 "src-ag/AbstractSyntaxDump.ag" #-}
                                               _hdIpp : _tlIppL
-                                              {-# LINE 928 "src-generated/AbstractSyntaxDump.hs" #-}
+                                              {-# LINE 935 "src-generated/AbstractSyntaxDump.hs" #-}
    {-# INLINE rule42 #-}
    rule42 = \ ((_hdIpp) :: PP_Doc) ((_tlIpp) :: PP_Doc) ->
      _hdIpp >-< _tlIpp
@@ -947,7 +954,7 @@ sem_Rules_Nil  = T_Rules (return st35) where
    rule43 = \  (_ :: ()) ->
                                               {-# LINE 64 "src-ag/AbstractSyntaxDump.ag" #-}
                                               []
-                                              {-# LINE 951 "src-generated/AbstractSyntaxDump.hs" #-}
+                                              {-# LINE 958 "src-generated/AbstractSyntaxDump.hs" #-}
    {-# INLINE rule44 #-}
    rule44 = \  (_ :: ()) ->
      empty
@@ -999,7 +1006,7 @@ sem_TypeSig_TypeSig arg_name_ arg_tp_ = T_TypeSig (return st38) where
    rule45 = \ name_ tp_ ->
                                               {-# LINE 41 "src-ag/AbstractSyntaxDump.ag" #-}
                                               ppNestInfo ["TypeSig","TypeSig"] [pp name_, ppShow tp_] [] []
-                                              {-# LINE 1003 "src-generated/AbstractSyntaxDump.hs" #-}
+                                              {-# LINE 1010 "src-generated/AbstractSyntaxDump.hs" #-}
 
 -- TypeSigs ----------------------------------------------------
 -- wrapper
@@ -1054,7 +1061,7 @@ sem_TypeSigs_Cons arg_hd_ arg_tl_ = T_TypeSigs (return st41) where
    rule46 = \ ((_hdIpp) :: PP_Doc) ((_tlIppL) :: [PP_Doc]) ->
                                               {-# LINE 59 "src-ag/AbstractSyntaxDump.ag" #-}
                                               _hdIpp : _tlIppL
-                                              {-# LINE 1058 "src-generated/AbstractSyntaxDump.hs" #-}
+                                              {-# LINE 1065 "src-generated/AbstractSyntaxDump.hs" #-}
    {-# INLINE rule47 #-}
    rule47 = \ ((_hdIpp) :: PP_Doc) ((_tlIpp) :: PP_Doc) ->
      _hdIpp >-< _tlIpp
@@ -1077,7 +1084,7 @@ sem_TypeSigs_Nil  = T_TypeSigs (return st41) where
    rule48 = \  (_ :: ()) ->
                                               {-# LINE 60 "src-ag/AbstractSyntaxDump.ag" #-}
                                               []
-                                              {-# LINE 1081 "src-generated/AbstractSyntaxDump.hs" #-}
+                                              {-# LINE 1088 "src-generated/AbstractSyntaxDump.hs" #-}
    {-# INLINE rule49 #-}
    rule49 = \  (_ :: ()) ->
      empty

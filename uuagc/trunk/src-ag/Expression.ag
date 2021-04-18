@@ -1,8 +1,16 @@
+optpragmas
+{
+{-# LANGUAGE DeriveLift #-}
+}
 imports
 {
 import UU.Scanner.Position(Pos)
 import HsToken
+import Language.Haskell.TH.Syntax (Lift)
+import LiftOrphans ()
 }
+
+DERIVING * : Lift
 
 DATA Expression
    | Expression pos:{Pos}

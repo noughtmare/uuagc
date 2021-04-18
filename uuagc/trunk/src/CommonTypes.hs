@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveLift #-}
 module CommonTypes (module Options, module CommonTypes) where
 
 import Options
@@ -9,6 +10,7 @@ import qualified Data.Set as Set
 import Data.Monoid(mappend,Monoid)
 import Data.Char
 import Pretty
+import Language.Haskell.TH.Syntax (Lift)
 
 type Blocks = Map BlockInfo [([String], Pos)]
 type BlockInfo = (BlockKind, Maybe NontermIdent)
@@ -19,7 +21,7 @@ data BlockKind
   | BlockData
   | BlockRec
   | BlockOther
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Lift)
 
 instance PP Identifier where
   pp = text . getName
@@ -28,7 +30,7 @@ data Type = Haskell String
           | NT Identifier [String]
                Bool  -- True: deforested nonterminal, False: nonterminal type
           | Self     -- reference to the enclosing nonterminal type
-          deriving (Eq)
+          deriving (Lift, Eq)
 
 data ComplexType = List Type
                  | Tuple [(Identifier, Type)]
@@ -38,6 +40,7 @@ data ComplexType = List Type
                  | IntMap Type
                  | OrdSet Type
                  | IntSet
+                 deriving Lift
 
 instance Show ComplexType where
   show (List  t )     = "[" ++ show t ++ "]"
@@ -73,11 +76,11 @@ data Dependency = Dependency Occurrence Occurrence deriving (Eq,Ord,Show)
 data Occurrence
   = OccAttr Identifier Identifier
   | OccRule Identifier
-  deriving (Eq,Ord,Show)
+  deriving (Eq,Ord,Show,Lift)
 data ConstructorType
   = DataConstructor
   | RecordConstructor
-  deriving (Eq,Ord,Show)
+  deriving (Eq,Ord,Show,Lift)
 
 type AttrEnv = ( [Identifier]
                , [(Identifier,Identifier)]

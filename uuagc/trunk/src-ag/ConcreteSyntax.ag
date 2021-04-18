@@ -1,3 +1,8 @@
+optpragmas
+{
+{-# LANGUAGE DeriveLift #-}
+}
+
 imports
 {
 import UU.Scanner.Position (Pos)
@@ -5,8 +10,11 @@ import Patterns   (Pattern)
 import Expression (Expression)
 import CommonTypes
 import Macro --marcos
+import Language.Haskell.TH.Syntax (Lift)
+import LiftOrphans ()
 }
 
+DERIVING * : Lift
 
 TYPE Elems     = [Elem]
 

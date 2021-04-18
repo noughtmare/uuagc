@@ -1,18 +1,21 @@
 {-# LANGUAGE Rank2Types, GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
+{-# LANGUAGE DeriveLift #-}
 module GenerateCode where
 {-# LINE 2 "src-ag/DeclBlocks.ag" #-}
 
 import Code (Decl,Expr)
-{-# LINE 9 "src-generated/GenerateCode.hs" #-}
+{-# LINE 10 "src-generated/GenerateCode.hs" #-}
 
-{-# LINE 2 "src-ag/Patterns.ag" #-}
+{-# LINE 6 "src-ag/Patterns.ag" #-}
 
 -- Patterns.ag imports
 import UU.Scanner.Position(Pos)
 import CommonTypes (ConstructorIdent,Identifier)
-{-# LINE 16 "src-generated/GenerateCode.hs" #-}
+import Language.Haskell.TH.Syntax (Lift)
+import LiftOrphans ()
+{-# LINE 19 "src-generated/GenerateCode.hs" #-}
 
 {-# LINE 2 "src-ag/CodeSyntax.ag" #-}
 
@@ -20,7 +23,7 @@ import Patterns
 import CommonTypes
 import Data.Map(Map)
 import Data.Set(Set)
-{-# LINE 24 "src-generated/GenerateCode.hs" #-}
+{-# LINE 27 "src-generated/GenerateCode.hs" #-}
 
 {-# LINE 9 "src-ag/GenerateCode.ag" #-}
 
@@ -48,7 +51,7 @@ import HsTokenScanner
 import Data.List(partition,intersperse)
 import Data.Maybe(fromJust,isJust)
 
-{-# LINE 52 "src-generated/GenerateCode.hs" #-}
+{-# LINE 55 "src-generated/GenerateCode.hs" #-}
 import Control.Monad.Identity (Identity)
 import qualified Control.Monad.Identity
 {-# LINE 107 "src-ag/GenerateCode.ag" #-}
@@ -59,7 +62,7 @@ cleanupArg opts s
   = case idEvalType opts (SimpleType s) of
       SimpleType s' -> s'
       _             -> error "Only SimpleType supported"
-{-# LINE 63 "src-generated/GenerateCode.hs" #-}
+{-# LINE 66 "src-generated/GenerateCode.hs" #-}
 
 {-# LINE 123 "src-ag/GenerateCode.ag" #-}
 
@@ -70,7 +73,7 @@ appContext mp nt tp
 appQuant :: QuantMap -> NontermIdent -> Code.Type -> Code.Type
 appQuant mp nt tp
   = foldr QuantApp tp $ Map.findWithDefault [] nt mp
-{-# LINE 74 "src-generated/GenerateCode.hs" #-}
+{-# LINE 77 "src-generated/GenerateCode.hs" #-}
 
 {-# LINE 249 "src-ag/GenerateCode.ag" #-}
 
@@ -84,7 +87,7 @@ unwrapSem True nm e = Case e alts
   where alts  = [CaseAlt left right]
         left  = Fun (typeName nm 0) [SimpleExpr "x"]
         right = SimpleExpr "x"
-{-# LINE 88 "src-generated/GenerateCode.hs" #-}
+{-# LINE 91 "src-generated/GenerateCode.hs" #-}
 
 {-# LINE 545 "src-ag/GenerateCode.ag" #-}
 
@@ -109,7 +112,7 @@ isHigherOrder _         = False
 pickOrigType :: (Identifier, Type, ChildKind) -> (Identifier, Type, ChildKind)
 pickOrigType (nm, _, virt@(ChildReplace x)) = (nm, x, virt)
 pickOrigType x = x
-{-# LINE 113 "src-generated/GenerateCode.hs" #-}
+{-# LINE 116 "src-generated/GenerateCode.hs" #-}
 
 {-# LINE 642 "src-ag/GenerateCode.ag" #-}
 
@@ -123,7 +126,7 @@ mkPartitionedFunction prefix' optCase nextVisitDecls lastExprVars cpsTree
         sem = sem_DeclBlocksRoot (DeclBlocksRoot cpsTree)
         syn = wrap_DeclBlocksRoot sem inh
     in (lambdas_Syn_DeclBlocksRoot syn, firstCall_Syn_DeclBlocksRoot syn)
-{-# LINE 127 "src-generated/GenerateCode.hs" #-}
+{-# LINE 130 "src-generated/GenerateCode.hs" #-}
 
 {-# LINE 692 "src-ag/GenerateCode.ag" #-}
 
@@ -146,7 +149,7 @@ mkBlockLambda optCase name args decls expr
   where
     lhs = Fun name (map SimpleExpr args)
     rhs = mkLet optCase decls expr
-{-# LINE 150 "src-generated/GenerateCode.hs" #-}
+{-# LINE 153 "src-generated/GenerateCode.hs" #-}
 
 {-# LINE 770 "src-ag/GenerateCode.ag" #-}
 
@@ -186,7 +189,7 @@ evalType opts replf t'
 
 idEvalType :: Options -> Code.Type -> Code.Type
 idEvalType options = evalType options id
-{-# LINE 190 "src-generated/GenerateCode.hs" #-}
+{-# LINE 193 "src-generated/GenerateCode.hs" #-}
 
 {-# LINE 896 "src-ag/GenerateCode.ag" #-}
 
@@ -195,7 +198,7 @@ isFirstOrder :: ChildKind -> Type -> Maybe Type
 isFirstOrder ChildSyntax       tp = Just tp
 isFirstOrder ChildAttr         _  = Nothing
 isFirstOrder (ChildReplace tp) _  = Just tp
-{-# LINE 199 "src-generated/GenerateCode.hs" #-}
+{-# LINE 202 "src-generated/GenerateCode.hs" #-}
 
 {-# LINE 917 "src-ag/GenerateCode.ag" #-}
 
@@ -207,7 +210,7 @@ makeLocalComment width what  name tp = let  x = getName name
                                                                    Self -> error "Self type not allowed here.") tp
                                        in   ( what ++ " " ++ x ++ replicate ((width - length x) `max` 0) ' ' ++ " : " ++ y )
 
-{-# LINE 211 "src-generated/GenerateCode.hs" #-}
+{-# LINE 214 "src-generated/GenerateCode.hs" #-}
 
 {-# LINE 951 "src-ag/GenerateCode.ag" #-}
 
@@ -254,7 +257,7 @@ ntOfVisit nt n = Ident (show nt ++ "_" ++ show n) (getPos nt)
 -- Gives the name of a visit function
 visitname  ::  String -> NontermIdent -> Int -> String
 visitname pre nt n =  pre ++ getName nt ++ "_" ++ show n
-{-# LINE 258 "src-generated/GenerateCode.hs" #-}
+{-# LINE 261 "src-generated/GenerateCode.hs" #-}
 
 {-# LINE 1042 "src-ag/GenerateCode.ag" #-}
 
@@ -262,7 +265,7 @@ toNamedType :: Bool -> NontermIdent -> ConstructorIdent -> Identifier -> Code.Ty
 toNamedType genStrict nt con nm tp
   = Code.Named genStrict strNm tp
   where strNm = recordFieldname nt con nm
-{-# LINE 266 "src-generated/GenerateCode.hs" #-}
+{-# LINE 269 "src-generated/GenerateCode.hs" #-}
 -- CGrammar ----------------------------------------------------
 -- wrapper
 data Inh_CGrammar  = Inh_CGrammar { options_Inh_CGrammar :: (Options) }
@@ -348,151 +351,151 @@ sem_CGrammar_CGrammar arg_typeSyns_ arg_derivings_ arg_wrappers_ arg_nonts_ arg_
    rule0 = \ ((_lhsIoptions) :: Options) ->
                                         {-# LINE 52 "src-ag/GenerateCode.ag" #-}
                                         typeSigs       _lhsIoptions
-                                        {-# LINE 352 "src-generated/GenerateCode.hs" #-}
+                                        {-# LINE 355 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule1 #-}
    {-# LINE 53 "src-ag/GenerateCode.ag" #-}
    rule1 = \ ((_lhsIoptions) :: Options) ->
                                         {-# LINE 53 "src-ag/GenerateCode.ag" #-}
                                         folds          _lhsIoptions
-                                        {-# LINE 358 "src-generated/GenerateCode.hs" #-}
+                                        {-# LINE 361 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule2 #-}
    {-# LINE 54 "src-ag/GenerateCode.ag" #-}
    rule2 = \ ((_lhsIoptions) :: Options) ->
                                         {-# LINE 54 "src-ag/GenerateCode.ag" #-}
                                         semfuns        _lhsIoptions
-                                        {-# LINE 364 "src-generated/GenerateCode.hs" #-}
+                                        {-# LINE 367 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule3 #-}
    {-# LINE 55 "src-ag/GenerateCode.ag" #-}
    rule3 = \ ((_lhsIoptions) :: Options) ->
                                         {-# LINE 55 "src-ag/GenerateCode.ag" #-}
                                         newtypes       _lhsIoptions
-                                        {-# LINE 370 "src-generated/GenerateCode.hs" #-}
+                                        {-# LINE 373 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule4 #-}
    {-# LINE 56 "src-ag/GenerateCode.ag" #-}
    rule4 = \ ((_lhsIoptions) :: Options) ->
                                         {-# LINE 56 "src-ag/GenerateCode.ag" #-}
                                         unbox          _lhsIoptions
-                                        {-# LINE 376 "src-generated/GenerateCode.hs" #-}
+                                        {-# LINE 379 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule5 #-}
    {-# LINE 57 "src-ag/GenerateCode.ag" #-}
    rule5 = \ ((_lhsIoptions) :: Options) ->
                                         {-# LINE 57 "src-ag/GenerateCode.ag" #-}
                                         cases          _lhsIoptions
-                                        {-# LINE 382 "src-generated/GenerateCode.hs" #-}
+                                        {-# LINE 385 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule6 #-}
    {-# LINE 58 "src-ag/GenerateCode.ag" #-}
    rule6 = \ ((_lhsIoptions) :: Options) ->
                                         {-# LINE 58 "src-ag/GenerateCode.ag" #-}
                                         attrInfo       _lhsIoptions
-                                        {-# LINE 388 "src-generated/GenerateCode.hs" #-}
+                                        {-# LINE 391 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule7 #-}
    {-# LINE 59 "src-ag/GenerateCode.ag" #-}
    rule7 = \ ((_lhsIoptions) :: Options) ->
                                         {-# LINE 59 "src-ag/GenerateCode.ag" #-}
                                         rename         _lhsIoptions
-                                        {-# LINE 394 "src-generated/GenerateCode.hs" #-}
+                                        {-# LINE 397 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule8 #-}
    {-# LINE 60 "src-ag/GenerateCode.ag" #-}
    rule8 = \ ((_lhsIoptions) :: Options) ->
                                         {-# LINE 60 "src-ag/GenerateCode.ag" #-}
                                         strictWrap     _lhsIoptions
-                                        {-# LINE 400 "src-generated/GenerateCode.hs" #-}
+                                        {-# LINE 403 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule9 #-}
    {-# LINE 61 "src-ag/GenerateCode.ag" #-}
    rule9 = \ ((_lhsIoptions) :: Options) ->
                                         {-# LINE 61 "src-ag/GenerateCode.ag" #-}
                                         splitSems      _lhsIoptions
-                                        {-# LINE 406 "src-generated/GenerateCode.hs" #-}
+                                        {-# LINE 409 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule10 #-}
    {-# LINE 62 "src-ag/GenerateCode.ag" #-}
    rule10 = \ ((_lhsIoptions) :: Options) ->
                                         {-# LINE 62 "src-ag/GenerateCode.ag" #-}
                                         if dataTypes _lhsIoptions then Just (strictData _lhsIoptions) else Nothing
-                                        {-# LINE 412 "src-generated/GenerateCode.hs" #-}
+                                        {-# LINE 415 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule11 #-}
    {-# LINE 63 "src-ag/GenerateCode.ag" #-}
    rule11 = \ ((_lhsIoptions) :: Options) ->
                                         {-# LINE 63 "src-ag/GenerateCode.ag" #-}
                                         prefix         _lhsIoptions
-                                        {-# LINE 418 "src-generated/GenerateCode.hs" #-}
+                                        {-# LINE 421 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule12 #-}
    {-# LINE 64 "src-ag/GenerateCode.ag" #-}
    rule12 = \ ((_lhsIoptions) :: Options) ->
                                         {-# LINE 64 "src-ag/GenerateCode.ag" #-}
                                         genTraces      _lhsIoptions
-                                        {-# LINE 424 "src-generated/GenerateCode.hs" #-}
+                                        {-# LINE 427 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule13 #-}
    {-# LINE 65 "src-ag/GenerateCode.ag" #-}
    rule13 = \ ((_lhsIoptions) :: Options) ->
                                         {-# LINE 65 "src-ag/GenerateCode.ag" #-}
                                         genCostCentres _lhsIoptions
-                                        {-# LINE 430 "src-generated/GenerateCode.hs" #-}
+                                        {-# LINE 433 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule14 #-}
    {-# LINE 66 "src-ag/GenerateCode.ag" #-}
    rule14 = \ ((_lhsIoptions) :: Options) ->
                                         {-# LINE 66 "src-ag/GenerateCode.ag" #-}
                                         genLinePragmas _lhsIoptions
-                                        {-# LINE 436 "src-generated/GenerateCode.hs" #-}
+                                        {-# LINE 439 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule15 #-}
    {-# LINE 67 "src-ag/GenerateCode.ag" #-}
    rule15 = \ ((_lhsIoptions) :: Options) ->
                                         {-# LINE 67 "src-ag/GenerateCode.ag" #-}
                                         monadic        _lhsIoptions
-                                        {-# LINE 442 "src-generated/GenerateCode.hs" #-}
+                                        {-# LINE 445 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule16 #-}
    {-# LINE 68 "src-ag/GenerateCode.ag" #-}
    rule16 = \ ((_lhsIoptions) :: Options) ->
                                         {-# LINE 68 "src-ag/GenerateCode.ag" #-}
                                         clean          _lhsIoptions
-                                        {-# LINE 448 "src-generated/GenerateCode.hs" #-}
+                                        {-# LINE 451 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule17 #-}
    {-# LINE 71 "src-ag/GenerateCode.ag" #-}
    rule17 = \ ((_lhsIoptions) :: Options) multivisit_ ->
                   {-# LINE 71 "src-ag/GenerateCode.ag" #-}
                   _lhsIoptions { breadthFirst = breadthFirst _lhsIoptions && visit _lhsIoptions && cases _lhsIoptions && multivisit_ }
-                  {-# LINE 454 "src-generated/GenerateCode.hs" #-}
+                  {-# LINE 457 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule18 #-}
    {-# LINE 76 "src-ag/GenerateCode.ag" #-}
    rule18 = \ pragmas_ ->
                                    {-# LINE 76 "src-ag/GenerateCode.ag" #-}
                                    pragmas_
-                                   {-# LINE 460 "src-generated/GenerateCode.hs" #-}
+                                   {-# LINE 463 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule19 #-}
    {-# LINE 98 "src-ag/GenerateCode.ag" #-}
    rule19 = \ paramMap_ ->
                                 {-# LINE 98 "src-ag/GenerateCode.ag" #-}
                                 paramMap_
-                                {-# LINE 466 "src-generated/GenerateCode.hs" #-}
+                                {-# LINE 469 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule20 #-}
    {-# LINE 120 "src-ag/GenerateCode.ag" #-}
    rule20 = \ contextMap_ ->
                            {-# LINE 120 "src-ag/GenerateCode.ag" #-}
                            contextMap_
-                           {-# LINE 472 "src-generated/GenerateCode.hs" #-}
+                           {-# LINE 475 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule21 #-}
    {-# LINE 121 "src-ag/GenerateCode.ag" #-}
    rule21 = \ quantMap_ ->
                            {-# LINE 121 "src-ag/GenerateCode.ag" #-}
                            quantMap_
-                           {-# LINE 478 "src-generated/GenerateCode.hs" #-}
+                           {-# LINE 481 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule22 #-}
    {-# LINE 137 "src-ag/GenerateCode.ag" #-}
    rule22 = \ ((_nontsIgathNts) :: Set NontermIdent) ->
                        {-# LINE 137 "src-ag/GenerateCode.ag" #-}
                        _nontsIgathNts
-                       {-# LINE 484 "src-generated/GenerateCode.hs" #-}
+                       {-# LINE 487 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule23 #-}
    {-# LINE 591 "src-ag/GenerateCode.ag" #-}
    rule23 = \ aroundsMap_ ->
                                                    {-# LINE 591 "src-ag/GenerateCode.ag" #-}
                                                    aroundsMap_
-                                                   {-# LINE 490 "src-generated/GenerateCode.hs" #-}
+                                                   {-# LINE 493 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule24 #-}
    {-# LINE 607 "src-ag/GenerateCode.ag" #-}
    rule24 = \ mergeMap_ ->
                                                   {-# LINE 607 "src-ag/GenerateCode.ag" #-}
                                                   mergeMap_
-                                                  {-# LINE 496 "src-generated/GenerateCode.hs" #-}
+                                                  {-# LINE 499 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule25 #-}
    {-# LINE 764 "src-ag/GenerateCode.ag" #-}
    rule25 = \ ((_lhsIoptions) :: Options) ((_nontsIsemDomUnfoldGath) :: Map (NontermIdent, Int) ([String], Code.Type)) ->
@@ -502,43 +505,43 @@ sem_CGrammar_CGrammar arg_typeSyns_ arg_derivings_ arg_wrappers_ arg_nonts_ arg_
               replMap = Map.fromList (zip params repl)
               replace k = Map.findWithDefault ('@':k) k replMap
           in evalType _lhsIoptions replace tp
-         {-# LINE 506 "src-generated/GenerateCode.hs" #-}
+         {-# LINE 509 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule26 #-}
    {-# LINE 865 "src-ag/GenerateCode.ag" #-}
    rule26 = \ ((_lhsIoptions) :: Options) ->
                                 {-# LINE 865 "src-ag/GenerateCode.ag" #-}
                                 typeSigs _lhsIoptions
-                                {-# LINE 512 "src-generated/GenerateCode.hs" #-}
+                                {-# LINE 515 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule27 #-}
    {-# LINE 868 "src-ag/GenerateCode.ag" #-}
    rule27 = \  (_ :: ()) ->
                              {-# LINE 868 "src-ag/GenerateCode.ag" #-}
                              Seq.empty
-                             {-# LINE 518 "src-generated/GenerateCode.hs" #-}
+                             {-# LINE 521 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule28 #-}
    {-# LINE 937 "src-ag/GenerateCode.ag" #-}
    rule28 = \ ((_nontsIchunks) :: Chunks) multivisit_ ->
                                {-# LINE 937 "src-ag/GenerateCode.ag" #-}
                                Program _nontsIchunks multivisit_
-                               {-# LINE 524 "src-generated/GenerateCode.hs" #-}
+                               {-# LINE 527 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule29 #-}
    {-# LINE 1005 "src-ag/GenerateCode.ag" #-}
    rule29 = \ typeSyns_ ->
                                    {-# LINE 1005 "src-ag/GenerateCode.ag" #-}
                                    typeSyns_
-                                   {-# LINE 530 "src-generated/GenerateCode.hs" #-}
+                                   {-# LINE 533 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule30 #-}
    {-# LINE 1006 "src-ag/GenerateCode.ag" #-}
    rule30 = \ derivings_ ->
                                    {-# LINE 1006 "src-ag/GenerateCode.ag" #-}
                                    derivings_
-                                   {-# LINE 536 "src-generated/GenerateCode.hs" #-}
+                                   {-# LINE 539 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule31 #-}
    {-# LINE 1007 "src-ag/GenerateCode.ag" #-}
    rule31 = \ wrappers_ ->
                                    {-# LINE 1007 "src-ag/GenerateCode.ag" #-}
                                    wrappers_
-                                   {-# LINE 542 "src-generated/GenerateCode.hs" #-}
+                                   {-# LINE 545 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule32 #-}
    rule32 = \ _aroundMap ->
      _aroundMap
@@ -630,13 +633,13 @@ sem_CInterface_CInterface arg_seg_ = T_CInterface (return st5) where
    rule36 = \  (_ :: ()) ->
                            {-# LINE 287 "src-ag/GenerateCode.ag" #-}
                            0
-                           {-# LINE 634 "src-generated/GenerateCode.hs" #-}
+                           {-# LINE 637 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule37 #-}
    {-# LINE 721 "src-ag/GenerateCode.ag" #-}
    rule37 = \ ((_segIsemDom) :: [Decl]) ->
                                 {-# LINE 721 "src-ag/GenerateCode.ag" #-}
                                 Comment "semantic domain" : _segIsemDom
-                                {-# LINE 640 "src-generated/GenerateCode.hs" #-}
+                                {-# LINE 643 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule38 #-}
    rule38 = \ ((_segIcomments) :: [String]) ->
      _segIcomments
@@ -824,31 +827,31 @@ sem_CNonterminal_CNonterminal arg_nt_ arg_params_ arg_inh_ arg_syn_ arg_prods_ a
    rule63 = \ inh_ nt_ syn_ ->
                                           {-# LINE 86 "src-ag/GenerateCode.ag" #-}
                                           (inh_,syn_,nt_)
-                                          {-# LINE 828 "src-generated/GenerateCode.hs" #-}
+                                          {-# LINE 831 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule64 #-}
    {-# LINE 87 "src-ag/GenerateCode.ag" #-}
    rule64 = \ inh_ nt_ syn_ ->
                                          {-# LINE 87 "src-ag/GenerateCode.ag" #-}
                                          (inh_,syn_,nt_)
-                                         {-# LINE 834 "src-generated/GenerateCode.hs" #-}
+                                         {-# LINE 837 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule65 #-}
    {-# LINE 143 "src-ag/GenerateCode.ag" #-}
    rule65 = \ nt_ ->
                       {-# LINE 143 "src-ag/GenerateCode.ag" #-}
                       Set.singleton nt_
-                      {-# LINE 840 "src-generated/GenerateCode.hs" #-}
+                      {-# LINE 843 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule66 #-}
    {-# LINE 592 "src-ag/GenerateCode.ag" #-}
    rule66 = \ ((_lhsIaroundMap) :: Map NontermIdent (Map ConstructorIdent (Set Identifier))) nt_ ->
                                                    {-# LINE 592 "src-ag/GenerateCode.ag" #-}
                                                    Map.findWithDefault Map.empty nt_ _lhsIaroundMap
-                                                   {-# LINE 846 "src-generated/GenerateCode.hs" #-}
+                                                   {-# LINE 849 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule67 #-}
    {-# LINE 608 "src-ag/GenerateCode.ag" #-}
    rule67 = \ ((_lhsImergeMap) :: Map NontermIdent (Map ConstructorIdent (Map Identifier (Identifier, [Identifier])))) nt_ ->
                                                   {-# LINE 608 "src-ag/GenerateCode.ag" #-}
                                                   Map.findWithDefault Map.empty nt_ _lhsImergeMap
-                                                  {-# LINE 852 "src-generated/GenerateCode.hs" #-}
+                                                  {-# LINE 855 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule68 #-}
    {-# LINE 814 "src-ag/GenerateCode.ag" #-}
    rule68 = \ ((_interIwrapDecls) :: Decls) ((_lhsIo_newtypes) :: Bool) ((_lhsIo_strictwrap) :: Bool) ((_lhsIoptions) :: Options) inh_ nt_ params_ syn_ ->
@@ -877,13 +880,13 @@ sem_CNonterminal_CNonterminal arg_nt_ arg_params_ arg_inh_ arg_syn_ arg_prods_ a
                                                       (Let _interIwrapDecls (App synNT synVars))
                                                       Set.empty Set.empty
                                                 ]
-                                    {-# LINE 881 "src-generated/GenerateCode.hs" #-}
+                                    {-# LINE 884 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule69 #-}
    {-# LINE 875 "src-ag/GenerateCode.ag" #-}
    rule69 = \ ((_interIcomments) :: [String]) ((_prodsIcomments) :: [String]) ->
                                  {-# LINE 875 "src-ag/GenerateCode.ag" #-}
                                  Comment . unlines . map ind $ ( _interIcomments ++ ("alternatives:" : map ind _prodsIcomments) )
-                                 {-# LINE 887 "src-generated/GenerateCode.hs" #-}
+                                 {-# LINE 890 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule70 #-}
    {-# LINE 940 "src-ag/GenerateCode.ag" #-}
    rule70 = \ _cataFun _comment _dataDef _genCata ((_interIsemDom) :: [Decl]) ((_lhsIo_cata) :: Bool) ((_lhsIo_data) :: Maybe Bool) ((_lhsIo_pretty) :: Bool) ((_lhsIo_sem) :: Bool) ((_lhsIo_sig) :: Bool) ((_lhsIwrappers) :: Set NontermIdent) ((_prodsIdecls) :: Decls) ((_prodsIsemNames) :: [String]) _semWrapper nt_ ->
@@ -898,7 +901,7 @@ sem_CNonterminal_CNonterminal arg_nt_ arg_params_ arg_inh_ arg_syn_ arg_prods_ a
                                         (if _lhsIo_sem                     then  _prodsIdecls     else [])
                                         (if _lhsIo_sem                     then  _prodsIsemNames  else [])
                                  ]
-                                 {-# LINE 902 "src-generated/GenerateCode.hs" #-}
+                                 {-# LINE 905 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule71 #-}
    {-# LINE 1010 "src-ag/GenerateCode.ag" #-}
    rule71 = \ ((_lhsIderivings) :: Derivings) ((_lhsIo_data) :: Maybe Bool) ((_lhsIoptions) :: Options) ((_lhsItypeSyns) :: TypeSyns) ((_prodsIdataAlts) :: DataAlts) nt_ params_ ->
@@ -918,13 +921,13 @@ sem_CNonterminal_CNonterminal arg_nt_ arg_params_ arg_inh_ arg_syn_ arg_prods_ a
                                      derivings  = maybe [] (map getName . Set.toList) (Map.lookup nt_ _lhsIderivings)
                                      dataDef    = Data (getName nt_) (map getName params_) _prodsIdataAlts (maybe False id _lhsIo_data) derivings
                                  in maybe dataDef typeSyn $ lookup nt_ _lhsItypeSyns
-                                 {-# LINE 922 "src-generated/GenerateCode.hs" #-}
+                                 {-# LINE 925 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule72 #-}
    {-# LINE 1054 "src-ag/GenerateCode.ag" #-}
    rule72 = \ ((_lhsIoptions) :: Options) nt_ ->
                                  {-# LINE 1054 "src-ag/GenerateCode.ag" #-}
                                  not (nt_ `Set.member` nocatas _lhsIoptions)
-                                 {-# LINE 928 "src-generated/GenerateCode.hs" #-}
+                                 {-# LINE 931 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule73 #-}
    {-# LINE 1055 "src-ag/GenerateCode.ag" #-}
    rule73 = \ ((_lhsIcontextMap) :: ContextMap) ((_lhsIo_sig) :: Bool) ((_lhsIoptions) :: Options) ((_lhsIprefix) :: String) ((_lhsIquantMap) :: QuantMap) ((_lhsItypeSyns) :: TypeSyns) ((_prodsIcataAlts) :: Decls) nt_ params_ ->
@@ -1028,7 +1031,7 @@ sem_CNonterminal_CNonterminal arg_nt_ arg_params_ arg_inh_ arg_syn_ arg_prods_ a
                                  in  Comment "cata" :
                                      (if _lhsIo_sig then [tSig] else []) ++
                                      maybe _prodsIcataAlts special (lookup nt_ _lhsItypeSyns)
-                                 {-# LINE 1032 "src-generated/GenerateCode.hs" #-}
+                                 {-# LINE 1035 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule74 #-}
    rule74 = \ ((_interIsemDomUnfoldGath) :: Map (NontermIdent, Int) ([String], Code.Type)) ->
      _interIsemDomUnfoldGath
@@ -1599,61 +1602,61 @@ sem_CProduction_CProduction arg_con_ arg_visits_ arg_children_ arg_terminals_ = 
    rule188 = \ con_ ->
                                  {-# LINE 92 "src-ag/GenerateCode.ag" #-}
                                  con_
-                                 {-# LINE 1603 "src-generated/GenerateCode.hs" #-}
+                                 {-# LINE 1606 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule189 #-}
    {-# LINE 93 "src-ag/GenerateCode.ag" #-}
    rule189 = \ terminals_ ->
                                         {-# LINE 93 "src-ag/GenerateCode.ag" #-}
                                         terminals_
-                                        {-# LINE 1609 "src-generated/GenerateCode.hs" #-}
+                                        {-# LINE 1612 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule190 #-}
    {-# LINE 105 "src-ag/GenerateCode.ag" #-}
    rule190 = \ ((_lhsIoptions) :: Options) children_ ->
                            {-# LINE 105 "src-ag/GenerateCode.ag" #-}
                            Map.fromList [(nm, (extractNonterminal tp, tps)) | (nm,tp,_) <- children_, let tps = map (cleanupArg _lhsIoptions) $ nontermArgs tp, not (null tps) ]
-                           {-# LINE 1615 "src-generated/GenerateCode.hs" #-}
+                           {-# LINE 1618 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule191 #-}
    {-# LINE 147 "src-ag/GenerateCode.ag" #-}
    rule191 = \  (_ :: ()) ->
                                                      {-# LINE 147 "src-ag/GenerateCode.ag" #-}
                                                      Set.empty
-                                                     {-# LINE 1621 "src-generated/GenerateCode.hs" #-}
+                                                     {-# LINE 1624 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule192 #-}
    {-# LINE 283 "src-ag/GenerateCode.ag" #-}
    rule192 = \  (_ :: ()) ->
                                {-# LINE 283 "src-ag/GenerateCode.ag" #-}
                                0
-                               {-# LINE 1627 "src-generated/GenerateCode.hs" #-}
+                               {-# LINE 1630 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule193 #-}
    {-# LINE 418 "src-ag/GenerateCode.ag" #-}
    rule193 = \ children_ ->
                                      {-# LINE 418 "src-ag/GenerateCode.ag" #-}
                                      children_
-                                     {-# LINE 1633 "src-generated/GenerateCode.hs" #-}
+                                     {-# LINE 1636 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule194 #-}
    {-# LINE 573 "src-ag/GenerateCode.ag" #-}
    rule194 = \ ((_visitsIgatherInstVisitNrs) :: Map Identifier Int) ->
                               {-# LINE 573 "src-ag/GenerateCode.ag" #-}
                               _visitsIgatherInstVisitNrs
-                              {-# LINE 1639 "src-generated/GenerateCode.hs" #-}
+                              {-# LINE 1642 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule195 #-}
    {-# LINE 593 "src-ag/GenerateCode.ag" #-}
    rule195 = \ ((_lhsIaroundMap) :: Map ConstructorIdent (Set Identifier)) con_ ->
                                                    {-# LINE 593 "src-ag/GenerateCode.ag" #-}
                                                    Map.findWithDefault Set.empty con_ _lhsIaroundMap
-                                                   {-# LINE 1645 "src-generated/GenerateCode.hs" #-}
+                                                   {-# LINE 1648 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule196 #-}
    {-# LINE 609 "src-ag/GenerateCode.ag" #-}
    rule196 = \ ((_lhsImergeMap) :: Map ConstructorIdent (Map Identifier (Identifier, [Identifier]))) con_ ->
                                                   {-# LINE 609 "src-ag/GenerateCode.ag" #-}
                                                   Map.findWithDefault Map.empty con_ _lhsImergeMap
-                                                  {-# LINE 1651 "src-generated/GenerateCode.hs" #-}
+                                                  {-# LINE 1654 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule197 #-}
    {-# LINE 890 "src-ag/GenerateCode.ag" #-}
    rule197 = \ children_ ->
                                             {-# LINE 890 "src-ag/GenerateCode.ag" #-}
                                             [ (nm,fromJust mb,virt) | (nm,tp,virt) <- children_, let mb = isFirstOrder virt tp, isJust mb ]
-                                            {-# LINE 1657 "src-generated/GenerateCode.hs" #-}
+                                            {-# LINE 1660 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule198 #-}
    {-# LINE 891 "src-ag/GenerateCode.ag" #-}
    rule198 = \ _firstOrderChildren ((_visitsIcomments) :: [String]) con_ ->
@@ -1662,13 +1665,13 @@ sem_CProduction_CProduction arg_con_ arg_visits_ arg_children_ arg_terminals_ = 
                                    : map ind (  map (\(x,y,_) -> makeLocalComment 14 "child" x (Just y)) _firstOrderChildren
                                              ++ _visitsIcomments
                                              )
-                                   {-# LINE 1666 "src-generated/GenerateCode.hs" #-}
+                                   {-# LINE 1669 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule199 #-}
    {-# LINE 1034 "src-ag/GenerateCode.ag" #-}
    rule199 = \ ((_lhsInt) :: NontermIdent) ((_lhsIparamMap) :: ParamMap) ->
                                 {-# LINE 1034 "src-ag/GenerateCode.ag" #-}
                                 map getName $ Map.findWithDefault [] _lhsInt _lhsIparamMap
-                                {-# LINE 1672 "src-generated/GenerateCode.hs" #-}
+                                {-# LINE 1675 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule200 #-}
    {-# LINE 1035 "src-ag/GenerateCode.ag" #-}
    rule200 = \ _firstOrderChildren ((_lhsInt) :: NontermIdent) ((_lhsIo_rename) :: Bool) ((_lhsIoptions) :: Options) _params con_ ->
@@ -1679,7 +1682,7 @@ sem_CProduction_CProduction arg_con_ arg_visits_ arg_children_ arg_terminals_ = 
                                 in if dataRecords _lhsIoptions
                                    then Record conNm $ mkFields $ toNamedType (strictData _lhsIoptions)
                                    else DataAlt conNm $ mkFields $ \_ _ _ t -> t
-                                {-# LINE 1683 "src-generated/GenerateCode.hs" #-}
+                                {-# LINE 1686 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule201 #-}
    {-# LINE 1165 "src-ag/GenerateCode.ag" #-}
    rule201 = \ _firstOrderChildren ((_lhsInt) :: NontermIdent) ((_lhsIo_rename) :: Bool) ((_lhsIoptions) :: Options) ((_lhsIprefix) :: String) con_ ->
@@ -1693,7 +1696,7 @@ sem_CProduction_CProduction arg_con_ arg_visits_ arg_children_ arg_terminals_ = 
                                                                      [SimpleExpr (locname _lhsIoptions nm)]
                                     argument (nm, _,_)    = SimpleExpr (locname _lhsIoptions nm)
                                  in Decl lhs rhs Set.empty Set.empty
-                                {-# LINE 1697 "src-generated/GenerateCode.hs" #-}
+                                {-# LINE 1700 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule202 #-}
    rule202 = \ ((_visitsIdecls) :: Decls) ->
      _visitsIdecls
@@ -1918,13 +1921,13 @@ sem_CProductions_Cons arg_hd_ arg_tl_ = T_CProductions (return st17) where
    rule236 = \ ((_hdIdataAlt) :: DataAlt) ((_tlIdataAlts) :: DataAlts) ->
                                   {-# LINE 1030 "src-ag/GenerateCode.ag" #-}
                                   _hdIdataAlt : _tlIdataAlts
-                                  {-# LINE 1922 "src-generated/GenerateCode.hs" #-}
+                                  {-# LINE 1925 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule237 #-}
    {-# LINE 1161 "src-ag/GenerateCode.ag" #-}
    rule237 = \ ((_hdIcataAlt) :: Decl) ((_tlIcataAlts) :: Decls) ->
                           {-# LINE 1161 "src-ag/GenerateCode.ag" #-}
                           _hdIcataAlt : _tlIcataAlts
-                          {-# LINE 1928 "src-generated/GenerateCode.hs" #-}
+                          {-# LINE 1931 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule238 #-}
    rule238 = \ ((_hdIcomments) :: [String]) ((_tlIcomments) :: [String]) ->
      _hdIcomments ++ _tlIcomments
@@ -2145,13 +2148,13 @@ sem_CProductions_Nil  = T_CProductions (return st17) where
    rule303 = \  (_ :: ()) ->
                                   {-# LINE 1031 "src-ag/GenerateCode.ag" #-}
                                   []
-                                  {-# LINE 2149 "src-generated/GenerateCode.hs" #-}
+                                  {-# LINE 2152 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule304 #-}
    {-# LINE 1162 "src-ag/GenerateCode.ag" #-}
    rule304 = \  (_ :: ()) ->
                           {-# LINE 1162 "src-ag/GenerateCode.ag" #-}
                           []
-                          {-# LINE 2155 "src-generated/GenerateCode.hs" #-}
+                          {-# LINE 2158 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule305 #-}
    rule305 = \  (_ :: ()) ->
      []
@@ -2246,7 +2249,7 @@ sem_CRule_CRule arg_name_ arg_isIn_ arg_hasCode_ arg_nt_ arg_con_ arg_field_ _ a
    rule308 = \ ((_lhsIchildren) :: [(Identifier,Type,ChildKind)]) ->
                              {-# LINE 158 "src-ag/GenerateCode.ag" #-}
                              [ (n, (t, mb, for)) | (n, NT t _ for, mb) <- _lhsIchildren ]
-                             {-# LINE 2250 "src-generated/GenerateCode.hs" #-}
+                             {-# LINE 2253 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule309 #-}
    {-# LINE 159 "src-ag/GenerateCode.ag" #-}
    rule309 = \ ((_lhsIo_pretty) :: Bool) origin_ ->
@@ -2254,7 +2257,7 @@ sem_CRule_CRule arg_name_ arg_isIn_ arg_hasCode_ arg_nt_ arg_con_ arg_field_ _ a
                                  if  _lhsIo_pretty
                                      then (Comment origin_:)
                                      else id
-                                 {-# LINE 2258 "src-generated/GenerateCode.hs" #-}
+                                 {-# LINE 2261 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule310 #-}
    {-# LINE 162 "src-ag/GenerateCode.ag" #-}
    rule310 = \ _definedInsts _instTypes ((_lhsIo_monadic) :: Bool) ((_lhsIo_newtypes) :: Bool) ((_lhsIoptions) :: Options) ((_lhsIprefix) :: String) ->
@@ -2276,7 +2279,7 @@ sem_CRule_CRule arg_name_ arg_isIn_ arg_hasCode_ arg_nt_ arg_con_ arg_field_ _ a
                              , let instLocFieldName = attrname _lhsIoptions True _INST inst
                                    instSemFieldName = attrname _lhsIoptions False _INST' inst
                              ]
-                             {-# LINE 2280 "src-generated/GenerateCode.hs" #-}
+                             {-# LINE 2283 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule311 #-}
    {-# LINE 179 "src-ag/GenerateCode.ag" #-}
    rule311 = \ ((_patternIpatternAttributes) :: [(Identifier, Identifier)]) isIn_ ->
@@ -2284,13 +2287,13 @@ sem_CRule_CRule arg_name_ arg_isIn_ arg_hasCode_ arg_nt_ arg_con_ arg_field_ _ a
                             if isIn_
                             then "_"
                             else concat $ intersperse "," (map (\(f,a) -> show f ++ "." ++ show a) _patternIpatternAttributes)
-                            {-# LINE 2288 "src-generated/GenerateCode.hs" #-}
+                            {-# LINE 2291 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule312 #-}
    {-# LINE 182 "src-ag/GenerateCode.ag" #-}
    rule312 = \ _patDescr con_ mbNamed_ nt_ ->
                               {-# LINE 182 "src-ag/GenerateCode.ag" #-}
                               (maybe "" (\nm -> show nm ++ ":") mbNamed_) ++ show nt_ ++ " :: " ++ show con_ ++ " :: " ++ _patDescr
-                              {-# LINE 2294 "src-generated/GenerateCode.hs" #-}
+                              {-# LINE 2297 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule313 #-}
    {-# LINE 184 "src-ag/GenerateCode.ag" #-}
    rule313 = \ ((_lhsIo_traces) :: Bool) _traceDescr ->
@@ -2298,13 +2301,13 @@ sem_CRule_CRule arg_name_ arg_isIn_ arg_hasCode_ arg_nt_ arg_con_ arg_field_ _ a
                             \v -> if _lhsIo_traces
                                   then Trace _traceDescr     v
                                   else v
-                            {-# LINE 2302 "src-generated/GenerateCode.hs" #-}
+                            {-# LINE 2305 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule314 #-}
    {-# LINE 187 "src-ag/GenerateCode.ag" #-}
    rule314 = \ _patDescr con_ nt_ ->
                                    {-# LINE 187 "src-ag/GenerateCode.ag" #-}
                                    show nt_ ++ ":" ++ show con_ ++ ":" ++ _patDescr
-                                   {-# LINE 2308 "src-generated/GenerateCode.hs" #-}
+                                   {-# LINE 2311 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule315 #-}
    {-# LINE 188 "src-ag/GenerateCode.ag" #-}
    rule315 = \ _costCentreDescr ((_lhsIo_costcentre) :: Bool) ->
@@ -2312,7 +2315,7 @@ sem_CRule_CRule arg_name_ arg_isIn_ arg_hasCode_ arg_nt_ arg_con_ arg_field_ _ a
                                  \v -> if _lhsIo_costcentre
                                        then PragmaExpr True False ("SCC \"" ++ _costCentreDescr     ++ "\"") v
                                        else v
-                                 {-# LINE 2316 "src-generated/GenerateCode.hs" #-}
+                                 {-# LINE 2319 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule316 #-}
    {-# LINE 191 "src-ag/GenerateCode.ag" #-}
    rule316 = \ ((_lhsIo_linePragmas) :: Bool) name_ ->
@@ -2324,7 +2327,7 @@ sem_CRule_CRule arg_name_ arg_isIn_ arg_hasCode_ arg_nt_ arg_con_ arg_field_ _ a
                                                $ LineExpr
                                                $ v
                                           else v
-                                 {-# LINE 2328 "src-generated/GenerateCode.hs" #-}
+                                 {-# LINE 2331 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule317 #-}
    {-# LINE 198 "src-ag/GenerateCode.ag" #-}
    rule317 = \ _addCostCentre _addLinePragma _addTrace _instDecls ((_lhsIo_monadic) :: Bool) ((_lhsIoptions) :: Options) _originComment ((_patternIcopy) :: Pattern) defines_ explicit_ hasCode_ rhs_ uses_ ->
@@ -2335,13 +2338,13 @@ sem_CRule_CRule arg_name_ arg_isIn_ arg_hasCode_ arg_nt_ arg_con_ arg_field_ _ a
                                                     (Set.fromList [attrname _lhsIoptions True fld nm | (fld,nm) <- Set.toList uses_])
                                              : _instDecls    )
                          else _instDecls
-                         {-# LINE 2339 "src-generated/GenerateCode.hs" #-}
+                         {-# LINE 2342 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule318 #-}
    {-# LINE 269 "src-ag/GenerateCode.ag" #-}
    rule318 = \ ((_patternIdefinedInsts) :: [Identifier]) isIn_ ->
                                 {-# LINE 269 "src-ag/GenerateCode.ag" #-}
                                 if isIn_ then [] else _patternIdefinedInsts
-                                {-# LINE 2345 "src-generated/GenerateCode.hs" #-}
+                                {-# LINE 2348 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule319 #-}
    {-# LINE 339 "src-ag/GenerateCode.ag" #-}
    rule319 = \ ((_lhsIoptions) :: Options) ((_lhsIterminals) :: [Identifier]) field_ isIn_ name_ ->
@@ -2349,25 +2352,25 @@ sem_CRule_CRule arg_name_ arg_isIn_ arg_hasCode_ arg_nt_ arg_con_ arg_field_ _ a
                             if  field_ == _LOC && name_ `elem` _lhsIterminals
                             then funname name_ 0
                             else attrname _lhsIoptions isIn_ field_ name_
-                            {-# LINE 2353 "src-generated/GenerateCode.hs" #-}
+                            {-# LINE 2356 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule320 #-}
    {-# LINE 342 "src-ag/GenerateCode.ag" #-}
    rule320 = \ _rulename ->
                          {-# LINE 342 "src-ag/GenerateCode.ag" #-}
                          [SimpleExpr _rulename    ]
-                         {-# LINE 2359 "src-generated/GenerateCode.hs" #-}
+                         {-# LINE 2362 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule321 #-}
    {-# LINE 358 "src-ag/GenerateCode.ag" #-}
    rule321 = \ _rulename ->
                        {-# LINE 358 "src-ag/GenerateCode.ag" #-}
                        Set.singleton _rulename
-                       {-# LINE 2365 "src-generated/GenerateCode.hs" #-}
+                       {-# LINE 2368 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule322 #-}
    {-# LINE 368 "src-ag/GenerateCode.ag" #-}
    rule322 = \ ((_lhsInt) :: NontermIdent) _orgParams ->
                                {-# LINE 368 "src-ag/GenerateCode.ag" #-}
                                typeToCodeType (Just _lhsInt) _orgParams
-                               {-# LINE 2371 "src-generated/GenerateCode.hs" #-}
+                               {-# LINE 2374 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule323 #-}
    {-# LINE 369 "src-ag/GenerateCode.ag" #-}
    rule323 = \ _evalTp ((_lhsIchildren) :: [(Identifier,Type,ChildKind)]) ((_lhsIoptions) :: Options) _mkTp defines_ ->
@@ -2389,13 +2392,13 @@ sem_CRule_CRule arg_name_ arg_isIn_ arg_hasCode_ arg_nt_ arg_con_ arg_field_ _ a
                                                       _                 -> Nothing
                                         | otherwise = findOrigType nm r
                                 ]
-                                {-# LINE 2393 "src-generated/GenerateCode.hs" #-}
+                                {-# LINE 2396 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule324 #-}
    {-# LINE 387 "src-ag/GenerateCode.ag" #-}
    rule324 = \ ((_lhsInt) :: NontermIdent) ((_lhsIparamMap) :: ParamMap) ->
                                     {-# LINE 387 "src-ag/GenerateCode.ag" #-}
                                     map getName $ Map.findWithDefault [] _lhsInt _lhsIparamMap
-                                    {-# LINE 2399 "src-generated/GenerateCode.hs" #-}
+                                    {-# LINE 2402 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule325 #-}
    {-# LINE 389 "src-ag/GenerateCode.ag" #-}
    rule325 = \ ((_lhsInt) :: NontermIdent) ((_lhsIoptions) :: Options) ((_lhsIparamInstMap) :: Map Identifier (NontermIdent, [String])) ((_lhsIparamMap) :: ParamMap) _orgParams ->
@@ -2409,32 +2412,32 @@ sem_CRule_CRule arg_name_ arg_isIn_ arg_hasCode_ arg_nt_ arg_con_ arg_field_ _ a
                                            then tp
                                            else idEvalType _lhsIoptions tp
                                       else evalType _lhsIoptions replace tp
-                      {-# LINE 2413 "src-generated/GenerateCode.hs" #-}
+                      {-# LINE 2416 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule326 #-}
    {-# LINE 424 "src-ag/GenerateCode.ag" #-}
    rule326 = \ tp_ ->
                                             {-# LINE 424 "src-ag/GenerateCode.ag" #-}
                                             maybe ([],False) (\tp -> ([tp],True)) tp_
-                                            {-# LINE 2419 "src-generated/GenerateCode.hs" #-}
+                                            {-# LINE 2422 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule327 #-}
    {-# LINE 625 "src-ag/GenerateCode.ag" #-}
    rule327 = \ _decls ((_lhsIdeclsAbove) :: [Decl]) ->
                          {-# LINE 625 "src-ag/GenerateCode.ag" #-}
                          _lhsIdeclsAbove ++ _decls
-                         {-# LINE 2425 "src-generated/GenerateCode.hs" #-}
+                         {-# LINE 2428 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule328 #-}
    {-# LINE 638 "src-ag/GenerateCode.ag" #-}
    rule328 = \  (_ :: ()) ->
                            {-# LINE 638 "src-ag/GenerateCode.ag" #-}
                            id
-                           {-# LINE 2431 "src-generated/GenerateCode.hs" #-}
+                           {-# LINE 2434 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule329 #-}
    {-# LINE 914 "src-ag/GenerateCode.ag" #-}
    rule329 = \ ((_lhsIwhat) :: String) defines_ ->
                                    {-# LINE 914 "src-ag/GenerateCode.ag" #-}
                                    [ makeLocalComment 11 _lhsIwhat name tp | (field,name,tp) <- Map.elems defines_, field == _LOC ]
                                    ++ [ makeLocalComment 11 "inst " name tp | (field,name,tp) <- Map.elems defines_, field == _INST ]
-                                   {-# LINE 2438 "src-generated/GenerateCode.hs" #-}
+                                   {-# LINE 2441 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule330 #-}
    rule330 = \ _decls ->
      _decls
@@ -2495,13 +2498,13 @@ sem_CRule_CChildVisit arg_name_ arg_nt_ arg_nr_ arg_inh_ arg_syn_ arg_isLast_ = 
    rule333 = \ ((_lhsIvisitedSet) :: Set Identifier) name_ ->
                                             {-# LINE 148 "src-ag/GenerateCode.ag" #-}
                                             Set.insert name_ _lhsIvisitedSet
-                                            {-# LINE 2499 "src-generated/GenerateCode.hs" #-}
+                                            {-# LINE 2502 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule334 #-}
    {-# LINE 204 "src-ag/GenerateCode.ag" #-}
    rule334 = \ ((_lhsIcon) :: ConstructorIdent) ((_lhsInt) :: NontermIdent) name_ nr_ nt_ ->
                                          {-# LINE 204 "src-ag/GenerateCode.ag" #-}
                                          show _lhsInt ++ ":" ++ show _lhsIcon ++ ":" ++ show name_ ++ ":" ++ show nt_ ++ ":" ++ show nr_
-                                         {-# LINE 2505 "src-generated/GenerateCode.hs" #-}
+                                         {-# LINE 2508 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule335 #-}
    {-# LINE 205 "src-ag/GenerateCode.ag" #-}
    rule335 = \ _costCentreDescr ((_lhsIo_costcentre) :: Bool) ->
@@ -2509,7 +2512,7 @@ sem_CRule_CChildVisit arg_name_ arg_nt_ arg_nr_ arg_inh_ arg_syn_ arg_isLast_ = 
                                        \v -> if _lhsIo_costcentre
                                              then PragmaExpr True False ("SCC \"" ++ _costCentreDescr     ++ "\"") v
                                              else v
-                                       {-# LINE 2513 "src-generated/GenerateCode.hs" #-}
+                                       {-# LINE 2516 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule336 #-}
    {-# LINE 208 "src-ag/GenerateCode.ag" #-}
    rule336 = \ _addCostCentre ((_lhsIaroundMap) :: Set Identifier) ((_lhsIchildren) :: [(Identifier,Type,ChildKind)]) ((_lhsImergeMap) :: Map Identifier (Identifier, [Identifier])) ((_lhsIo_monadic) :: Bool) ((_lhsIo_newtypes) :: Bool) ((_lhsIo_unbox) :: Bool) ((_lhsIoptions) :: Options) _visitedSet inh_ isLast_ name_ nr_ nt_ syn_ ->
@@ -2553,13 +2556,13 @@ sem_CRule_CChildVisit arg_name_ arg_nt_ arg_nr_ arg_inh_ arg_syn_ arg_isLast_ = 
                                                             in [Resume _lhsIo_monadic (typeName nt_ nr_) tuple' rhs']
                                in
                                   (outDecls ++ outMerged)
-                               {-# LINE 2557 "src-generated/GenerateCode.hs" #-}
+                               {-# LINE 2560 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule337 #-}
    {-# LINE 331 "src-ag/GenerateCode.ag" #-}
    rule337 = \ ((_lhsIinstVisitNrs) :: Map Identifier Int) ((_lhsInr) :: Int) name_ ->
             {-# LINE 331 "src-ag/GenerateCode.ag" #-}
             _lhsInr <= Map.findWithDefault (-1) name_ _lhsIinstVisitNrs
-            {-# LINE 2563 "src-generated/GenerateCode.hs" #-}
+            {-# LINE 2566 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule338 #-}
    {-# LINE 344 "src-ag/GenerateCode.ag" #-}
    rule338 = \ _isSuperfluousHigherOrderIntra name_ nr_ ->
@@ -2567,7 +2570,7 @@ sem_CRule_CChildVisit arg_name_ arg_nt_ arg_nr_ arg_inh_ arg_syn_ arg_isLast_ = 
                      if _isSuperfluousHigherOrderIntra
                      then []
                      else [funname name_ (nr_+1)]
-                     {-# LINE 2571 "src-generated/GenerateCode.hs" #-}
+                     {-# LINE 2574 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule339 #-}
    {-# LINE 348 "src-ag/GenerateCode.ag" #-}
    rule339 = \ _instParams ((_lhsIo_newtypes) :: Bool) ((_lhsIunfoldSemDom) :: NontermIdent -> Int -> [String] -> Code.Type) _names nr_ nt_ ->
@@ -2576,67 +2579,67 @@ sem_CRule_CChildVisit arg_name_ arg_nt_ arg_nr_ arg_inh_ arg_syn_ arg_isLast_ = 
                          addType expr | null _instParams     = expr
                                       | otherwise            = TypedExpr expr (_lhsIunfoldSemDom nt_ (nr_+1) _instParams    )
                      in map (wrap . addType . SimpleExpr) _names
-                     {-# LINE 2580 "src-generated/GenerateCode.hs" #-}
+                     {-# LINE 2583 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule340 #-}
    {-# LINE 360 "src-ag/GenerateCode.ag" #-}
    rule340 = \ _names ->
                        {-# LINE 360 "src-ag/GenerateCode.ag" #-}
                        Set.fromList _names
-                       {-# LINE 2586 "src-generated/GenerateCode.hs" #-}
+                       {-# LINE 2589 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule341 #-}
    {-# LINE 399 "src-ag/GenerateCode.ag" #-}
    rule341 = \ _evalTp _orgParams nt_ ->
                                {-# LINE 399 "src-ag/GenerateCode.ag" #-}
                                _evalTp     . typeToCodeType (Just nt_) _orgParams
-                               {-# LINE 2592 "src-generated/GenerateCode.hs" #-}
+                               {-# LINE 2595 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule342 #-}
    {-# LINE 400 "src-ag/GenerateCode.ag" #-}
    rule342 = \ ((_lhsIoptions) :: Options) _mkTp name_ syn_ ->
                                      {-# LINE 400 "src-ag/GenerateCode.ag" #-}
                                      [ TSig (attrname _lhsIoptions True name_ a) (_mkTp tp) |  (a,tp) <- Map.toList syn_ ]
-                                     {-# LINE 2598 "src-generated/GenerateCode.hs" #-}
+                                     {-# LINE 2601 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule343 #-}
    {-# LINE 401 "src-ag/GenerateCode.ag" #-}
    rule343 = \ nr_ nt_ ->
                                  {-# LINE 401 "src-ag/GenerateCode.ag" #-}
                                  typeName nt_ (nr_+1)
-                                 {-# LINE 2604 "src-generated/GenerateCode.hs" #-}
+                                 {-# LINE 2607 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule344 #-}
    {-# LINE 402 "src-ag/GenerateCode.ag" #-}
    rule344 = \ _definedTps _instParams _nextTp isLast_ name_ nr_ ->
                                 {-# LINE 402 "src-ag/GenerateCode.ag" #-}
                                 (if isLast_ then id else (TSig (funname name_ (nr_+1)) (TypeApp (SimpleType _nextTp) (map SimpleType _instParams    )) :)) _definedTps
-                                {-# LINE 2610 "src-generated/GenerateCode.hs" #-}
+                                {-# LINE 2613 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule345 #-}
    {-# LINE 404 "src-ag/GenerateCode.ag" #-}
    rule345 = \ ((_lhsIparamMap) :: ParamMap) nt_ ->
                                     {-# LINE 404 "src-ag/GenerateCode.ag" #-}
                                     map getName $ Map.findWithDefault [] nt_ _lhsIparamMap
-                                    {-# LINE 2616 "src-generated/GenerateCode.hs" #-}
+                                    {-# LINE 2619 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule346 #-}
    {-# LINE 405 "src-ag/GenerateCode.ag" #-}
    rule346 = \ ((_lhsIparamInstMap) :: Map Identifier (NontermIdent, [String])) name_ nt_ ->
                                      {-# LINE 405 "src-ag/GenerateCode.ag" #-}
                                      snd $ Map.findWithDefault (nt_,[]) name_ _lhsIparamInstMap
-                                     {-# LINE 2622 "src-generated/GenerateCode.hs" #-}
+                                     {-# LINE 2625 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule347 #-}
    {-# LINE 406 "src-ag/GenerateCode.ag" #-}
    rule347 = \ _instParams _orgParams ->
                                        {-# LINE 406 "src-ag/GenerateCode.ag" #-}
                                        Map.fromList (zip _orgParams     _instParams    )
-                                       {-# LINE 2628 "src-generated/GenerateCode.hs" #-}
+                                       {-# LINE 2631 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule348 #-}
    {-# LINE 407 "src-ag/GenerateCode.ag" #-}
    rule348 = \ _replParamMap ->
                                   {-# LINE 407 "src-ag/GenerateCode.ag" #-}
                                   \k -> Map.findWithDefault k k _replParamMap
-                                  {-# LINE 2634 "src-generated/GenerateCode.hs" #-}
+                                  {-# LINE 2637 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule349 #-}
    {-# LINE 408 "src-ag/GenerateCode.ag" #-}
    rule349 = \ ((_lhsIoptions) :: Options) _orgParams _replace ->
                                  {-# LINE 408 "src-ag/GenerateCode.ag" #-}
                                  if null _orgParams     then id else evalType _lhsIoptions _replace
-                                 {-# LINE 2640 "src-generated/GenerateCode.hs" #-}
+                                 {-# LINE 2643 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule350 #-}
    {-# LINE 425 "src-ag/GenerateCode.ag" #-}
    rule350 = \ _instParams _isSuperfluousHigherOrderIntra nr_ nt_ ->
@@ -2644,19 +2647,19 @@ sem_CRule_CChildVisit arg_name_ arg_nt_ arg_nr_ arg_inh_ arg_syn_ arg_isLast_ = 
                               if _isSuperfluousHigherOrderIntra
                               then []
                               else [NT (ntOfVisit nt_ (nr_+1)) _instParams     False]
-                              {-# LINE 2648 "src-generated/GenerateCode.hs" #-}
+                              {-# LINE 2651 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule351 #-}
    {-# LINE 627 "src-ag/GenerateCode.ag" #-}
    rule351 = \  (_ :: ()) ->
                          {-# LINE 627 "src-ag/GenerateCode.ag" #-}
                          []
-                         {-# LINE 2654 "src-generated/GenerateCode.hs" #-}
+                         {-# LINE 2657 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule352 #-}
    {-# LINE 640 "src-ag/GenerateCode.ag" #-}
    rule352 = \ _decls ((_lhsIdeclsAbove) :: [Decl]) ->
                            {-# LINE 640 "src-ag/GenerateCode.ag" #-}
                            DeclBlock _lhsIdeclsAbove (head _decls    )
-                           {-# LINE 2660 "src-generated/GenerateCode.hs" #-}
+                           {-# LINE 2663 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule353 #-}
    rule353 = \  (_ :: ()) ->
      True
@@ -2741,7 +2744,7 @@ sem_CSegment_CSegment arg_inh_ arg_syn_ = T_CSegment (return st23) where
    rule358 = \ ((_lhsIoptions) :: Options) ->
                                  {-# LINE 724 "src-ag/GenerateCode.ag" #-}
                                  breadthFirst _lhsIoptions
-                                 {-# LINE 2745 "src-generated/GenerateCode.hs" #-}
+                                 {-# LINE 2748 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule359 #-}
    {-# LINE 725 "src-ag/GenerateCode.ag" #-}
    rule359 = \ _altSemForm _indexExpr _inhTps _synTps ->
@@ -2749,73 +2752,73 @@ sem_CSegment_CSegment arg_inh_ arg_syn_ = T_CSegment (return st23) where
                          if _altSemForm
                          then TypeApp (SimpleType "Child") [SimpleType "EvalInfo", _indexExpr     ]
                          else foldr Arr _synTps     _inhTps
-                         {-# LINE 2753 "src-generated/GenerateCode.hs" #-}
+                         {-# LINE 2756 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule360 #-}
    {-# LINE 728 "src-ag/GenerateCode.ag" #-}
    rule360 = \ ((_lhsInt) :: NontermIdent) _params inh_ ->
                              {-# LINE 728 "src-ag/GenerateCode.ag" #-}
                              [typeToCodeType (Just _lhsInt) _params     tp |  tp <- Map.elems inh_]
-                             {-# LINE 2759 "src-generated/GenerateCode.hs" #-}
+                             {-# LINE 2762 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule361 #-}
    {-# LINE 729 "src-ag/GenerateCode.ag" #-}
    rule361 = \ _inhTps ((_lhsIo_unbox) :: Bool) ->
                              {-# LINE 729 "src-ag/GenerateCode.ag" #-}
                              mkTupleType _lhsIo_unbox (null _inhTps    ) _inhTps
-                             {-# LINE 2765 "src-generated/GenerateCode.hs" #-}
+                             {-# LINE 2768 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule362 #-}
    {-# LINE 730 "src-ag/GenerateCode.ag" #-}
    rule362 = \ _continuation _inhTps ((_lhsInt) :: NontermIdent) ((_lhsIo_unbox) :: Bool) _params syn_ ->
                              {-# LINE 730 "src-ag/GenerateCode.ag" #-}
                              mkTupleType _lhsIo_unbox (null _inhTps    ) ([typeToCodeType (Just _lhsInt) _params     tp |  tp <- Map.elems syn_] ++ _continuation    )
-                             {-# LINE 2771 "src-generated/GenerateCode.hs" #-}
+                             {-# LINE 2774 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule363 #-}
    {-# LINE 731 "src-ag/GenerateCode.ag" #-}
    rule363 = \ ((_lhsInr) :: Int) ((_lhsInt) :: NontermIdent) ->
                                    {-# LINE 731 "src-ag/GenerateCode.ag" #-}
                                    typeName _lhsInt _lhsInr
-                                   {-# LINE 2777 "src-generated/GenerateCode.hs" #-}
+                                   {-# LINE 2780 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule364 #-}
    {-# LINE 732 "src-ag/GenerateCode.ag" #-}
    rule364 = \ ((_lhsInr) :: Int) ((_lhsInt) :: NontermIdent) ->
                                    {-# LINE 732 "src-ag/GenerateCode.ag" #-}
                                    typeName _lhsInt (_lhsInr + 1)
-                                   {-# LINE 2783 "src-generated/GenerateCode.hs" #-}
+                                   {-# LINE 2786 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule365 #-}
    {-# LINE 733 "src-ag/GenerateCode.ag" #-}
    rule365 = \ _curTypeName ->
                                    {-# LINE 733 "src-ag/GenerateCode.ag" #-}
                                    "I_" ++ _curTypeName
-                                   {-# LINE 2789 "src-generated/GenerateCode.hs" #-}
+                                   {-# LINE 2792 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule366 #-}
    {-# LINE 734 "src-ag/GenerateCode.ag" #-}
    rule366 = \ _indexName _params ->
                                 {-# LINE 734 "src-ag/GenerateCode.ag" #-}
                                 Code.Data _indexName     _params     [DataAlt _indexName     []] False []
-                                {-# LINE 2795 "src-generated/GenerateCode.hs" #-}
+                                {-# LINE 2798 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule367 #-}
    {-# LINE 735 "src-ag/GenerateCode.ag" #-}
    rule367 = \ _indexName _params ->
                                 {-# LINE 735 "src-ag/GenerateCode.ag" #-}
                                 TypeApp (SimpleType _indexName    ) (map (SimpleType . ('@':)) _params    )
-                                {-# LINE 2801 "src-generated/GenerateCode.hs" #-}
+                                {-# LINE 2804 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule368 #-}
    {-# LINE 736 "src-ag/GenerateCode.ag" #-}
    rule368 = \ _indexName _params ->
                                 {-# LINE 736 "src-ag/GenerateCode.ag" #-}
                                 "(" ++ _indexName     ++ concatMap (\p -> " " ++ p) _params     ++ ")"
-                                {-# LINE 2807 "src-generated/GenerateCode.hs" #-}
+                                {-# LINE 2810 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule369 #-}
    {-# LINE 737 "src-ag/GenerateCode.ag" #-}
    rule369 = \ _indexStr _inhTup ((_lhsInr) :: Int) ((_lhsInt) :: NontermIdent) ->
                                   {-# LINE 737 "src-ag/GenerateCode.ag" #-}
                                   Code.Data "instance Inh" [_indexStr    ] [DataAlt (typeName _lhsInt _lhsInr ++ "_Inh") [_inhTup    ] ] False []
-                                  {-# LINE 2813 "src-generated/GenerateCode.hs" #-}
+                                  {-# LINE 2816 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule370 #-}
    {-# LINE 738 "src-ag/GenerateCode.ag" #-}
    rule370 = \ _indexStr ((_lhsInr) :: Int) ((_lhsInt) :: NontermIdent) _synTps ->
                                   {-# LINE 738 "src-ag/GenerateCode.ag" #-}
                                   Code.Data "instance Syn" [_indexStr    ] [DataAlt (typeName _lhsInt _lhsInr ++ "_Syn") [_synTps    ] ] False []
-                                  {-# LINE 2819 "src-generated/GenerateCode.hs" #-}
+                                  {-# LINE 2822 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule371 #-}
    {-# LINE 739 "src-ag/GenerateCode.ag" #-}
    rule371 = \ ((_lhsIisLast) :: Bool) _nextTypeName _params ->
@@ -2823,13 +2826,13 @@ sem_CSegment_CSegment arg_inh_ arg_syn_ = T_CSegment (return st23) where
                                    if  _lhsIisLast
                                    then []
                                    else [TypeApp (SimpleType _nextTypeName    ) (map (SimpleType . ('@':)) _params    )]
-                                   {-# LINE 2827 "src-generated/GenerateCode.hs" #-}
+                                   {-# LINE 2830 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule372 #-}
    {-# LINE 742 "src-ag/GenerateCode.ag" #-}
    rule372 = \ ((_lhsInt) :: NontermIdent) ((_lhsIparamMap) :: ParamMap) ->
                              {-# LINE 742 "src-ag/GenerateCode.ag" #-}
                              map getName $ Map.findWithDefault [] _lhsInt _lhsIparamMap
-                             {-# LINE 2833 "src-generated/GenerateCode.hs" #-}
+                             {-# LINE 2836 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule373 #-}
    {-# LINE 743 "src-ag/GenerateCode.ag" #-}
    rule373 = \ _altSemForm _dataIndex _inhInstance ((_lhsInr) :: Int) ((_lhsInt) :: NontermIdent) ((_lhsIo_newtypes) :: Bool) ((_lhsIoptions) :: Options) _params _synInstance _tp ->
@@ -2843,13 +2846,13 @@ sem_CSegment_CSegment arg_inh_ arg_syn_ = T_CSegment (return st23) where
                                 ++ ( if _altSemForm
                                      then [_dataIndex    , _inhInstance    , _synInstance    ]
                                      else [] )
-                             {-# LINE 2847 "src-generated/GenerateCode.hs" #-}
+                             {-# LINE 2850 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule374 #-}
    {-# LINE 757 "src-ag/GenerateCode.ag" #-}
    rule374 = \ ((_lhsInr) :: Int) ((_lhsInt) :: NontermIdent) _params _tp ->
                                {-# LINE 757 "src-ag/GenerateCode.ag" #-}
                                Map.singleton (_lhsInt, _lhsInr) (_params    , _tp    )
-                               {-# LINE 2853 "src-generated/GenerateCode.hs" #-}
+                               {-# LINE 2856 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule375 #-}
    {-# LINE 842 "src-ag/GenerateCode.ag" #-}
    rule375 = \ ((_lhsIisLast) :: Bool) ((_lhsInr) :: Int) ((_lhsInt) :: NontermIdent) ((_lhsIo_newtypes) :: Bool) ((_lhsIo_unbox) :: Bool) ((_lhsIoptions) :: Options) inh_ syn_ ->
@@ -2864,7 +2867,7 @@ sem_CSegment_CSegment arg_inh_ arg_syn_ = T_CSegment (return st23) where
                                      sem n = var ++ "_" ++ show n
                                      ntt   = typeName _lhsInt _lhsInr
                                  in [ EvalDecl ntt (mkTupleLhs _lhsIo_unbox (null $ Map.keys inh_) lhsVars) (InvokeExpr ntt (SimpleExpr $ sem _lhsInr) rhs) ]
-                                 {-# LINE 2868 "src-generated/GenerateCode.hs" #-}
+                                 {-# LINE 2871 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule376 #-}
    {-# LINE 884 "src-ag/GenerateCode.ag" #-}
    rule376 = \ ((_lhsInr) :: Int) inh_ syn_ ->
@@ -2873,7 +2876,7 @@ sem_CSegment_CSegment arg_inh_ arg_syn_ = T_CSegment (return st23) where
                                    in if null body
                                       then []
                                       else ("visit " ++ show _lhsInr ++ ":") : body
-                                   {-# LINE 2877 "src-generated/GenerateCode.hs" #-}
+                                   {-# LINE 2880 "src-generated/GenerateCode.hs" #-}
 
 -- CSegments ---------------------------------------------------
 -- wrapper
@@ -2981,19 +2984,19 @@ sem_CSegments_Cons arg_hd_ arg_tl_ = T_CSegments (return st26) where
    rule377 = \ ((_lhsInr) :: Int) ->
                     {-# LINE 289 "src-ag/GenerateCode.ag" #-}
                     _lhsInr + 1
-                    {-# LINE 2985 "src-generated/GenerateCode.hs" #-}
+                    {-# LINE 2988 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule378 #-}
    {-# LINE 302 "src-ag/GenerateCode.ag" #-}
    rule378 = \  (_ :: ()) ->
                          {-# LINE 302 "src-ag/GenerateCode.ag" #-}
                          False
-                         {-# LINE 2991 "src-generated/GenerateCode.hs" #-}
+                         {-# LINE 2994 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule379 #-}
    {-# LINE 303 "src-ag/GenerateCode.ag" #-}
    rule379 = \ ((_tlIisNil) :: Bool) ->
                          {-# LINE 303 "src-ag/GenerateCode.ag" #-}
                          _tlIisNil
-                         {-# LINE 2997 "src-generated/GenerateCode.hs" #-}
+                         {-# LINE 3000 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule380 #-}
    rule380 = \ ((_hdIcomments) :: [String]) ((_tlIcomments) :: [String]) ->
      _hdIcomments ++ _tlIcomments
@@ -3166,7 +3169,7 @@ sem_CSegments_Nil  = T_CSegments (return st26) where
    rule429 = \  (_ :: ()) ->
                        {-# LINE 304 "src-ag/GenerateCode.ag" #-}
                        True
-                       {-# LINE 3170 "src-generated/GenerateCode.hs" #-}
+                       {-# LINE 3173 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule430 #-}
    rule430 = \  (_ :: ()) ->
      []
@@ -3337,37 +3340,37 @@ sem_CVisit_CVisit arg_inh_ arg_syn_ arg_vss_ arg_intra_ arg_ordered_ = T_CVisit 
    rule434 = \ ((_intraIexprs) :: Exprs) ->
                           {-# LINE 313 "src-ag/GenerateCode.ag" #-}
                           _intraIexprs
-                          {-# LINE 3341 "src-generated/GenerateCode.hs" #-}
+                          {-# LINE 3344 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule435 #-}
    {-# LINE 314 "src-ag/GenerateCode.ag" #-}
    rule435 = \ ((_intraIusedVars) :: Set String) ->
                               {-# LINE 314 "src-ag/GenerateCode.ag" #-}
                               _intraIusedVars
-                              {-# LINE 3347 "src-generated/GenerateCode.hs" #-}
+                              {-# LINE 3350 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule436 #-}
    {-# LINE 447 "src-ag/GenerateCode.ag" #-}
    rule436 = \ ((_lhsIchildren) :: [(Identifier,Type, ChildKind)]) ->
                                                                  {-# LINE 447 "src-ag/GenerateCode.ag" #-}
                                                                  partition (\(_,_,virt) -> isHigherOrder virt) _lhsIchildren
-                                                                 {-# LINE 3353 "src-generated/GenerateCode.hs" #-}
+                                                                 {-# LINE 3356 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule437 #-}
    {-# LINE 448 "src-ag/GenerateCode.ag" #-}
    rule437 = \ _firstOrderChildren ->
                                    {-# LINE 448 "src-ag/GenerateCode.ag" #-}
                                    map pickOrigType _firstOrderChildren
-                                   {-# LINE 3359 "src-generated/GenerateCode.hs" #-}
+                                   {-# LINE 3362 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule438 #-}
    {-# LINE 449 "src-ag/GenerateCode.ag" #-}
    rule438 = \ ((_lhsIcon) :: ConstructorIdent) ((_lhsInr) :: Int) ((_lhsInt) :: NontermIdent) ((_lhsIprefix) :: String) ->
                              {-# LINE 449 "src-ag/GenerateCode.ag" #-}
                              seqSemname _lhsIprefix _lhsInt _lhsIcon _lhsInr
-                             {-# LINE 3365 "src-generated/GenerateCode.hs" #-}
+                             {-# LINE 3368 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule439 #-}
    {-# LINE 450 "src-ag/GenerateCode.ag" #-}
    rule439 = \ ((_lhsIisLast) :: Bool) ((_lhsInr) :: Int) ((_lhsInt) :: NontermIdent) ((_lhsIprefix) :: String) ->
                                   {-# LINE 450 "src-ag/GenerateCode.ag" #-}
                                   if _lhsIisLast then [] else [visitname _lhsIprefix _lhsInt (_lhsInr+1)]
-                                  {-# LINE 3371 "src-generated/GenerateCode.hs" #-}
+                                  {-# LINE 3374 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule440 #-}
    {-# LINE 451 "src-ag/GenerateCode.ag" #-}
    rule440 = \ ((_lhsIcon) :: ConstructorIdent) ((_lhsIdecls) :: Decls) ((_lhsIisLast) :: Bool) ((_lhsInextIntraVars) :: Set String) ((_lhsInr) :: Int) ((_lhsInt) :: NontermIdent) ((_lhsIprefix) :: String) _nextVisitName ->
@@ -3378,19 +3381,19 @@ sem_CVisit_CVisit arg_inh_ arg_syn_ arg_vss_ arg_intra_ arg_ordered_ = T_CVisit 
                                   in if _lhsIisLast
                                      then []
                                      else [Decl lhs rhs (Set.fromList _nextVisitName) _lhsInextIntraVars]
-                                  {-# LINE 3382 "src-generated/GenerateCode.hs" #-}
+                                  {-# LINE 3385 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule441 #-}
    {-# LINE 458 "src-ag/GenerateCode.ag" #-}
    rule441 = \ ((_lhsIisLast) :: Bool) ((_lhsInr) :: Int) ->
                                 {-# LINE 458 "src-ag/GenerateCode.ag" #-}
                                 _lhsIisLast && _lhsInr == 0
-                                {-# LINE 3388 "src-generated/GenerateCode.hs" #-}
+                                {-# LINE 3391 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule442 #-}
    {-# LINE 459 "src-ag/GenerateCode.ag" #-}
    rule442 = \ ((_lhsInt) :: NontermIdent) ((_lhsIwrappers) :: Set NontermIdent) ->
                                 {-# LINE 459 "src-ag/GenerateCode.ag" #-}
                                 _lhsInt `Set.member` _lhsIwrappers
-                                {-# LINE 3394 "src-generated/GenerateCode.hs" #-}
+                                {-# LINE 3397 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule443 #-}
    {-# LINE 460 "src-ag/GenerateCode.ag" #-}
    rule443 = \ _hasWrappers _isOneVisit ((_lhsInt) :: NontermIdent) ((_lhsIoptions) :: Options) syn_ ->
@@ -3403,7 +3406,7 @@ sem_CVisit_CVisit arg_inh_ arg_syn_ arg_vss_ arg_intra_ arg_ordered_ = T_CVisit 
                                       lhs = Fun "___node" []
                                   in [Decl lhs rhs Set.empty Set.empty]
                              else []
-                             {-# LINE 3407 "src-generated/GenerateCode.hs" #-}
+                             {-# LINE 3410 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule444 #-}
    {-# LINE 468 "src-ag/GenerateCode.ag" #-}
    rule444 = \ ((_lhsIo_clean) :: Bool) _nextVisitDecl _refDecls _typeSigs ((_vssIdecls) :: Decls) ->
@@ -3411,37 +3414,37 @@ sem_CVisit_CVisit arg_inh_ arg_syn_ arg_vss_ arg_intra_ arg_ordered_ = T_CVisit 
                           if _lhsIo_clean
                             then _vssIdecls ++ _nextVisitDecl ++ _refDecls
                             else _typeSigs ++ _vssIdecls ++ _nextVisitDecl ++ _refDecls
-                          {-# LINE 3415 "src-generated/GenerateCode.hs" #-}
+                          {-# LINE 3418 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule445 #-}
    {-# LINE 471 "src-ag/GenerateCode.ag" #-}
    rule445 = \ ((_lhsIo_unbox) :: Bool) ((_lhsIoptions) :: Options) _nextVisitName inh_ syn_ ->
                              {-# LINE 471 "src-ag/GenerateCode.ag" #-}
                              mkTupleExpr _lhsIo_unbox (null $ Map.keys inh_) $ map (SimpleExpr . lhsname _lhsIoptions False) (Map.keys syn_) ++ map SimpleExpr _nextVisitName
-                             {-# LINE 3421 "src-generated/GenerateCode.hs" #-}
+                             {-# LINE 3424 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule446 #-}
    {-# LINE 472 "src-ag/GenerateCode.ag" #-}
    rule446 = \  (_ :: ()) ->
                                {-# LINE 472 "src-ag/GenerateCode.ag" #-}
                                error "lastExpr: not used here"
-                               {-# LINE 3427 "src-generated/GenerateCode.hs" #-}
+                               {-# LINE 3430 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule447 #-}
    {-# LINE 473 "src-ag/GenerateCode.ag" #-}
    rule447 = \ ((_lhsIoptions) :: Options) _nextVisitName syn_ ->
                                  {-# LINE 473 "src-ag/GenerateCode.ag" #-}
                                  map (lhsname _lhsIoptions False) (Map.keys syn_) ++ _nextVisitName
-                                 {-# LINE 3433 "src-generated/GenerateCode.hs" #-}
+                                 {-# LINE 3436 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule448 #-}
    {-# LINE 474 "src-ag/GenerateCode.ag" #-}
    rule448 = \ _funcname _lastExprVars _nextVisitDecl _o_case ((_vssIblockDecls) :: DeclBlocks) ->
                                                            {-# LINE 474 "src-ag/GenerateCode.ag" #-}
                                                            mkPartitionedFunction _funcname     _o_case     _nextVisitDecl     _lastExprVars     _vssIblockDecls
-                                                           {-# LINE 3439 "src-generated/GenerateCode.hs" #-}
+                                                           {-# LINE 3442 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule449 #-}
    {-# LINE 476 "src-ag/GenerateCode.ag" #-}
    rule449 = \ ((_lhsIcon) :: ConstructorIdent) ((_lhsInr) :: Int) ((_lhsInt) :: NontermIdent) ->
                                     {-# LINE 476 "src-ag/GenerateCode.ag" #-}
                                     "b" ++ ":" ++ show _lhsInt ++ ":" ++ show _lhsIcon ++ ":" ++ show _lhsInr
-                                    {-# LINE 3445 "src-generated/GenerateCode.hs" #-}
+                                    {-# LINE 3448 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule450 #-}
    {-# LINE 477 "src-ag/GenerateCode.ag" #-}
    rule450 = \ _costCentreDescr ((_lhsIo_costcentre) :: Bool) ->
@@ -3449,13 +3452,13 @@ sem_CVisit_CVisit arg_inh_ arg_syn_ arg_vss_ arg_intra_ arg_ordered_ = T_CVisit 
                                   \v -> if _lhsIo_costcentre
                                         then PragmaExpr True False ("SCC \"" ++ _costCentreDescr     ++ "\"") v
                                         else v
-                                  {-# LINE 3453 "src-generated/GenerateCode.hs" #-}
+                                  {-# LINE 3456 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule451 #-}
    {-# LINE 481 "src-ag/GenerateCode.ag" #-}
    rule451 = \ ((_lhsInt) :: NontermIdent) ((_lhsIparamMap) :: ParamMap) ->
                            {-# LINE 481 "src-ag/GenerateCode.ag" #-}
                            map getName $ Map.findWithDefault [] _lhsInt _lhsIparamMap
-                           {-# LINE 3459 "src-generated/GenerateCode.hs" #-}
+                           {-# LINE 3462 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule452 #-}
    {-# LINE 482 "src-ag/GenerateCode.ag" #-}
    rule452 = \ _addCostCentre _blockFirstFunCall _decls _declsType _firstOrderOrig _funcname ((_lhsInr) :: Int) ((_lhsInt) :: NontermIdent) ((_lhsIo_newtypes) :: Bool) ((_lhsIo_unbox) :: Bool) ((_lhsIoptions) :: Options) ((_lhsIunfoldSemDom) :: NontermIdent -> Int -> [String] -> Code.Type) _nextVisitName _o_splitsems _params inh_ ordered_ syn_ ->
@@ -3486,13 +3489,13 @@ sem_CVisit_CVisit arg_inh_ arg_syn_ arg_vss_ arg_intra_ arg_ordered_ = T_CVisit 
                                            then \x -> App (typeName _lhsInt _lhsInr) [x]
                                            else id
                            in Decl lhs rhs Set.empty Set.empty
-                           {-# LINE 3490 "src-generated/GenerateCode.hs" #-}
+                           {-# LINE 3493 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule453 #-}
    {-# LINE 513 "src-ag/GenerateCode.ag" #-}
    rule453 = \ _funcname _semType ->
                          {-# LINE 513 "src-ag/GenerateCode.ag" #-}
                          TSig _funcname _semType
-                         {-# LINE 3496 "src-generated/GenerateCode.hs" #-}
+                         {-# LINE 3499 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule454 #-}
    {-# LINE 514 "src-ag/GenerateCode.ag" #-}
    rule454 = \ _firstOrderOrig ((_lhsIcontextMap) :: ContextMap) ((_lhsInr) :: Int) ((_lhsInt) :: NontermIdent) ((_lhsIoptions) :: Options) ((_lhsIquantMap) :: QuantMap) _params ->
@@ -3507,7 +3510,7 @@ sem_CVisit_CVisit arg_inh_ arg_syn_ arg_vss_ arg_intra_ arg_ordered_ = T_CVisit 
                                if  _lhsInr == 0
                                    then foldr argType (typeAppStrs (sdtype   _lhsInt        ) _params    ) (map (\(_,t,_) -> t) _firstOrderOrig    )
                                    else foldr argType (typeAppStrs (typeName _lhsInt _lhsInr) _params    ) []
-                            {-# LINE 3511 "src-generated/GenerateCode.hs" #-}
+                            {-# LINE 3514 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule455 #-}
    {-# LINE 525 "src-ag/GenerateCode.ag" #-}
    rule455 = \ _blockFunDecls ((_lhsIwith_sig) :: Bool) _o_splitsems _semFun _tsig ordered_ ->
@@ -3520,7 +3523,7 @@ sem_CVisit_CVisit arg_inh_ arg_syn_ arg_vss_ arg_intra_ arg_ordered_ = T_CVisit 
                              then _blockFunDecls
                              else []
                            )
-                           {-# LINE 3524 "src-generated/GenerateCode.hs" #-}
+                           {-# LINE 3527 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule456 #-}
    {-# LINE 533 "src-ag/GenerateCode.ag" #-}
    rule456 = \ ((_lhsIo_sig) :: Bool) _o_case ((_vssItSigs) :: [Decl]) ->
@@ -3528,19 +3531,19 @@ sem_CVisit_CVisit arg_inh_ arg_syn_ arg_vss_ arg_intra_ arg_ordered_ = T_CVisit 
                               if  _lhsIo_sig && not _o_case
                                   then  _vssItSigs
                                   else  []
-                              {-# LINE 3532 "src-generated/GenerateCode.hs" #-}
+                              {-# LINE 3535 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule457 #-}
    {-# LINE 536 "src-ag/GenerateCode.ag" #-}
    rule457 = \ ((_lhsIo_monadic) :: Bool) ordered_ ->
                            {-# LINE 536 "src-ag/GenerateCode.ag" #-}
                            ordered_ && _lhsIo_monadic
-                           {-# LINE 3538 "src-generated/GenerateCode.hs" #-}
+                           {-# LINE 3541 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule458 #-}
    {-# LINE 537 "src-ag/GenerateCode.ag" #-}
    rule458 = \ ((_lhsIallPragmas) :: PragmaMap) ((_lhsIcon) :: ConstructorIdent) ((_lhsInt) :: NontermIdent) ((_lhsIo_case) :: Bool) _o_do ordered_ ->
                            {-# LINE 537 "src-ag/GenerateCode.ag" #-}
                            not _o_do     && _lhsIo_case && ordered_ && not (hasPragma _lhsIallPragmas _lhsInt _lhsIcon _NOCASE)
-                           {-# LINE 3544 "src-generated/GenerateCode.hs" #-}
+                           {-# LINE 3547 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule459 #-}
    {-# LINE 538 "src-ag/GenerateCode.ag" #-}
    rule459 = \ _o_case _o_do ->
@@ -3550,31 +3553,31 @@ sem_CVisit_CVisit arg_inh_ arg_syn_ arg_vss_ arg_intra_ arg_ordered_ = T_CVisit 
                               else if _o_case
                                    then DeclsCase
                                    else DeclsLet
-                              {-# LINE 3554 "src-generated/GenerateCode.hs" #-}
+                              {-# LINE 3557 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule460 #-}
    {-# LINE 543 "src-ag/GenerateCode.ag" #-}
    rule460 = \ ((_lhsIo_splitsems) :: Bool) ordered_ ->
                                 {-# LINE 543 "src-ag/GenerateCode.ag" #-}
                                 ordered_ && _lhsIo_splitsems
-                                {-# LINE 3560 "src-generated/GenerateCode.hs" #-}
+                                {-# LINE 3563 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule461 #-}
    {-# LINE 577 "src-ag/GenerateCode.ag" #-}
    rule461 = \ ((_lhsInr) :: Int) ((_vssIdefinedInsts) :: [Identifier]) ->
                                  {-# LINE 577 "src-ag/GenerateCode.ag" #-}
                                  Map.fromList [(i,_lhsInr) | i <- _vssIdefinedInsts]
-                                 {-# LINE 3566 "src-generated/GenerateCode.hs" #-}
+                                 {-# LINE 3569 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule462 #-}
    {-# LINE 620 "src-ag/GenerateCode.ag" #-}
    rule462 = \  (_ :: ()) ->
                          {-# LINE 620 "src-ag/GenerateCode.ag" #-}
                          []
-                         {-# LINE 3572 "src-generated/GenerateCode.hs" #-}
+                         {-# LINE 3575 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule463 #-}
    {-# LINE 621 "src-ag/GenerateCode.ag" #-}
    rule463 = \  (_ :: ()) ->
                            {-# LINE 621 "src-ag/GenerateCode.ag" #-}
                            error "declsAbove: not used here"
-                           {-# LINE 3578 "src-generated/GenerateCode.hs" #-}
+                           {-# LINE 3581 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule464 #-}
    {-# LINE 905 "src-ag/GenerateCode.ag" #-}
    rule464 = \ ((_intraIcomments) :: [String]) ((_lhsInr) :: Int) ((_vssIcomments) :: [String]) ->
@@ -3583,25 +3586,25 @@ sem_CVisit_CVisit arg_inh_ arg_syn_ arg_vss_ arg_intra_ arg_ordered_ = T_CVisit 
                                    in if null body
                                       then []
                                       else ("visit " ++ show _lhsInr ++ ":") : body
-                                   {-# LINE 3587 "src-generated/GenerateCode.hs" #-}
+                                   {-# LINE 3590 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule465 #-}
    {-# LINE 909 "src-ag/GenerateCode.ag" #-}
    rule465 = \  (_ :: ()) ->
                                   {-# LINE 909 "src-ag/GenerateCode.ag" #-}
                                   "local"
-                                  {-# LINE 3593 "src-generated/GenerateCode.hs" #-}
+                                  {-# LINE 3596 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule466 #-}
    {-# LINE 910 "src-ag/GenerateCode.ag" #-}
    rule466 = \  (_ :: ()) ->
                                   {-# LINE 910 "src-ag/GenerateCode.ag" #-}
                                   "intra"
-                                  {-# LINE 3599 "src-generated/GenerateCode.hs" #-}
+                                  {-# LINE 3602 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule467 #-}
    {-# LINE 1190 "src-ag/GenerateCode.ag" #-}
    rule467 = \ _funcname ->
                        {-# LINE 1190 "src-ag/GenerateCode.ag" #-}
                        [_funcname    ]
-                       {-# LINE 3605 "src-generated/GenerateCode.hs" #-}
+                       {-# LINE 3608 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule468 #-}
    rule468 = \ ((_intraIvisitedSet) :: Set Identifier) ->
      _intraIvisitedSet
@@ -3949,55 +3952,55 @@ sem_CVisits_Cons arg_hd_ arg_tl_ = T_CVisits (return st32) where
    rule535 = \ ((_lhsInr) :: Int) ->
                     {-# LINE 285 "src-ag/GenerateCode.ag" #-}
                     _lhsInr + 1
-                    {-# LINE 3953 "src-generated/GenerateCode.hs" #-}
+                    {-# LINE 3956 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule536 #-}
    {-# LINE 298 "src-ag/GenerateCode.ag" #-}
    rule536 = \  (_ :: ()) ->
                          {-# LINE 298 "src-ag/GenerateCode.ag" #-}
                          False
-                         {-# LINE 3959 "src-generated/GenerateCode.hs" #-}
+                         {-# LINE 3962 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule537 #-}
    {-# LINE 299 "src-ag/GenerateCode.ag" #-}
    rule537 = \ ((_tlIisNil) :: Bool) ->
                          {-# LINE 299 "src-ag/GenerateCode.ag" #-}
                          _tlIisNil
-                         {-# LINE 3965 "src-generated/GenerateCode.hs" #-}
+                         {-# LINE 3968 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule538 #-}
    {-# LINE 316 "src-ag/GenerateCode.ag" #-}
    rule538 = \ ((_tlIintra) :: Exprs) ->
                             {-# LINE 316 "src-ag/GenerateCode.ag" #-}
                             _tlIintra
-                            {-# LINE 3971 "src-generated/GenerateCode.hs" #-}
+                            {-# LINE 3974 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule539 #-}
    {-# LINE 317 "src-ag/GenerateCode.ag" #-}
    rule539 = \ ((_tlIintraVars) :: Set String) ->
                                 {-# LINE 317 "src-ag/GenerateCode.ag" #-}
                                 _tlIintraVars
-                                {-# LINE 3977 "src-generated/GenerateCode.hs" #-}
+                                {-# LINE 3980 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule540 #-}
    {-# LINE 318 "src-ag/GenerateCode.ag" #-}
    rule540 = \ ((_hdIintra) :: Exprs) ->
                          {-# LINE 318 "src-ag/GenerateCode.ag" #-}
                          _hdIintra
-                         {-# LINE 3983 "src-generated/GenerateCode.hs" #-}
+                         {-# LINE 3986 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule541 #-}
    {-# LINE 319 "src-ag/GenerateCode.ag" #-}
    rule541 = \ ((_hdIintraVars) :: Set String) ->
                              {-# LINE 319 "src-ag/GenerateCode.ag" #-}
                              _hdIintraVars
-                             {-# LINE 3989 "src-generated/GenerateCode.hs" #-}
+                             {-# LINE 3992 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule542 #-}
    {-# LINE 437 "src-ag/GenerateCode.ag" #-}
    rule542 = \ ((_hdIdecls) :: Decls) ->
                         {-# LINE 437 "src-ag/GenerateCode.ag" #-}
                         _hdIdecls
-                        {-# LINE 3995 "src-generated/GenerateCode.hs" #-}
+                        {-# LINE 3998 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule543 #-}
    {-# LINE 438 "src-ag/GenerateCode.ag" #-}
    rule543 = \ ((_tlIdecls) :: Decls) ->
                         {-# LINE 438 "src-ag/GenerateCode.ag" #-}
                         _tlIdecls
-                        {-# LINE 4001 "src-generated/GenerateCode.hs" #-}
+                        {-# LINE 4004 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule544 #-}
    rule544 = \ ((_hdIcomments) :: [String]) ((_tlIcomments) :: [String]) ->
      _hdIcomments ++ _tlIcomments
@@ -4266,25 +4269,25 @@ sem_CVisits_Nil  = T_CVisits (return st32) where
    rule623 = \  (_ :: ()) ->
                        {-# LINE 300 "src-ag/GenerateCode.ag" #-}
                        True
-                       {-# LINE 4270 "src-generated/GenerateCode.hs" #-}
+                       {-# LINE 4273 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule624 #-}
    {-# LINE 320 "src-ag/GenerateCode.ag" #-}
    rule624 = \  (_ :: ()) ->
                        {-# LINE 320 "src-ag/GenerateCode.ag" #-}
                        []
-                       {-# LINE 4276 "src-generated/GenerateCode.hs" #-}
+                       {-# LINE 4279 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule625 #-}
    {-# LINE 321 "src-ag/GenerateCode.ag" #-}
    rule625 = \  (_ :: ()) ->
                            {-# LINE 321 "src-ag/GenerateCode.ag" #-}
                            Set.empty
-                           {-# LINE 4282 "src-generated/GenerateCode.hs" #-}
+                           {-# LINE 4285 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule626 #-}
    {-# LINE 436 "src-ag/GenerateCode.ag" #-}
    rule626 = \  (_ :: ()) ->
                         {-# LINE 436 "src-ag/GenerateCode.ag" #-}
                         []
-                        {-# LINE 4288 "src-generated/GenerateCode.hs" #-}
+                        {-# LINE 4291 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule627 #-}
    rule627 = \  (_ :: ()) ->
      []
@@ -4361,43 +4364,43 @@ sem_DeclBlocks_DeclBlock arg_defs_ arg_visit_ arg_next_ = T_DeclBlocks (return s
    rule631 = \ ((_lhsIblockNr) :: Int) ->
                        {-# LINE 671 "src-ag/GenerateCode.ag" #-}
                        _lhsIblockNr + 1
-                       {-# LINE 4365 "src-generated/GenerateCode.hs" #-}
+                       {-# LINE 4368 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule632 #-}
    {-# LINE 676 "src-ag/GenerateCode.ag" #-}
    rule632 = \ ((_lhsIblockNr) :: Int) ((_lhsIprefix) :: String) ->
                          {-# LINE 676 "src-ag/GenerateCode.ag" #-}
                          _lhsIprefix ++ "_block" ++ show _lhsIblockNr
-                         {-# LINE 4371 "src-generated/GenerateCode.hs" #-}
+                         {-# LINE 4374 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule633 #-}
    {-# LINE 677 "src-ag/GenerateCode.ag" #-}
    rule633 = \ _lambdaName ->
                          {-# LINE 677 "src-ag/GenerateCode.ag" #-}
                          PragmaDecl ("NOINLINE " ++ _lambdaName    )
-                         {-# LINE 4377 "src-generated/GenerateCode.hs" #-}
+                         {-# LINE 4380 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule634 #-}
    {-# LINE 678 "src-ag/GenerateCode.ag" #-}
    rule634 = \ _freeVars _lambdaName ->
                        {-# LINE 678 "src-ag/GenerateCode.ag" #-}
                        App _lambdaName     (map SimpleExpr _freeVars    )
-                       {-# LINE 4383 "src-generated/GenerateCode.hs" #-}
+                       {-# LINE 4386 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule635 #-}
    {-# LINE 682 "src-ag/GenerateCode.ag" #-}
    rule635 = \ ((_nextIfreeVars) :: [String]) defs_ visit_ ->
                        {-# LINE 682 "src-ag/GenerateCode.ag" #-}
                        freevars _nextIfreeVars (visit_ : defs_)
-                       {-# LINE 4389 "src-generated/GenerateCode.hs" #-}
+                       {-# LINE 4392 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule636 #-}
    {-# LINE 689 "src-ag/GenerateCode.ag" #-}
    rule636 = \ _freeVars _lambdaName ((_lhsIoptCase) :: Bool) ((_nextIcallExpr) :: Expr) defs_ visit_ ->
                    {-# LINE 689 "src-ag/GenerateCode.ag" #-}
                    mkBlockLambda _lhsIoptCase _lambdaName     _freeVars     (defs_ ++ [visit_]) _nextIcallExpr
-                   {-# LINE 4395 "src-generated/GenerateCode.hs" #-}
+                   {-# LINE 4398 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule637 #-}
    {-# LINE 690 "src-ag/GenerateCode.ag" #-}
    rule637 = \ _decl ((_lhsIblockNr) :: Int) ((_nextIdecls) :: [Decl]) _pragmaDecl ->
                     {-# LINE 690 "src-ag/GenerateCode.ag" #-}
                     (if _lhsIblockNr > 1 then [_pragmaDecl    ] else []) ++ [_decl    ] ++ _nextIdecls
-                    {-# LINE 4401 "src-generated/GenerateCode.hs" #-}
+                    {-# LINE 4404 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule638 #-}
    rule638 = \ _freeVars ->
      _freeVars
@@ -4437,31 +4440,31 @@ sem_DeclBlocks_DeclTerminator arg_defs_ arg_result_ = T_DeclBlocks (return st35)
    rule643 = \ ((_lhsIblockNr) :: Int) ((_lhsIprefix) :: String) ->
                          {-# LINE 676 "src-ag/GenerateCode.ag" #-}
                          _lhsIprefix ++ "_block" ++ show _lhsIblockNr
-                         {-# LINE 4441 "src-generated/GenerateCode.hs" #-}
+                         {-# LINE 4444 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule644 #-}
    {-# LINE 677 "src-ag/GenerateCode.ag" #-}
    rule644 = \ _lambdaName ->
                          {-# LINE 677 "src-ag/GenerateCode.ag" #-}
                          PragmaDecl ("NOINLINE " ++ _lambdaName    )
-                         {-# LINE 4447 "src-generated/GenerateCode.hs" #-}
+                         {-# LINE 4450 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule645 #-}
    {-# LINE 678 "src-ag/GenerateCode.ag" #-}
    rule645 = \ _freeVars _lambdaName ->
                        {-# LINE 678 "src-ag/GenerateCode.ag" #-}
                        App _lambdaName     (map SimpleExpr _freeVars    )
-                       {-# LINE 4453 "src-generated/GenerateCode.hs" #-}
+                       {-# LINE 4456 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule646 #-}
    {-# LINE 680 "src-ag/GenerateCode.ag" #-}
    rule646 = \ ((_lhsIlastExprVars) :: [String]) ((_lhsInextVisitDecls) :: [Decl]) defs_ ->
                        {-# LINE 680 "src-ag/GenerateCode.ag" #-}
                        freevars _lhsIlastExprVars (defs_ ++ _lhsInextVisitDecls)
-                       {-# LINE 4459 "src-generated/GenerateCode.hs" #-}
+                       {-# LINE 4462 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule647 #-}
    {-# LINE 687 "src-ag/GenerateCode.ag" #-}
    rule647 = \ _freeVars _lambdaName ((_lhsInextVisitDecls) :: [Decl]) ((_lhsIoptCase) :: Bool) defs_ result_ ->
                     {-# LINE 687 "src-ag/GenerateCode.ag" #-}
                     [ mkBlockLambda _lhsIoptCase _lambdaName     _freeVars     (defs_ ++ _lhsInextVisitDecls) result_ ]
-                    {-# LINE 4465 "src-generated/GenerateCode.hs" #-}
+                    {-# LINE 4468 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule648 #-}
    rule648 = \ _freeVars ->
      _freeVars
@@ -4522,19 +4525,19 @@ sem_DeclBlocksRoot_DeclBlocksRoot arg_blocks_ = T_DeclBlocksRoot (return st38) w
    rule649 = \ ((_blocksIdecls) :: [Decl]) ->
                        {-# LINE 662 "src-ag/GenerateCode.ag" #-}
                        _blocksIdecls
-                       {-# LINE 4526 "src-generated/GenerateCode.hs" #-}
+                       {-# LINE 4529 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule650 #-}
    {-# LINE 663 "src-ag/GenerateCode.ag" #-}
    rule650 = \ ((_blocksIcallExpr) :: Expr) ->
                         {-# LINE 663 "src-ag/GenerateCode.ag" #-}
                         _blocksIcallExpr
-                        {-# LINE 4532 "src-generated/GenerateCode.hs" #-}
+                        {-# LINE 4535 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule651 #-}
    {-# LINE 668 "src-ag/GenerateCode.ag" #-}
    rule651 = \  (_ :: ()) ->
                          {-# LINE 668 "src-ag/GenerateCode.ag" #-}
                          1
-                         {-# LINE 4538 "src-generated/GenerateCode.hs" #-}
+                         {-# LINE 4541 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule652 #-}
    rule652 = \ ((_lhsIlastExprVars) :: [String]) ->
      _lhsIlastExprVars
@@ -4668,13 +4671,13 @@ sem_Pattern_Alias arg_field_ arg_attr_ arg_pat_ = T_Pattern (return st41) where
    rule664 = \ ((_patIdefinedInsts) :: [Identifier]) attr_ field_ ->
                                {-# LINE 266 "src-ag/GenerateCode.ag" #-}
                                (if field_ == _INST then [attr_] else []) ++ _patIdefinedInsts
-                               {-# LINE 4672 "src-generated/GenerateCode.hs" #-}
+                               {-# LINE 4675 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule665 #-}
    {-# LINE 274 "src-ag/GenerateCode.ag" #-}
    rule665 = \ ((_patIpatternAttributes) :: [(Identifier, Identifier)]) attr_ field_ ->
                                 {-# LINE 274 "src-ag/GenerateCode.ag" #-}
                                 (field_,attr_) : _patIpatternAttributes
-                                {-# LINE 4678 "src-generated/GenerateCode.hs" #-}
+                                {-# LINE 4681 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule666 #-}
    rule666 = \ ((_patIcopy) :: Pattern) attr_ field_ ->
      Alias field_ attr_ _patIcopy
@@ -4977,7 +4980,7 @@ sem_Sequence_Cons arg_hd_ arg_tl_ = T_Sequence (return st47) where
    rule684 = \ ((_hdIbldBlocksFun) :: DeclBlocks -> DeclBlocks) ((_tlIblockDecls) :: DeclBlocks) ->
                          {-# LINE 631 "src-ag/GenerateCode.ag" #-}
                          _hdIbldBlocksFun _tlIblockDecls
-                         {-# LINE 4981 "src-generated/GenerateCode.hs" #-}
+                         {-# LINE 4984 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule685 #-}
    rule685 = \ ((_hdIallTpsFound) :: Bool) ((_tlIallTpsFound) :: Bool) ->
      _hdIallTpsFound && _tlIallTpsFound
@@ -5258,7 +5261,7 @@ sem_Sequence_Nil  = T_Sequence (return st47) where
    rule766 = \ ((_lhsIdeclsAbove) :: [Decl]) ((_lhsIlastExpr) :: Expr) ->
                          {-# LINE 633 "src-ag/GenerateCode.ag" #-}
                          DeclTerminator _lhsIdeclsAbove _lhsIlastExpr
-                         {-# LINE 5262 "src-generated/GenerateCode.hs" #-}
+                         {-# LINE 5265 "src-generated/GenerateCode.hs" #-}
    {-# INLINE rule767 #-}
    rule767 = \  (_ :: ()) ->
      True

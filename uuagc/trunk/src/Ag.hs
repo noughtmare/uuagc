@@ -56,6 +56,7 @@ import ATermWrite
 import Data.Aeson (encode)
 import qualified Data.ByteString.Lazy as ByteString
 import qualified Language.Haskell.TH as TH
+import ConcreteSyntax (AG (AG))
 
 -- Library version
 import System.Exit (ExitCode(..), exitWith)
@@ -76,12 +77,12 @@ uuagcLib args fileP
                    else do compile flags fileP (head $ outputFiles flags++repeat "")
                            return (ExitSuccess, [])
 
-uuagcLibTH :: [String] -> String -> TH.Q [TH.Dec]
-uuagcLibTH args input = do
+uuagcLibTH :: [String] -> String -> AG -> TH.Q (AG, [TH.Dec])
+uuagcLibTH args input prev = do
   let (flags, _, errs) = getOptions (map ("--" ++) args)
   if not (null errs)
     then fail (unlines errs)
-    else compileTH flags input
+    else compileTH flags input prev
 
 -- Executable version
 uuagcExe :: IO ()
@@ -103,10 +104,11 @@ uuagcExe
                        then reportDeps flags files
                        else zipWithM_ (compile flags) files (outputFiles flags++repeat "")
 
-compileTH :: Options -> String -> TH.Q [TH.Dec]
-compileTH flags input
+compileTH :: Options -> String -> AG -> TH.Q (AG, [TH.Dec])
+compileTH flags input (AG prev)
  = do TH.Loc { TH.loc_filename = filename, TH.loc_start = (linepos, colpos) } <- TH.location
-      let (output0,parseErrors) = parseAGString flags input (Pos linepos colpos filename)
+      let (AG output0',parseErrors) = parseAGString flags input (Pos linepos colpos filename)
+          output0 = AG (output0' ++ prev)
           irrefutableMap = mempty
           printStr  = outputStr flags
           failWith  = failWithCode flags
@@ -300,7 +302,7 @@ compileTH flags input
       if not (null errorsToStopOn)  -- note: this may already run quite a part of the compilation...
            then fail "Encountered critical errors"
 
-           else return (Pass5c.th_Syn_Program output5c)
+           else return (output0, Pass5c.th_Syn_Program output5c)
 --            do
 --               if genvisage flags'
 --                then writeFile (outputfile++".visage") (writeATerm aterm)

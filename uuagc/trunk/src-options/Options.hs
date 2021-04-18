@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveLift #-}
 module Options where
 
 import System.Console.GetOpt
@@ -7,9 +8,11 @@ import Data.List(intercalate)
 import qualified Data.Set as Set
 import System.IO
 import System.Exit
+import Language.Haskell.TH.Syntax (Lift)
+import LiftOrphans ()
 
 -- From CommonTypes
-data Identifier   = Ident { getName::String, getPos::Pos }
+data Identifier   = Ident { getName::String, getPos::Pos } deriving Lift
 type NontermIdent = Identifier
 identifier :: String -> Identifier
 identifier x      = Ident x noPos

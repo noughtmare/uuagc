@@ -1,13 +1,16 @@
 
 
+{-# LANGUAGE DeriveLift #-}
 -- UUAGC 0.9.53.1 (src-ag/Patterns.ag)
 module Patterns where
-{-# LINE 2 "src-ag/Patterns.ag" #-}
+{-# LINE 6 "src-ag/Patterns.ag" #-}
 
 -- Patterns.ag imports
 import UU.Scanner.Position(Pos)
 import CommonTypes (ConstructorIdent,Identifier)
-{-# LINE 11 "src-generated/Patterns.hs" #-}
+import Language.Haskell.TH.Syntax (Lift)
+import LiftOrphans ()
+{-# LINE 14 "src-generated/Patterns.hs" #-}
 -- Pattern -----------------------------------------------------
 {-
    visit 0:
@@ -44,7 +47,7 @@ data Pattern = Constr (ConstructorIdent) (Patterns)
              | Alias (Identifier) (Identifier) (Pattern)
              | Irrefutable (Pattern)
              | Underscore (Pos)
-             deriving ( Show)
+             deriving ( Lift,Show)
 -- Patterns ----------------------------------------------------
 {-
    visit 0:
